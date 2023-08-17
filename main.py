@@ -47,6 +47,8 @@ def factors(n:int) -> list:
 # calculates a root of n with custom root
 def root(base: float, root: float) -> float:
   """takes the root of base"""
+  if (base < 0) and (root%2 == 0):
+    raise ValueError(f"math error - root() does not support complex numbers")
   return math.pow(base, 1/root)
 
 # calculates the quadratic roots of ax^2 + bx + c
@@ -89,6 +91,22 @@ def poly(input:float,eq:list) -> float:
   for i in range(len(eq)):
     s.append(eq[i]*math.pow(input,len(eq)-1-i))
   return sum(s)
+
+# performs fixed point iteration on n
+# CompPolyFPIter() for complex number supported
+def polyFPIter(input:float,eq:list,iter:int) -> float:
+  """Returns the input calculated through eq using fixed point iteration, iter times"""
+  for i in range(iter):
+    input = poly(input,eq)
+  return input
+
+# performs fixed point iteration on n
+# CompPolyFPIter() for complex number supported
+def CompPolyFPIter(input:list,eq:list,iter:int) -> list:
+  """Returns the input calculated through eq using fixed point iteration, iter times. outputs as [(Real part),(imaginary part)]. All values must be float or int"""
+  for i in range(iter):
+    input = CompPoly(input,eq)
+  return input
 
 # calculates f(x)
 # Complex number supported 
