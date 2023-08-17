@@ -75,6 +75,14 @@ def CompConj(A: list) -> list:
   """returns the conjugate of A[0] + A[1]*i outputs as [(Real part),(imaginary part)]. All values must be float or int"""
   return [A[0], -1*A[1]]
 
+def Re(A:list) -> float:
+  """returns the real part of the complex number A[0] + A[1]*i"""
+  return A[0]
+
+def Im(A:list) -> float:
+  """returns the imaginary part of the complex number A[0] + A[1]*i"""
+  return A[1]
+
 
 ### Conversions ###
 def Polar2Cart(r: float, theta: float, mode: str = "RAD") -> list:
@@ -100,7 +108,6 @@ def Cart2Polar(x: float, y: float, mode: str = "RAD") -> list:
 
 
 ### others ###
-
 def rmSame(x:list) -> list:
   """removes any duplicated values"""
   y = []
@@ -109,10 +116,28 @@ def rmSame(x:list) -> list:
       y.append(i)
   return y
 
-def rangePick(list:list,min:float,max:float) -> list:
-  """returns numbers in list that are bigger than min (included), smaller than max (included)"""
+def rangePick(list:list,min:float,max:float = "inf") -> list:
+  """returns numbers in list that are bigger than min (included), smaller than max (included). leave max blank for infinity"""
   output = []
-  for i in list:
-    if (i >= min) and (i <= max):
-      output.append(i)
+  if max == "inf":
+    for i in list:
+      if i >= min:
+        output.append(i)
+  else:
+    for i in list:
+      if (i >= min) and (i <= max):
+        output.append(i)
   return output
+
+def str2list(str:str,divider:str) -> list:
+  """returns a string list made out of a string, where each element is distuingished with a divider (one letter). The divider is not included in the list"""
+  output = [""]
+  for i in str:
+    if i == divider:
+      output.append("")
+    else:
+      output[len(output)-1] += i
+  if str[len(str)-1] == divider:
+    output.pop()
+  return output
+
