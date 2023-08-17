@@ -47,8 +47,6 @@ def factors(n:int) -> list:
 # calculates a root of n with custom root
 def root(base: float, root: float) -> float:
   """takes the root of base"""
-  if (base < 0) and (root%2 == 0):
-    raise ValueError(f"math error - root() does not support complex numbers")
   return math.pow(base, 1/root)
 
 # calculates the quadratic roots of ax^2 + bx + c
