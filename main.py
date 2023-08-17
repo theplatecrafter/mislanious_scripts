@@ -1,4 +1,5 @@
 import math
+import random
 
 
 ### Number theory stuff ###
@@ -42,34 +43,83 @@ def factors(n:int) -> list:
   return rangePick(rmSame(factorD),1,n)
 
 
+
 ### Calculations ###
 def root(base: float, root: float) -> float:
   """takes the root of base"""
   return math.pow(base, 1/root)
 
+def Qroots(a:float,b:float,c:float) -> list:
+  """returns the roots of ax^2 + bx + c as a list. If there is only one root, returns it as a float. If the roots are imaginary, returns [[a,b],[c,d]] where as the first root is a + b*i, and the second is c + d*i"""
+  if math.pow(b,2) - 4*a*c > 0:
+    return [(-1*b+math.sqrt(math.pow(b,2) - 4*a*c))/(2*a),(-1*b-math.sqrt(math.pow(b,2) - 4*a*c))/(2*a)]
+  elif math.pow(b,2) - 4*a*c == 0:
+    return (-1*b+math.sqrt(math.pow(b,2) - 4*a*c))/(2*a)
+  else:
+    return [[(-1*b)/(a*2),math.sqrt(abs(math.pow(b,2) - 4*a*c))],[(-1*b)/(a*2),math.sqrt(abs(math.pow(b,2) - 4*a*c))*-1]]
 
-### Complex Numbers ###
+def rootsDK(poly:list,Iter:int = 100) -> list:
+  """returns the roots of poly[0]*x^n + poly[1]*x^(n-1) + ... + poly[n-1]*x^1 + poly[n]*x^0 down to the imaginary numbers using the Durand-Kerner method. set the Iter to any natural value. The higher this value, the more accurate. Default value is 100. Return syntax: [root1:[(real part),(imaginary part)],root2:[(Re),(Im)], ... ,rootN[(Re),(Im)]]"""
+  for i in range(1,len(poly)-1):
+    poly[i] /= poly[0]
+  poly[0] = 1
+
+  points = []
+  for i in range(len(poly)-1):
+    points.append(Polar2Cart(root(abs(1/poly[len(poly)-1]),len(poly)-1),2*math.pi/(len(poly)-1)*i+(math.pi/(2*(len(poly)-1)))))
+
+  for g in range(Iter):
+    for i in range(len(points)):
+      deno = [1,0]
+      for j in range(len(points)):
+        if j != i:
+          deno = CompMul(deno,CompSub(points[i],points[j]))
+      points[i] = CompSub(points[i],CompDiv(CompPoly(points[i],poly),(deno)))
+  return points
+      
+def poly(input:float,eq:list) -> float:
+  """for a polynominal equation f(x) = eq[0]*x^n + eq[1]*x^(n-1) + ... + eq[n-1]*x^1 + eq[n]*x^0 returns f(input)"""
+  s = []
+  for i in range(len(eq)):
+    s.append(eq[i]*math.pow(input,len(eq)-1-i))
+  return sum(s)
+
+
+
+### Complex Numbers Calculation ###
+def CompPoly(input:list,eq:list) -> list:
+  """for a polynominal equation f(x) = eq[0]*x^n + eq[1]*x^(n-1) + ... + eq[n-1]*x^1 + eq[n]*x^0 returns f(input[0] + input[1]*i) outputs as [(Real part),(imaginary part)]. All values must be float or int"""
+  s = []
+  for i in range(len(eq)):
+    s.append(CompMul([eq[i],0],CompPow(input,len(eq)-1-i)))
+  return CompSum(s)
+
 def CompAdd(A: list, B: list) -> list:
   """does (A[0] + A[1]*i) + (B[0] + B[1]*i) outputs as [(Real part),(imaginary part)]. All values must be float or int"""
   return [A[0] + B[0], A[1] + B[1]]
 
+def CompSum(A:list) -> list:
+  """returns the sum of all complex numbers [(real part),(imaginary part)] in 2D array A outputs as [(Real part),(imaginary part)]. All values must be float or int"""
+  RealP = []
+  ImagP = []
+  for i in A:
+    RealP.append(i[0])
+    ImagP.append(i[1])
+  return [sum(RealP),sum(ImagP)]
 
 def CompSub(A: list, B: list) -> list:
   """does (A[0] + A[1]*i) - (B[0] + B[1]*i) outputs as [(Real part),(imaginary part)]. All values must be float or int"""
   return [A[0] - B[0], A[1] - B[1]]
 
-
 def CompMul(A: list, B: list) -> list:
   """does (A[0] + A[1]*i) * (B[0] + B[1]*i) outputs as [(Real part),(imaginary part)]. All values must be float or int"""
   return [A[0]*B[0]-A[1]*B[1], A[1]*B[0]+A[0]*B[1]]
 
-
-def CompDev(A: list, B: list) -> list:
+def CompDiv(A: list, B: list) -> list:
   """does (A[0] + A[1]*i) / (B[0] + B[1]*i) outputs as [(Real part),(imaginary part)]. All values must be float or int"""
   BDash = math.pow(B[0],2) + math.pow(B[1],2)
   ADash = CompMul(A, [B[0], -1*B[1]])
   return [ADash[0]/BDash, ADash[1]/BDash]
-
 
 def CompConj(A: list) -> list:
   """returns the conjugate of A[0] + A[1]*i outputs as [(Real part),(imaginary part)]. All values must be float or int"""
@@ -83,6 +133,12 @@ def Im(A:list) -> float:
   """returns the imaginary part of the complex number A[0] + A[1]*i"""
   return A[1]
 
+def CompPow(base:list,power:float):
+  """returns the complex number base[0] + base[1]*i raised to the power of "power"(real number) as [(Real part),(imaginary part)]. All values must be float or int"""
+  base = Cart2Polar(base[0],base[1])
+  return Polar2Cart(math.pow(base[0],power),base[1]*power)
+
+
 
 ### Conversions ###
 def Polar2Cart(r: float, theta: float, mode: str = "RAD") -> list:
@@ -90,7 +146,6 @@ def Polar2Cart(r: float, theta: float, mode: str = "RAD") -> list:
   if mode == "DEG":
     theta = math.radians(theta)
   return [r*math.cos(theta), r*math.sin(theta)]
-
 
 def Cart2Polar(x: float, y: float, mode: str = "RAD") -> list:
   """converts cartigean coordinate (x,y) to polar coordinate <r,theta> as a list [r,theta]. Optional Argument "mode" can either be "RAD" for if you want theta to be in radians, or "DEG" for degrees. Default is "RAD"."""
@@ -105,7 +160,25 @@ def Cart2Polar(x: float, y: float, mode: str = "RAD") -> list:
     else:
       return [math.sqrt(pow(x,2)+pow(y,2)), 2*math.pi-math.acos(x/(math.sqrt(pow(x,2)+pow(y,2))))]
 
+def str2list(str:str,divider:str) -> list:
+  """returns a string list made out of a string, where each element is distuingished with a divider (one letter). The divider is not included in the list"""
+  output = [""]
+  for i in str:
+    if i == divider:
+      output.append("")
+    else:
+      output[len(output)-1] += i
+  if str[len(str)-1] == divider:
+    output.pop()
+  return output
 
+def list2str(list:list,divider:str) -> str:
+  """returns a list made out of a list, where each element is distuingished with a divider (one letter). The divider is not included in the string"""
+  output = str(list[0])
+  for i in list[1:]:
+    output += divider + str(i)
+  
+  return output
 
 ### others ###
 def rmSame(x:list) -> list:
@@ -129,15 +202,9 @@ def rangePick(list:list,min:float,max:float = "inf") -> list:
         output.append(i)
   return output
 
-def str2list(str:str,divider:str) -> list:
-  """returns a string list made out of a string, where each element is distuingished with a divider (one letter). The divider is not included in the list"""
-  output = [""]
-  for i in str:
-    if i == divider:
-      output.append("")
-    else:
-      output[len(output)-1] += i
-  if str[len(str)-1] == divider:
-    output.pop()
+def ranList(min:float,max:float,length:int) -> list:
+  """returns a list with length length, each element being a random value between min and max"""
+  output = []
+  for i in range(length):
+    output.append(random.random()*(abs(max)+abs(min))-abs(min))
   return output
-
