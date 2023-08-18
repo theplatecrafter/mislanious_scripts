@@ -90,6 +90,7 @@ def poly(input:float,eq:list) -> float:
     s.append(eq[i]*math.pow(input,len(eq)-1-i))
   return sum(s)
 
+# derivative of a polynominal
 def Dpoly(eq:list) -> list:
   """returns the first derivative of f(x) = eq[0]*x^n + eq[1]*x^(n-1) + ... + eq[n-1]*x^1 + eq[n]*x^0"""
   for i in range(len(eq)):
@@ -263,12 +264,35 @@ def polyPrint(eq:list) -> str:
   """returns a string that shows the polynominal equation in standard form"""
   output = ""
   for i in range(len(eq)):
-    if i != len(eq)-1:
-      if i != len(eq)-2:
-        output += str(eq[i]) + " * x ^ " + str(len(eq)-1-i) + " + "
-      else:
-        output += str(eq[i]) + " * x" + " + "
+    if i == 0:
+      if eq[i] < 0:
+        if eq[i] == -1:
+          output += "-"
+        else:
+          output += str(eq[i])
+      elif eq[i] > 0:
+        if eq[i] != 1:
+          output += str(eq[i])
     else:
-      output += str(eq[i])
+      if eq[i] < 0:
+        if eq[i] == -1:
+          output += " - "
+        else:
+          output += " - " + str(abs(eq[i]))
+      elif eq[i] > 0:
+        if eq[i] == 1:
+          output += " + "
+        else:
+          output += " + " + str(eq[i])
+    
+    if len(eq)-1-i == 0:
+      if eq[i] == 1 or eq[i] == -1:
+        output += "1"
+    elif len(eq)-1-i == 1:
+      output += "x"
+    else:
+      output += "x^" + str(len(eq)-1-i)
   return output
 
+def compPrint(comp:list) -> str:
+  
