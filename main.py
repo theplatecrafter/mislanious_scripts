@@ -90,6 +90,13 @@ def poly(input:float,eq:list) -> float:
     s.append(eq[i]*math.pow(input,len(eq)-1-i))
   return sum(s)
 
+def Dpoly(eq:list) -> list:
+  """returns the first derivative of f(x) = eq[0]*x^n + eq[1]*x^(n-1) + ... + eq[n-1]*x^1 + eq[n]*x^0"""
+  for i in range(len(eq)):
+    eq[i] *= len(eq)-1-i
+  eq.pop()
+  return eq
+
 # performs fixed point iteration on n
 # CompPolyFPIter() for complex number supported
 def polyFPIter(input:float,eq:list,iter:int) -> float:
