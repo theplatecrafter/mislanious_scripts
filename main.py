@@ -278,21 +278,56 @@ def polyPrint(eq:list) -> str:
         if eq[i] == -1:
           output += " - "
         else:
-          output += " - " + str(abs(eq[i]))
+          if output == "":
+            output += str(eq[i])
+          else:
+            output += " - " + str(abs(eq[i]))
       elif eq[i] > 0:
         if eq[i] == 1:
           output += " + "
         else:
-          output += " + " + str(eq[i])
+          if output == "":
+            output += str(eq[i])
+          else:
+            output += " + " + str(eq[i])
     
-    if len(eq)-1-i == 0:
-      if eq[i] == 1 or eq[i] == -1:
-        output += "1"
-    elif len(eq)-1-i == 1:
-      output += "x"
-    else:
-      output += "x^" + str(len(eq)-1-i)
+    if eq[i] != 0:
+      if len(eq)-1-i == 0:
+        if eq[i] == 1 or eq[i] == -1:
+          output += "1"
+      elif len(eq)-1-i == 1:
+        output += "x"
+      else:
+        output += "x^" + str(len(eq)-1-i)
   return output
 
-def compPrint(comp:list) -> str:
+def compPrint(comp:list,precision:int = 2) -> str:
+  """returns a string that shows the complex equation in standard form"""
+  comp = [round(y,precision) for y in comp]
+  if comp[0] == 0:
+    if comp[1] == -1:
+      return "-i"
+    elif comp[1] == 1:
+      return "i"
+    elif comp[1] == 0:
+      return str(comp[1])
+    else:
+      return str(comp[1]) + "i"
+  else:
+    if comp[1] < 0:
+      if comp[1] == -1:
+        return str(comp[0]) + "  - i"
+      else:
+        return str(comp[0]) + " - " + str(abs(comp[1])) + "i"
+    elif comp[1] == 0:
+      return str(comp[0])
+    else:
+      if comp[1] == 1:
+        return str(comp[0]) + " + i"
+      else:
+        return str(comp[0]) + " + " + str(comp[1]) + "i"
+      
+def polyExpand(roots:list):
+  """complex roots should be [(real part),(imaginary part)] and real numbers should be float"""
+  poly = []
   
