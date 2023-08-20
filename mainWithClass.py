@@ -70,10 +70,10 @@ class Complex():
       r = self.r**other
       theta = self.theta*other
       return Complex(r*math.cos(theta),r*math.sin(theta))
-    
+
 
 
 a = Complex(2,1)
-b = Complex(2,5)
+b = Complex(2,0)
 
 print(a**b)

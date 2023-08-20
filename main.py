@@ -1,3 +1,5 @@
+# TODO: make everything complex number input supported
+
 import math
 import random
 
@@ -120,7 +122,10 @@ def CompPoly(input:list,eq:list) -> list:
   """for a polynominal equation f(x) = eq[0]*x^n + eq[1]*x^(n-1) + ... + eq[n-1]*x^1 + eq[n]*x^0 returns f(input[0] + input[1]*i) outputs as [(Real part),(imaginary part)]. All values must be float or int"""
   s = []
   for i in range(len(eq)):
-    s.append(CompMul([eq[i],0],CompPow(input,len(eq)-1-i)))
+    if type(eq[i]) == list:
+      s.append(CompMul(eq[i],CompPow(input,len(eq)-1-i)))
+    else:
+      s.append(CompMul([eq[i],0],CompPow(input,len(eq)-1-i)))
   return CompSum(s)
 
 # Adds two complex numbers
@@ -264,33 +269,38 @@ def polyPrint(eq:list) -> str:
   """returns a string that shows the polynominal equation in standard form"""
   output = ""
   for i in range(len(eq)):
-    if i == 0:
-      if eq[i] < 0:
-        if eq[i] == -1:
-          output += "-"
-        else:
-          output += str(eq[i])
-      elif eq[i] > 0:
-        if eq[i] != 1:
-          output += str(eq[i])
+    if type(eq[i]) != list:
+      if i == 0:
+        if eq[i] < 0:
+          if eq[i] == -1:
+            output += "-"
+          else:
+            output += str(eq[i])
+        elif eq[i] > 0:
+          if eq[i] != 1:
+            output += str(eq[i])
+      else:
+        if eq[i] < 0:
+          if eq[i] == -1:
+            output += " - "
+          else:
+            if output == "":
+              output += str(eq[i])
+            else:
+              output += " - " + str(abs(eq[i]))
+        elif eq[i] > 0:
+          if eq[i] == 1:
+            output += " + "
+          else:
+            if output == "":
+              output += str(eq[i])
+            else:
+              output += " + " + str(eq[i])
     else:
-      if eq[i] < 0:
-        if eq[i] == -1:
-          output += " - "
-        else:
-          if output == "":
-            output += str(eq[i])
-          else:
-            output += " - " + str(abs(eq[i]))
-      elif eq[i] > 0:
-        if eq[i] == 1:
-          output += " + "
-        else:
-          if output == "":
-            output += str(eq[i])
-          else:
-            output += " + " + str(eq[i])
-    
+      if i == 0:
+        output += "(" + compPrint(eq[i]) + ")"
+      else:
+        output += " + (" + compPrint(eq[i]) + ")"
     if eq[i] != 0:
       if len(eq)-1-i == 0:
         if eq[i] == 1 or eq[i] == -1:
@@ -330,4 +340,22 @@ def compPrint(comp:list,precision:int = 2) -> str:
 def polyExpand(roots:list):
   """complex roots should be [(real part),(imaginary part)] and real numbers should be float"""
   poly = []
-  
+  for i in range(len(roots)):
+    subMulti = []
+    for j in range(math.factorial(len(roots))/math.factorial(len(roots)-(i+1))/math.factorial(i+1)):
+      pass # TODO
+
+def polyAdd(A:list,B:list) -> list:
+  if len(A) >= len(B):
+    tmp = range(len(B))
+    tmp.reverse()
+    for i in tmp:
+      if 
+      A[i + (len(A)-len(B))] += B[i]
+  else:
+    tmp = range(len(A))
+    tmp.reverse()
+    for i in tmp:
+      B[i + (len(B)-len(A))] += A[i]
+      
+    
