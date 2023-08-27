@@ -5,10 +5,13 @@ class Complex():
     self.Re = real
     self.Im = imaginary
     self.r = math.sqrt(pow(real,2)+pow(imaginary,2))
-    if imaginary >= 0:
-      self.theta =  math.acos(real/(math.sqrt(pow(real,2)+pow(imaginary,2))))
+    if imaginary != 0:
+      if imaginary > 0:
+          self.theta =  math.acos(real/(math.sqrt(pow(real,2)+pow(imaginary,2))))
+      else:
+        self.theta =  2*math.pi-math.acos(real/(math.sqrt(pow(real,2)+pow(imaginary,2))))
     else:
-      self.theta =  2*math.pi-math.acos(real/(math.sqrt(pow(real,2)+pow(imaginary,2))))
+      self.theta = 0
     self.thetaDEG = math.degrees(self.theta)
 
   def __str__(self):
@@ -85,10 +88,24 @@ class Complex():
       r = self.r**other
       theta = self.theta*other
       return Complex(r*math.cos(theta),r*math.sin(theta))
+    
+  def __rpow__(self,other):
+    return Complex(other,0)**self
+  
+  def __floordiv__(self,other):
+    ans = self/other
+    return Complex(math.floor(ans.Re),math.floor(ans.Im))
+  
+  def __rfloordiv__(self,other):
+    ans = self/other
+    return Complex(math.floor(ans.Re),math.floor(ans.Im))
+  
+  def __mod__(self,other):
+    
 
 
 
 a = 3
-b = Complex(6,0)
+b = Complex(5,45)
 
-print(a/b)
+print(a//b)
