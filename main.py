@@ -344,18 +344,3 @@ def polyExpand(roots:list):
     subMulti = []
     for j in range(math.factorial(len(roots))/math.factorial(len(roots)-(i+1))/math.factorial(i+1)):
       pass # TODO
-
-def polyAdd(A:list,B:list) -> list:
-  if len(A) >= len(B):
-    tmp = range(len(B))
-    tmp.reverse()
-    for i in tmp:
-      if 
-      A[i + (len(A)-len(B))] += B[i]
-  else:
-    tmp = range(len(A))
-    tmp.reverse()
-    for i in tmp:
-      B[i + (len(B)-len(A))] += A[i]
-      
-    

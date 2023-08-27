@@ -41,11 +41,18 @@ class Complex():
     else:
       return Complex(self.Re+other,self.Im)
 
+  def __radd__(self,other):
+    return Complex(self.Re+other,self.Im)
+
   def __sub__(self,other):
     if type(other) == Complex:
       return Complex(self.Re-other.Re,self.Im-other.Im)
     else:
       return Complex(self.Re-other,self.Im)
+
+  def __rsub__(self,other):
+    return Complex(-1*(self.Re-other),-1*(self.Im))
+  
 
   def __mul__(self,other):
     if type(other) == Complex:
@@ -53,6 +60,9 @@ class Complex():
     else:
       return Complex(self.Re*other,self.Im*other)
   
+  def __rmul__(self,other):
+    return Complex(self.Re*other,self.Im*other)
+
   def __truediv__(self,other):
     if type(other) == Complex:
       BDash = math.pow(other.Re,2) + math.pow(other.Im,2)
@@ -60,6 +70,11 @@ class Complex():
       return Complex(ADash.Re/BDash, ADash.Im/BDash)
     else:
       return Complex(self.Re/other,self.Im/other)
+  
+  def __rtruediv__(self,other):
+    BDash = math.pow(self.Re,2) + math.pow(self.Im,2)
+    ADash = other * Complex(self.Re, -1*self.Im)
+    return Complex(ADash.Re/BDash, ADash.Im/BDash)
   
   def __pow__(self,other):
     if type(other) == Complex:
@@ -73,7 +88,7 @@ class Complex():
 
 
 
-a = Complex(2,1)
-b = Complex(2,0)
+a = 3
+b = Complex(6,0)
 
-print(a**b)
+print(a/b)
