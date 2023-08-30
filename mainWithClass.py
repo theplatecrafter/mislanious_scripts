@@ -14,6 +14,17 @@ class Complex():
       self.theta = 0
     self.thetaDEG = math.degrees(self.theta)
 
+  def rTheta(self):
+    self.r = math.sqrt(pow(self.Re,2)+pow(self.Im,2))
+    if self.Im != 0:
+      if self.Im > 0:
+          self.theta =  math.acos(self.Re/(math.sqrt(pow(self.Re,2)+pow(self.Im,2))))
+      else:
+        self.theta =  2*math.pi-math.acos(self.Re/(math.sqrt(pow(self.Re,2)+pow(self.Im,2))))
+    else:
+      self.theta = 0
+    self.thetaDEG = math.degrees(self.theta)
+
   def __str__(self):
     if self.Re == 0:
       if self.Im == -1:
@@ -43,6 +54,7 @@ class Complex():
       return Complex(self.Re+other.Re,self.Im+other.Im)
     else:
       return Complex(self.Re+other,self.Im)
+    
 
   def __radd__(self,other):
     return Complex(self.Re+other,self.Im)
@@ -101,7 +113,7 @@ class Complex():
     return Complex(math.floor(ans.Re),math.floor(ans.Im))
   
   def __mod__(self,other):
-    
+    pass
 
 
 
