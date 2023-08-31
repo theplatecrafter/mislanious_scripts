@@ -82,7 +82,7 @@ class Complex():
     BDash = math.pow(self.Re,2) + math.pow(self.Im,2)
     ADash = other * Complex(self.Re, -1*self.Im)
     return Complex(ADash.Re/BDash, ADash.Im/BDash).rTheta()
-  
+
   def __pow__(self,other):
     if type(other) == Complex:
       x = (self.r**other.Im)*(math.e**(other.Re*self.theta))
@@ -92,7 +92,7 @@ class Complex():
       r = self.r**other
       theta = self.theta*other
       return Complex(r*math.cos(theta),r*math.sin(theta)).rTheta()
-    
+
   def __rpow__(self,other):
     return (Complex(other,0)**self).rTheta()
   
@@ -107,7 +107,8 @@ class Complex():
   def __mod__(self,other):
     pass
 
-
+class Poly():
+  
 
 b = Complex(5,2)
 
