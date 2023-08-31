@@ -12,13 +12,14 @@ class Complex():
       self.theta = 0
     self.thetaDEG = math.degrees(self.theta)
     return self
-  
+
   def __init__(self,real:float,imaginary:float):
     self.Re = real
     self.Im = imaginary
     self.rTheta()
 
   def __str__(self):
+    self.rTheta
     if self.Re == 0:
       if self.Im == -1:
         return "-i"
@@ -47,7 +48,6 @@ class Complex():
       return Complex(self.Re+other.Re,self.Im+other.Im).rTheta()
     else:
       return Complex(self.Re+other,self.Im).rTheta()
-    
 
   def __radd__(self,other):
     return Complex(self.Re+other,self.Im).rTheta()
@@ -60,14 +60,13 @@ class Complex():
 
   def __rsub__(self,other):
     return Complex(-1*(self.Re-other),-1*(self.Im)).rTheta()
-  
 
   def __mul__(self,other):
     if type(other) == Complex:
       return Complex(self.Re*other.Re-self.Im*other.Im, self.Im*other.Re+self.Re*other.Im).rTheta()
     else:
       return Complex(self.Re*other,self.Im*other).rTheta()
-  
+
   def __rmul__(self,other):
     return Complex(self.Re*other,self.Im*other).rTheta()
 
@@ -110,7 +109,9 @@ class Complex():
 
 
 
-a = 3
 b = Complex(5,2)
 
-print((a+b).theta)
+b.Re = 3
+print(b.Re)
+
+complex(1,1)
