@@ -1,3 +1,12 @@
 import main as sms
 
-sms.addProduct("eye balls",1000)
+sms.addProduct()
+sms.addProduct()
+sms.addProduct()
+sms.addProduct()
+
+sms.printMarket()
+
+while True:
+  sms.tick()
+  sms.printMarket()
