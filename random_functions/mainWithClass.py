@@ -108,7 +108,8 @@ class Complex():
     pass
 
 class Poly():
-  
+  def __init__(self,*arg):
+    p = [arg]
 
 b = Complex(5,2)
 

@@ -336,7 +336,7 @@ def compPrint(comp:list,precision:int = 2) -> str:
         return str(comp[0]) + " + i"
       else:
         return str(comp[0]) + " + " + str(comp[1]) + "i"
-      
+
 def polyExpand(roots:list):
   """complex roots should be [(real part),(imaginary part)] and real numbers should be float"""
   poly = []
