@@ -344,3 +344,64 @@ def polyExpand(roots:list):
     subMulti = []
     for j in range(math.factorial(len(roots))/math.factorial(len(roots)-(i+1))/math.factorial(i+1)):
       pass # TODO
+
+def controledInput(type:str = "float",numMax:float = "none",numMin:float = "none",prompt:str = "",rePrompt:bool=True,invalidTXT:str="Invalid input"):
+  """"this only supports float and int controled input. When rePrompt is set to true, it will keep on prompting for the correct answer. invalidTXT is the text that appears when rePrompt is true, and the user inputed a wrong value. numMin <= <userinput> <= numMax This will return "" when rePrompt is False and the user inputs an invalid input."""
+  if rePrompt:
+    while True:
+      user_input = input(prompt)
+      try:
+        if type == "float":
+          user_input = float(user_input)
+          if user_input <= numMax and user_input >= numMin:
+            return user_input
+          else:
+            print(invalidTXT)
+        elif type == "int":
+          user_input = int(user_input)
+          if user_input <= numMax and user_input >= numMin:
+            return user_input
+          else:
+            print(invalidTXT)
+      except ValueError:
+        print(invalidTXT)
+  else:
+    user_input = input(prompt)
+    try:
+      if type == "float":
+        user_input = float(user_input)
+        if user_input <= numMax and user_input >= numMin:
+          return user_input
+        else:
+          return ""
+      elif type == "int":
+        user_input = int(user_input)
+        if user_input <= numMax and user_input >= numMin:
+          return user_input
+        else:
+          return ""
+    except ValueError:
+      return ""
+
+def startStockGame():
+  players = []
+  players.append(input("Player 1 name... "))
+  userinput = input("Player 2 name... ")
+  n=2
+  while userinput != "":
+    n+=1
+    players.append(userinput)
+    userinput = input(f"Player {n} name... ")
+
+  sharesName = []
+  sharesPrice = []
+  sharesStrength = []
+  sharesName.append(input("Company 1 name... "))
+  sharesPrice.append(input(f"{sharesName[-1]} starting price... "))
+  sharesStrength.append(input(f"{sharesName[-1]} up and down strength... "))
+  userinput = input("Player 2 name... ")
+  n=2
+  while userinput != "":
+    n+=1
+    players.append(userinput)
+    userinput = input(f"Player {n} name... ")
