@@ -2,6 +2,7 @@
 
 import math
 import random
+from tabulate import tabulate
 
 
 # Checks if n is prime
@@ -344,6 +345,8 @@ def polyExpand(roots:list):
     subMulti = []
     for j in range(math.factorial(len(roots))/math.factorial(len(roots)-(i+1))/math.factorial(i+1)):
       pass # TODO
+
+def table
 
 def controledInput(type:str = "float",numMax:float = "none",numMin:float = "none",prompt:str = "",rePrompt:bool=True,invalidTXT:str="Invalid input"):
   """"this only supports float and int controled input. When rePrompt is set to true, it will keep on prompting for the correct answer. invalidTXT is the text that appears when rePrompt is true, and the user inputed a wrong value. numMin <= <userinput> <= numMax This will return "" when rePrompt is False and the user inputs an invalid input."""
