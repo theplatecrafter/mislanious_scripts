@@ -1,8 +1,8 @@
 # TODO: make everything complex number input supported
+# TODO: finish stock market game
 
 import math
 import random
-from tabulate import tabulate
 
 
 # Checks if n is prime
@@ -346,9 +346,21 @@ def polyExpand(roots:list):
     for j in range(math.factorial(len(roots))/math.factorial(len(roots)-(i+1))/math.factorial(i+1)):
       pass # TODO
 
-def table
+def printTable(table:list):
+  try:
+    print(table)
+  except:
+    print("array must be a 2 dimensional array")
+    raise
 
-def controledInput(type:str = "float",numMax:float = "none",numMin:float = "none",prompt:str = "",rePrompt:bool=True,invalidTXT:str="Invalid input"):
+def genRandomWord(length:int = 5,pronouncible:bool = True):
+  if not pronouncible:
+    word = ""
+    for i in range(len):
+      word+="qwertyuiopasdfghjklzxcvbnm"[random.randint(0,)]
+
+
+def controledInput(type:str = "float",prompt:str = "",rePrompt:bool=True,invalidTXT:str="Invalid input"):
   """"this only supports float and int controled input. When rePrompt is set to true, it will keep on prompting for the correct answer. invalidTXT is the text that appears when rePrompt is true, and the user inputed a wrong value. numMin <= <userinput> <= numMax This will return "" when rePrompt is False and the user inputs an invalid input."""
   if rePrompt:
     while True:
@@ -356,16 +368,10 @@ def controledInput(type:str = "float",numMax:float = "none",numMin:float = "none
       try:
         if type == "float":
           user_input = float(user_input)
-          if user_input <= numMax and user_input >= numMin:
-            return user_input
-          else:
-            print(invalidTXT)
+          return user_input
         elif type == "int":
           user_input = int(user_input)
-          if user_input <= numMax and user_input >= numMin:
-            return user_input
-          else:
-            print(invalidTXT)
+          return user_input
       except ValueError:
         print(invalidTXT)
   else:
@@ -373,38 +379,75 @@ def controledInput(type:str = "float",numMax:float = "none",numMin:float = "none
     try:
       if type == "float":
         user_input = float(user_input)
-        if user_input <= numMax and user_input >= numMin:
-          return user_input
-        else:
-          return ""
+        return user_input
       elif type == "int":
         user_input = int(user_input)
-        if user_input <= numMax and user_input >= numMin:
-          return user_input
-        else:
-          return ""
+        return user_input
     except ValueError:
       return ""
 
 def startStockGame():
+  print("\n\n\nStock Market Minigame")
+  print("\nEnter at least 1 player names. leave blank to go to next")
+  userinput = input("Player 1 name... ")
   players = []
-  players.append(input("Player 1 name... "))
+  while userinput == "":
+    userinput = input("Player 1 name... ")
+  players.append(userinput)
   userinput = input("Player 2 name... ")
   n=2
   while userinput != "":
-    n+=1
-    players.append(userinput)
+    if userinput not in players:
+      n+=1
+      players.append(userinput)
+    else:
+      print("That player name already exist. Please enter another one.")
     userinput = input(f"Player {n} name... ")
-
+  
+  printTable([["Players"]+players])
+  print("")
+  userinput = input("Would you like to add custom companies or randomly? [y/N]... ")
+  if userinput != "":
+    while not(userinput.lower() == "y" or userinput.lower() == "n"):
+      userinput = input("Would you like to add custom companies or randomly? [y/N]... ")
+      if userinput == "":
+        break
+  
   sharesName = []
   sharesPrice = []
   sharesStrength = []
-  sharesName.append(input("Company 1 name... "))
-  sharesPrice.append(input(f"{sharesName[-1]} starting price... "))
-  sharesStrength.append(input(f"{sharesName[-1]} up and down strength... "))
-  userinput = input("Player 2 name... ")
-  n=2
-  while userinput != "":
-    n+=1
-    players.append(userinput)
-    userinput = input(f"Player {n} name... ")
+  if userinput.lower() == "y":
+    print("\nEnter at least 1 company.")
+
+    userinput = input("Company 1 name... ")
+    while userinput == "":
+      userinput = input("Company 1 name... ")
+    sharesName.append(userinput)
+    sharesPrice.append(controledInput("float",f"  {sharesName[-1]} starting price... "))
+    sharesStrength.append(controledInput("float",f"  {sharesName[-1]} aggresiveness... "))
+    n = 2
+    print("")
+    while True:
+      userinput = input(f"Company {n} name... ")
+      if userinput not in sharesName:
+        n+=1
+        if userinput == "":
+          break
+        sharesName.append(userinput)
+        sharesPrice.append(controledInput("float",f"  {sharesName[-1]} starting price... "))
+        sharesStrength.append(controledInput("float",f"  {sharesName[-1]} aggresiveness... "))
+        print("")
+      else:
+        print("That company name already exist. Please enter another one.")
+  else:
+    print("")
+    userinput = int(controledInput("int","How many companies woudl you like... "))
+    while not(userinput >= 1):
+      userinput = int(controledInput("int","How many companies woudl you like... "))
+    for i in range(userinput):
+      sharesName.append()
+      sharesPrice.append()
+      sharesStrength.append()
+    print("")
+  
+  printTable([["Companies"]+sharesName,["Starting price"]+sharesPrice,["aggresiveness"]+sharesStrength])
