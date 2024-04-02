@@ -162,4 +162,4 @@ def Game(Player1Looks:str = "x",Player2Looks:str = "o",EmptySpotLooks:str = "-",
         while len(game[player2-1]) != 9:
           player2 = p.r.randint(1,9)
 
-Game("d","s"," ")
+Game()
