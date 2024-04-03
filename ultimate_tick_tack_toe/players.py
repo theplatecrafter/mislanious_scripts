@@ -61,7 +61,7 @@ def user(gameState,choose,which):
       quad = int(controledInput("int","select quadrant (1~9): "))
     
     cell = int(controledInput("int","select cell (1~9): "))
-    while not (cell >=1 and cell <= 9 and gameState[which-1][cell-1] == 0):
+    while not (cell >=1 and cell <= 9 and gameState[quad-1][cell-1] == 0):
       print("Invalid Input")
       cell = int(controledInput("int","select cell (1~9): "))
     return [quad,cell]
