@@ -48,17 +48,35 @@ def visualizeNetwork(twoDneuralNetwork:list):
       print(f"node #{twoDneuralNetwork[i][3]+1} with a weight of ",end="")
     print(f"{int(((twoDneuralNetwork[i][4]/(m.pow(10,WeightDataSize)-1)-0.5)*2*WeightSize)*1000)/1000}")  ## data weight to actuall weight
 
+def lookForInputOf(twoDneuralNetwork:list,type:int,which:int):
+  out = []
+  for a in range(len(twoDneuralNetwork)-1):
+    if twoDneuralNetwork[a][0] == type and twoDneuralNetwork[a][1] == which:
+      out.append(a)
+  return out
+
 def runNetwork(twoDneuralNetwork:list,inputArray:list):
-  if twoDneuralNetwork[-1][1] != len(inputArray):
+  NumberOfNodes = twoDneuralNetwork[-1][0]
+  NumberOfInput = twoDneuralNetwork[-1][1]
+  NumberOfOutput = twoDneuralNetwork[-1][2]
+  WeightSize = twoDneuralNetwork[-1][3]
+  WeightDataSize = twoDneuralNetwork[-1][4]
+  if NumberOfInput != len(inputArray):
     print("warning: input array length does not match the criteria for this neural network")
-    if twoDneuralNetwork[-1][1] > len(inputArray):
-      while twoDneuralNetwork[-1][1] != len(inputArray):
+    if NumberOfInput > len(inputArray):
+      while NumberOfInput != len(inputArray):
         inputArray.append(0)
     else:
-      inputArray = inputArray[:twoDneuralNetwork[-1][1]]
+      inputArray = inputArray[:NumberOfInput]
   output = []
-  for i in range(twoDneuralNetwork[-1][2]):
+  for i in range(NumberOfOutput):
     output.append(0)
+  
+  for i in range(NumberOfInput):
+    conncetedNodesOrOutputs = lookForInputOf(twoDneuralNetwork,1,i)
+    for j in conncetedNodesOrOutputs:
+      if twoDneuralNetwork[j][2] == 3:
+        
   
   
   
