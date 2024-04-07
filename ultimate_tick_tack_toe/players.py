@@ -57,12 +57,12 @@ def user(gameState,choose,which):
     
     quad = int(controledInput("int","select quadrant (1~9): "))
     while not (quad >=1 and quad <= 9 and terraToe[quad-1] == 0):
-      print("Invalid Input")
+      print("Invalid Input: select a diffrent quadrant")
       quad = int(controledInput("int","select quadrant (1~9): "))
     
     cell = int(controledInput("int","select cell (1~9): "))
     while not (cell >=1 and cell <= 9 and gameState[quad-1][cell-1] == 0):
-      print("Invalid Input")
+      print("Invalid Input: select a diffrent cell")
       cell = int(controledInput("int","select cell (1~9): "))
     return [quad,cell]
   else:
