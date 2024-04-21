@@ -113,7 +113,7 @@ def Game(Player1Looks:str = "x",Player2Looks:str = "o",EmptySpotLooks:str = "-",
 
   ################################### players
   def p1(a,choose,which):
-    return p.rand(a,choose,which)
+    return p.user(a,choose,which)
 
   def p2(b,choose,which):
     return p.rand(b,choose,which)
