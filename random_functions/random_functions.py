@@ -3,7 +3,16 @@
 
 import math
 import random
+import os
 
+def slightly_change_names(dir:str,whatToAddInFrontOfName:str):
+  for file in os.listdir(dir):
+    os.rename(f"{dir}/{file}",f"{dir}/{whatToAddInFrontOfName}_{file}")
+
+def copy_random_files(FileOriginDir:str,DestinationDir:str,whatToAddInFrontOfName:str,percentage:int = 0.5): ##for windows
+  for file in os.listdir(FileOriginDir):
+    if random.random() <= percentage:
+      os.system(f"copy '{FileOriginDir}/{file}' '{DestinationDir}/{whatToAddInFrontOfName}_{file}'")
 
 # Checks if n is prime
 def checkPrime(n: int) -> bool:

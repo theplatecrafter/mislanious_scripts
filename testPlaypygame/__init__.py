@@ -10,14 +10,27 @@ screenHeight = p.display.get_desktop_sizes()[0][1]-200
 screen = p.display.set_mode([screenWidth,screenHeight])
 
 speed = 1
-particles = []
+particles = [
+  {
+    "mass":100,
+    "pos":[screenWidth/2-170,screenHeight/2-250],
+    "vel":[0,0],
+    "bounciness":1
+    },
+    {
+    "mass":100,
+    "pos":[screenWidth/2-330,screenHeight/2-250],
+    "vel":[0,0],
+    "bounciness":1
+    }
+]
 collidedParticles = []
-NumberOfParticles = 20
+NumberOfParticles = 100
 for i in range(NumberOfParticles):
   particles.append({
-    "mass":30,
+    "mass":r.random()*15+1,
     "pos":[r.randrange(25,screenWidth-25),r.randrange(25,screenHeight-25)],
-    "vel":[r.random()*2-1,r.random()*2-1],
+    "vel":[r.random()*10-5,r.random()*10-5],
     "bounciness":1
     })
 
@@ -43,7 +56,7 @@ while running:
   screen.fill(255)
 
   collidedParticles = []
-  maxSpeed = 0
+  maxSpeed = 0.1
   for a in range(len(particles)):
     i = particles[a]
     i["pos"][0] += i["vel"][0]
