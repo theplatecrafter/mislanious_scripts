@@ -4,6 +4,7 @@ version = "0.1.0"
 description = ""
 authors = ["theplatecrafter <theplatecrater@gmail.com>"]
 readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -13,6 +14,10 @@ pygame = "^2.5.2"
 numpy = "^1.26.4"
 pillow = "^10.3.0"
 ipykernel = "^6.29.4"
+plotly = "^5.21.0"
+pandas = "^2.2.2"
+nbformat = "^5.10.4"
+autopep8 = "^2.1.0"
 
 
 [build-system]
