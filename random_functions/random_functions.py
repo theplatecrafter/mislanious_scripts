@@ -12,7 +12,13 @@ def slightly_change_names(dir:str,whatToAddInFrontOfName:str):
 def copy_random_files(FileOriginDir:str,DestinationDir:str,whatToAddInFrontOfName:str,percentage:int = 0.5): ##for windows
   for file in os.listdir(FileOriginDir):
     if random.random() <= percentage:
-      os.system(f"copy '{FileOriginDir}/{file}' '{DestinationDir}/{whatToAddInFrontOfName}_{file}'")
+      src = f'{FileOriginDir}\{file}'
+      dst = f'{DestinationDir}\{whatToAddInFrontOfName}_{file}'
+      if os.name == 'nt':  # Windows
+          cmd = f'copy "{src}" "{dst}"'
+      else:  # Unix/Linux
+          cmd = f'cp "{src}" "{dst}"'
+      os.system(cmd)
 
 # Checks if n is prime
 def checkPrime(n: int) -> bool:
