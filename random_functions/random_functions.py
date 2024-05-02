@@ -93,7 +93,6 @@ def pick_images_cleverly(FilesToPickFrom: str, DestinationDir: str, fileType: st
 
     print(f"processed: {n}    kept: {k/n*100} % ({k}/{n} files)")
 
-
 def slightly_change_names(dir: str, whatToAddInFrontOfName: str):
     for file in os.listdir(dir):
         os.rename(f"{dir}/{file}", f"{dir}/{whatToAddInFrontOfName}_{file}")
