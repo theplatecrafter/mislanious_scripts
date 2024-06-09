@@ -7,8 +7,71 @@ import os
 from glob import glob
 import pandas as pd
 import numpy as np
+import rawpy as r
 from PIL import Image
 
+def NEFtoJPG(NEFfolderPATH:str,printDeets:bool=False):
+    """Converts all .nef files in the inputted directory into jpg. This will create a new directory inside the inputted directory for the output. glob not supported"""
+    files = [file for file in os.listdir(NEFfolderPATH) if file.lower().endswith(".nef")]
+    printIF(printDeets,f"Imported {len(files)} .nef files from {NEFfolderPATH}")
+    out = os.path.join(NEFfolderPATH,"NEFtoJPGconversionOUTPUT")
+    os.mkdir(out)
+    printIF(printDeets,f"Created output folder at {out}")
+    n = 0
+    for i in files:
+        n += 1
+        file_path = os.path.join(NEFfolderPATH,i)
+        with r.imread(file_path) as raw:
+            rgb_iamge = raw.postprocess()
+            printIF(printDeets,f"Converted {i} to rgb array")
+        img = Image.fromarray(rgb_iamge)
+        printIF(printDeets,"Created new jpg image from rgb array")
+        outIMGname = os.path.splitext(i)[0]+".jpg"
+        img.save(os.path.join(out,outIMGname),"JPEG")
+        printIF(printDeets,f"saved {i} as {outIMGname} to {out} {n}/{len(files)}")
+
+def polygonDetails(points:list) -> dict:
+    """gives details of the givin polygon drawn in order of the points list. points = [(x1,y1),(x2,y2),(x3,y3)...(xn,yn)]"""
+    vertices = len(points)
+    area = 0
+    for i in range(vertices):
+        x1, y1 = points[i]
+        x2, y2 = points[(i+1)%vertices]
+        area += x1*y2
+        area -= x2*y1
+    area = 0.5*abs(area)
+
+    angles = []
+    for i in range(vertices):
+        x1, y1 = points[(i-1)%vertices]
+        x2, y2 = points[i]
+        x3, y3 = points[(i+1)%vertices]
+
+        a = math.sqrt(math.pow(x1-x2,2)+math.pow(y1-y2,2))
+        b = math.sqrt(math.pow(x1-x3,2)+math.pow(y1-y3,2))
+        c = math.sqrt(math.pow(x3-x2,2)+math.pow(y3-y2,2))
+        angles.append(math.acos((math.pow(a,2)+math.pow(c,2)-math.pow(b,2))/(2*a*c)))
+
+    return {
+        "area":area,
+        "vertices":vertices,
+        "angles":angles,
+        "anglesDEG":[i*180/math.pi for i in angles]
+    }
+
+def randomPolygon(sides:int,maxCord:tuple=(10,10),minCord:tuple=(-10,-10)) -> list:
+    """returns a random polygon with points = [(x1,y1),(x2,y2),(x3,y3)...(xn,yn)]"""
+    return [(randFloat(minCord[0],maxCord[0]),randFloat(minCord[1],maxCord[1])) for i in range(sides)]
+
+def randFloat(start:float,stop:float) -> float:
+    """returns a random float between start and stop (both ends included)"""
+    return random.random()*(stop-start)+start
+
+
+def printIF(boolean:bool,printString:str):
+    """prints printString if boolean == True"""
+    if boolean:
+        print(printString)
 
 def compare_image(photoOne: str, photoTwo: str, downSamplePercentage: float = 1) -> float:
     A = Image.open(photoOne)
@@ -93,6 +156,7 @@ def pick_images_cleverly(FilesToPickFrom: str, DestinationDir: str, fileType: st
 
     print(f"processed: {n}    kept: {k/n*100} % ({k}/{n} files)")
 
+
 def slightly_change_names(dir: str, whatToAddInFrontOfName: str):
     for file in os.listdir(dir):
         os.rename(f"{dir}/{file}", f"{dir}/{whatToAddInFrontOfName}_{file}")
@@ -108,8 +172,6 @@ def copy_random_files(FileOriginDir: str, DestinationDir: str, whatToAddInFrontO
             else:  # Unix/Linux
                 cmd = f'cp "{src}" "{dst}"'
             os.system(cmd)
-
-# Checks if n is prime
 
 
 def checkPrime(n: int) -> bool:
@@ -130,8 +192,6 @@ def checkPrime(n: int) -> bool:
 
     return True
 
-# generates a factor tree of n as a list
-
 
 def factorTree(n: int) -> list:
     """returns the factor tree in a list form (smallest to largest)"""
@@ -144,8 +204,6 @@ def factorTree(n: int) -> list:
                 break
     return tree
 
-# calculates the factors of n as a list
-
 
 def factors(n: int) -> list:
     """returns all factors of n in a list (smallest to largest)"""
@@ -157,15 +215,10 @@ def factors(n: int) -> list:
             factorD.append(i*j)
     return rangePick(rmSame(factorD), 1, n)
 
-# calculates a root of n with custom root
-
 
 def root(base: float, root: float) -> float:
     """takes the root of base"""
     return math.pow(base, 1/root)
-
-# calculates the quadratic roots of ax^2 + bx + c
-# Complex number supported
 
 
 def Qroots(a: float, b: float, c: float) -> list:
@@ -176,9 +229,6 @@ def Qroots(a: float, b: float, c: float) -> list:
         return (-1*b+math.sqrt(math.pow(b, 2) - 4*a*c))/(2*a)
     else:
         return [[(-1*b)/(a*2), math.sqrt(abs(math.pow(b, 2) - 4*a*c))], [(-1*b)/(a*2), math.sqrt(abs(math.pow(b, 2) - 4*a*c))*-1]]
-
-# calculates the roots of a  polynominal equation
-# Complex number supported
 
 
 def rootsDK(poly: list, Iter: int = 100) -> list:
@@ -202,9 +252,6 @@ def rootsDK(poly: list, Iter: int = 100) -> list:
                 CompPoly(points[i], poly), (deno)))
     return points
 
-# calculates f(x)
-# CompPoly for Complex number supported
-
 
 def poly(input: float, eq: list) -> float:
     """for a polynominal equation f(x) = eq[0]*x^n + eq[1]*x^(n-1) + ... + eq[n-1]*x^1 + eq[n]*x^0 returns f(input)"""
@@ -212,8 +259,6 @@ def poly(input: float, eq: list) -> float:
     for i in range(len(eq)):
         s.append(eq[i]*math.pow(input, len(eq)-1-i))
     return sum(s)
-
-# derivative of a polynominal
 
 
 def Dpoly(eq: list) -> list:
@@ -223,9 +268,6 @@ def Dpoly(eq: list) -> list:
     eq.pop()
     return eq
 
-# performs fixed point iteration on n
-# CompPolyFPIter() for complex number supported
-
 
 def polyFPIter(input: float, eq: list, iter: int) -> float:
     """Returns the input calculated through eq using fixed point iteration, iter times"""
@@ -233,18 +275,12 @@ def polyFPIter(input: float, eq: list, iter: int) -> float:
         input = poly(input, eq)
     return input
 
-# performs fixed point iteration on n
-# CompPolyFPIter() for complex number supported
-
 
 def CompPolyFPIter(input: list, eq: list, iter: int) -> list:
     """Returns the input calculated through eq using fixed point iteration, iter times. outputs as [(Real part),(imaginary part)]. All values must be float or int"""
     for i in range(iter):
         input = CompPoly(input, eq)
     return input
-
-# calculates f(x)
-# Complex number supported
 
 
 def CompPoly(input: list, eq: list) -> list:
@@ -257,16 +293,10 @@ def CompPoly(input: list, eq: list) -> list:
             s.append(CompMul([eq[i], 0], CompPow(input, len(eq)-1-i)))
     return CompSum(s)
 
-# Adds two complex numbers
-# Complex number supported
-
 
 def CompAdd(A: list, B: list) -> list:
     """does (A[0] + A[1]*i) + (B[0] + B[1]*i) outputs as [(Real part),(imaginary part)]. All values must be float or int"""
     return [A[0] + B[0], A[1] + B[1]]
-
-# Adds multiple complex numbers
-# Complex number supported
 
 
 def CompSum(A: list) -> list:
@@ -278,24 +308,15 @@ def CompSum(A: list) -> list:
         ImagP.append(i[1])
     return [sum(RealP), sum(ImagP)]
 
-# Subtracs two complex numbers
-# Complex number supported
-
 
 def CompSub(A: list, B: list) -> list:
     """does (A[0] + A[1]*i) - (B[0] + B[1]*i) outputs as [(Real part),(imaginary part)]. All values must be float or int"""
     return [A[0] - B[0], A[1] - B[1]]
 
-# Multiplies two complex numbers
-# Complex number supported
-
 
 def CompMul(A: list, B: list) -> list:
     """does (A[0] + A[1]*i) * (B[0] + B[1]*i) outputs as [(Real part),(imaginary part)]. All values must be float or int"""
     return [A[0]*B[0]-A[1]*B[1], A[1]*B[0]+A[0]*B[1]]
-
-# Divides two complex numbers
-# Complex number supported
 
 
 def CompDiv(A: list, B: list) -> list:
@@ -304,32 +325,20 @@ def CompDiv(A: list, B: list) -> list:
     ADash = CompMul(A, [B[0], -1*B[1]])
     return [ADash[0]/BDash, ADash[1]/BDash]
 
-# Takes the conjugate of a complex number
-# Complex number supported
-
 
 def CompConj(A: list) -> list:
     """returns the conjugate of A[0] + A[1]*i outputs as [(Real part),(imaginary part)]. All values must be float or int"""
     return [A[0], -1*A[1]]
-
-# Takes the real part of a complex number
-# Complex number supported
 
 
 def Re(A: list) -> float:
     """returns the real part of the complex number A[0] + A[1]*i"""
     return A[0]
 
-# Takes the imaginary part of a complex number
-# Complex number supported
-
 
 def Im(A: list) -> float:
     """returns the imaginary part of the complex number A[0] + A[1]*i"""
     return A[1]
-
-# Takes the real exponent of a complex number
-# Complex number supported
 
 
 def CompPow(base: list, power: float):
@@ -337,16 +346,12 @@ def CompPow(base: list, power: float):
     base = Cart2Polar(base[0], base[1])
     return Polar2Cart(math.pow(base[0], power), base[1]*power)
 
-# Converts polar coordinates to Cartigean coordinates
-
 
 def Polar2Cart(r: float, theta: float, mode: str = "RAD") -> list:
     """converts polar coordinate <r,theta> to cartigean coordinate (x,y) as a list [x,y]. Optional Argument "mode" can either be "RAD" for if theta is in radians, or "DEG" if it is in degrees. Default is "RAD"."""
     if mode == "DEG":
         theta = math.radians(theta)
     return [r*math.cos(theta), r*math.sin(theta)]
-
-# Converts Cartigean coordinates to polar coordinates
 
 
 def Cart2Polar(x: float, y: float, mode: str = "RAD") -> list:
@@ -362,8 +367,6 @@ def Cart2Polar(x: float, y: float, mode: str = "RAD") -> list:
         else:
             return [math.sqrt(pow(x, 2)+pow(y, 2)), 2*math.pi-math.acos(x/(math.sqrt(pow(x, 2)+pow(y, 2))))]
 
-# Converts a string into a list with a divider
-
 
 def str2list(str: str, divider: str) -> list:
     """returns a string list made out of a string, where each element is distuingished with a divider (one letter). The divider is not included in the list"""
@@ -377,8 +380,6 @@ def str2list(str: str, divider: str) -> list:
         output.pop()
     return output
 
-# Converts a list into a string with a divider
-
 
 def list2str(list: list, divider: str) -> str:
     """returns a list made out of a list, where each element is distuingished with a divider (one letter). The divider is not included in the string"""
@@ -388,8 +389,6 @@ def list2str(list: list, divider: str) -> str:
 
     return output
 
-# Removes any same values in a list
-
 
 def rmSame(x: list) -> list:
     """removes any duplicated values"""
@@ -398,8 +397,6 @@ def rmSame(x: list) -> list:
         if i not in y:
             y.append(i)
     return y
-
-# Extracts numbers from a list in a certain range
 
 
 def rangePick(list: list, min: float, max: float = "inf") -> list:
@@ -415,8 +412,6 @@ def rangePick(list: list, min: float, max: float = "inf") -> list:
                 output.append(i)
     return output
 
-# Outputs a random list of numbers
-
 
 def ranList(length: int, min: float = 0, max: float = 1) -> list:
     """returns a list with length length, each element being a random value between min and max"""
@@ -424,8 +419,6 @@ def ranList(length: int, min: float = 0, max: float = 1) -> list:
     for i in range(length):
         output.append(random.random()*(abs(max)+abs(min))-abs(min))
     return output
-
-# Outputs the standard form of a polynominal equation
 
 
 def polyPrint(eq: list) -> str:

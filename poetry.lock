@@ -1094,6 +1094,41 @@ files = [
 cffi = {version = "*", markers = "implementation_name == \"pypy\""}
 
 [[package]]
+name = "rawpy"
+version = "0.21.0"
+description = "RAW image processing for Python, a wrapper for libraw"
+optional = false
+python-versions = "*"
+files = [
+    {file = "rawpy-0.21.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:f33241c8c9d4b42df2c4a8cd3662938e15639f504d14c0ccbfc91b0ae1106d70"},
+    {file = "rawpy-0.21.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:e5a0958ec1f51a2bcccd39fee5daae81fb86e2f3706a839db1e9fcd3ea04529e"},
+    {file = "rawpy-0.21.0-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:f34efe909835fee45361f7dae1a2792370911ea4b1d19b4aff601bcde2dc628f"},
+    {file = "rawpy-0.21.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d6915760945ca058b9b1b2184459a862baa33b70e53abeb165d2f3d779eb7a78"},
+    {file = "rawpy-0.21.0-cp310-cp310-win_amd64.whl", hash = "sha256:3b7bed13c847b296bc0c6a27508ad164fe691b105f2e36369c2690109f1908cd"},
+    {file = "rawpy-0.21.0-cp311-cp311-macosx_10_9_x86_64.whl", hash = "sha256:8e7d6ce708374e3fc2efc9fd59fbc763679cabe4b31143fe43302374735a1c36"},
+    {file = "rawpy-0.21.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:dad77467dabc2cbe356a59580d28cb4244ecdddb4711e64ce879fb8dfdca7a91"},
+    {file = "rawpy-0.21.0-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:b9701ee95a93a2f9f7518cfbe038fce025e80ca0638604955091f71fc6180606"},
+    {file = "rawpy-0.21.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:d0946278700dde363787bb8121ad29d5b7719c9d6ce0e2440bd48e4144ec072c"},
+    {file = "rawpy-0.21.0-cp311-cp311-win_amd64.whl", hash = "sha256:acc982af3e5d04c265d6e433979d542876e2139edc1ff07c0db358939313e6a8"},
+    {file = "rawpy-0.21.0-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:1c71aa37bb8ce75f889c18f7bcf7266f6ad7d39799bbf745539110eff25e64a9"},
+    {file = "rawpy-0.21.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:4f077a054230d127c3dd9455066516afcff636186c222867ea0cc80ad37cff3c"},
+    {file = "rawpy-0.21.0-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:018d9956d897fe26fa5059f5b28da55e4dc87444984f32f84924355feff3af7d"},
+    {file = "rawpy-0.21.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:88c58b94688bba14130a33ecd751b2bc9cd3bdf632f6ee399bba8011e45512d8"},
+    {file = "rawpy-0.21.0-cp312-cp312-win_amd64.whl", hash = "sha256:10c8129a3d9d05f9a92cd3e15894827663148e42ef090a2644f2396f64bbd2eb"},
+    {file = "rawpy-0.21.0-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:6de2f293e75d36e178dfcf7bf1578668bc3ee9474f2f004edad3cd1b1af40bca"},
+    {file = "rawpy-0.21.0-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:dce0802435f092e75f4f5aee670b4fe4e20f9014954fe274609b5ee4947a4573"},
+    {file = "rawpy-0.21.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8b864e3297791b5820432d11a9252a1b47563d90547e98e7cb04385fe754f2b8"},
+    {file = "rawpy-0.21.0-cp38-cp38-win_amd64.whl", hash = "sha256:5f7ffcbda108183aedf37618457452c7d0b52799efd2d39b95afba5ddf73616b"},
+    {file = "rawpy-0.21.0-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:a5c76b531b35605ab82bf3963e86a97871118979d4ab1464a5cccef246087526"},
+    {file = "rawpy-0.21.0-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:bdc412d97601943775bae5256406c98d78db61b9657408484864e9cc7c3f793f"},
+    {file = "rawpy-0.21.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:da8c31df8c78a2ee69352a476133de8239acd5787e24b23f547378a543aeabc5"},
+    {file = "rawpy-0.21.0-cp39-cp39-win_amd64.whl", hash = "sha256:0ee4b0b2ee361de704a69e87b9e49e5b4211ad74b2f4838ac22016a55f0600be"},
+]
+
+[package.dependencies]
+numpy = "*"
+
+[[package]]
 name = "referencing"
 version = "0.35.0"
 description = "JSON Referencing + Python"
@@ -1356,4 +1391,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "f5bfe441c161e0efae4a9870feb2ecd493c424d50a8fd48f350f855b40a639d0"
+content-hash = "b06d83a35ee27698f776e6f2be916e514ee120c0062e8afd7d54d858dc4730a9"
