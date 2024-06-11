@@ -10,23 +10,43 @@ import numpy as np
 import rawpy as r
 from PIL import Image
 
-def NEFtoJPG(NEFfolderPATH:str,printDeets:bool=False):
+def RAWtoJPG(RAWfolderPATH:str,printDeets:bool=False,DetectingExtenstionName:list = [
+"3fr",
+"ari", "arw",
+"bay",
+"braw", "crw", "cr2", "cr3",
+"cap",
+"data", "dcs", "dcr", "dng",
+"drf",
+"eip", "erf",
+"fff",
+"gpr",
+"iiq",
+"k25", "kdc",
+"mdc", "mef", "mos", "mrw",
+"nef", "nrw",
+"obm", "orf",
+"pef", "ptx", "pxn",
+"r3d", "raf", "raw", "rwl", "rw2", "rwz",
+"sr2", "srf", "srw",
+"tif",
+"x3f"]):
     """Converts all .nef files in the inputted directory into jpg. This will create a new directory inside the inputted directory for the output. glob not supported"""
-    files = [file for file in os.listdir(NEFfolderPATH) if file.lower().endswith(".nef")]
-    printIF(printDeets,f"Imported {len(files)} .nef files from {NEFfolderPATH}")
-    out = os.path.join(NEFfolderPATH,"NEFtoJPGconversionOUTPUT")
+    files = [file for file in os.listdir(RAWfolderPATH) if os.path.splitext(file.lower())[1][1:] in DetectingExtenstionName]
+    printIF(printDeets,f"Imported {len(files)} raw files from {RAWfolderPATH}")
+    out = os.path.join(RAWfolderPATH,"RAWtoJPGconversionOUTPUT")
     os.mkdir(out)
     printIF(printDeets,f"Created output folder at {out}")
     n = 0
     for i in files:
         n += 1
-        file_path = os.path.join(NEFfolderPATH,i)
+        file_path = os.path.join(RAWfolderPATH,i)
         with r.imread(file_path) as raw:
             rgb_iamge = raw.postprocess()
             printIF(printDeets,f"Converted {i} to rgb array")
         img = Image.fromarray(rgb_iamge)
         printIF(printDeets,"Created new jpg image from rgb array")
-        outIMGname = os.path.splitext(i)[0]+".jpg"
+        outIMGname = os.path.splitext(i)[1][1:]+os.path.splitext(i)[0]+".jpg"
         img.save(os.path.join(out,outIMGname),"JPEG")
         printIF(printDeets,f"saved {i} as {outIMGname} to {out} {n}/{len(files)}")
 
@@ -66,7 +86,6 @@ def randomPolygon(sides:int,maxCord:tuple=(10,10),minCord:tuple=(-10,-10)) -> li
 def randFloat(start:float,stop:float) -> float:
     """returns a random float between start and stop (both ends included)"""
     return random.random()*(stop-start)+start
-
 
 def printIF(boolean:bool,printString:str):
     """prints printString if boolean == True"""
