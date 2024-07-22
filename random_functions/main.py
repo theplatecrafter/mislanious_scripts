@@ -4,13 +4,23 @@
 import math
 import random
 import os
-from glob import glob
+import glob
 import pandas as pd
 import numpy as np
 import rawpy as r
 from PIL import Image
+Image.MAX_IMAGE_PIXELS = None
+import ffmpeg
+from moviepy.editor import ImageSequenceClip
+import shutil
+import xlsxwriter as xlsw
+import webbrowser
 
-def RAWtoJPG(RAWfolderPATH:str,printDeets:bool=False,DetectingExtenstionName:list = [
+
+
+
+#### converter
+def RAW2JPG(RAWfolderPATH:str,printDeets:bool=False,DetectingExtenstionName:list = [
 "3fr",
 "ari", "arw",
 "bay",
@@ -50,6 +60,66 @@ def RAWtoJPG(RAWfolderPATH:str,printDeets:bool=False,DetectingExtenstionName:lis
         img.save(os.path.join(out,outIMGname),"JPEG")
         printIF(printDeets,f"saved {i} as {outIMGname} to {out} {n}/{len(files)}")
 
+
+def Polar2Cart(r: float, theta: float, mode: str = "RAD") -> list:
+    """converts polar coordinate <r,theta> to cartigean coordinate (x,y) as a list [x,y]. Optional Argument "mode" can either be "RAD" for if theta is in radians, or "DEG" if it is in degrees. Default is "RAD"."""
+    if mode == "DEG":
+        theta = math.radians(theta)
+    return [r*math.cos(theta), r*math.sin(theta)]
+
+
+def Cart2Polar(x: float, y: float, mode: str = "RAD") -> list:
+    """converts cartigean coordinate (x,y) to polar coordinate <r,theta> as a list [r,theta]. Optional Argument "mode" can either be "RAD" for if you want theta to be in radians, or "DEG" for degrees. Default is "RAD"."""
+    if mode == "DEG":
+        if y >= 0:
+            return [math.sqrt(pow(x, 2)+pow(y, 2)), math.degrees(math.acos(x/(math.sqrt(pow(x, 2)+pow(y, 2)))))]
+        else:
+            return [math.sqrt(pow(x, 2)+pow(y, 2)), math.degrees(2*math.pi-math.acos(x/(math.sqrt(pow(x, 2)+pow(y, 2)))))]
+    else:
+        if y >= 0:
+            return [math.sqrt(pow(x, 2)+pow(y, 2)), math.acos(x/(math.sqrt(pow(x, 2)+pow(y, 2))))]
+        else:
+            return [math.sqrt(pow(x, 2)+pow(y, 2)), 2*math.pi-math.acos(x/(math.sqrt(pow(x, 2)+pow(y, 2))))]
+
+
+def str2list(str: str, divider: str) -> list:
+    """returns a string list made out of a string, where each element is distuingished with a divider (one letter). The divider is not included in the list"""
+    output = [""]
+    for i in str:
+        if i == divider:
+            output.append("")
+        else:
+            output[len(output)-1] += i
+    if str[len(str)-1] == divider:
+        output.pop()
+    return output
+
+
+def list2str(list: list, divider: str) -> str:
+    """returns a list made out of a list, where each element is distuingished with a divider (one letter). The divider is not included in the string"""
+    output = str(list[0])
+    for i in list[1:]:
+        output += divider + str(i)
+
+    return output
+
+
+def png2mp4(image_folder:str, output_folder:str,filename:str = "movie", fps=None):
+    filename += ".mp4"
+    image_files = sorted([os.path.join(image_folder, img)
+                          for img in os.listdir(image_folder)
+                          if img.endswith(".png")])
+    
+    if fps == None:
+        fps = int(math.log(len(image_files)+1,1.3))
+
+    clip = ImageSequenceClip(image_files, fps=fps)
+    
+    clip.write_videofile(os.path.join(output_folder,filename), codec="libx264")
+
+
+
+#### polygons
 def polygonDetails(points:list) -> dict:
     """gives details of the givin polygon drawn in order of the points list. points = [(x1,y1),(x2,y2),(x3,y3)...(xn,yn)]"""
     vertices = len(points)
@@ -79,19 +149,100 @@ def polygonDetails(points:list) -> dict:
         "anglesDEG":[i*180/math.pi for i in angles]
     }
 
+
 def randomPolygon(sides:int,maxCord:tuple=(10,10),minCord:tuple=(-10,-10)) -> list:
     """returns a random polygon with points = [(x1,y1),(x2,y2),(x3,y3)...(xn,yn)]"""
     return [(randFloat(minCord[0],maxCord[0]),randFloat(minCord[1],maxCord[1])) for i in range(sides)]
 
+
+
+#### programming tools
 def randFloat(start:float,stop:float) -> float:
     """returns a random float between start and stop (both ends included)"""
     return random.random()*(stop-start)+start
+
 
 def printIF(boolean:bool,printString:str):
     """prints printString if boolean == True"""
     if boolean:
         print(printString)
 
+
+def rmSame(x: list) -> list:
+    """removes any duplicated values"""
+    y = []
+    for i in x:
+        if i not in y:
+            y.append(i)
+    return y
+
+
+def rangePick(list: list, min: float, max: float = "inf") -> list:
+    """returns numbers in list that are bigger than min (included), smaller than max (included). leave max blank for infinity"""
+    output = []
+    if max == "inf":
+        for i in list:
+            if i >= min:
+                output.append(i)
+    else:
+        for i in list:
+            if (i >= min) and (i <= max):
+                output.append(i)
+    return output
+
+
+def printTable(table: list):
+    try:
+        print(table)
+    except:
+        print("array must be a 2 dimensional array")
+        raise
+
+
+def controledInput(type: str = "float", prompt: str = "", rePrompt: bool = True, invalidTXT: str = "Invalid input"):
+    """"this only supports float and int controled input. When rePrompt is set to true, it will keep on prompting for the correct answer. invalidTXT is the text that appears when rePrompt is true, and the user inputed a wrong value. numMin <= <userinput> <= numMax This will return "" when rePrompt is False and the user inputs an invalid input."""
+    if rePrompt:
+        while True:
+            user_input = input(prompt)
+            try:
+                if type == "float":
+                    user_input = float(user_input)
+                    return user_input
+                elif type == "int":
+                    user_input = int(user_input)
+                    return user_input
+            except ValueError:
+                print(invalidTXT)
+    else:
+        user_input = input(prompt)
+        try:
+            if type == "float":
+                user_input = float(user_input)
+                return user_input
+            elif type == "int":
+                user_input = int(user_input)
+                return user_input
+        except ValueError:
+            return ""
+
+
+def ranList(length: int, min: float = 0, max: float = 1) -> list:
+    """returns a list with length length, each element being a random value between min and max"""
+    output = []
+    for i in range(length):
+        output.append(random.random()*(abs(max)+abs(min))-abs(min))
+    return output
+
+
+def choose_random_objects(array, num_objects):
+    if num_objects > len(array):
+        raise ValueError("Number of objects to choose cannot be greater than the array length")
+    
+    return random.sample(array, num_objects)
+
+
+
+#### image, video handlers
 def compare_image(photoOne: str, photoTwo: str, downSamplePercentage: float = 1) -> float:
     A = Image.open(photoOne)
     A = A.resize((int(A.width * downSamplePercentage),
@@ -109,21 +260,6 @@ def compare_image(photoOne: str, photoTwo: str, downSamplePercentage: float = 1)
     similarity = np.dot(A, B)/(bottom)
 
     return similarity
-
-
-def copy_file(CopyThisFile: str, ToBecomeThisFile: str):
-    src = CopyThisFile
-    dst = ToBecomeThisFile
-    if os.name == 'nt':  # Windows
-        cmd = f'copy "{src}" "{dst}"'
-    else:  # Unix/Linux
-        cmd = f'cp "{src}" "{dst}"'
-    os.system(cmd)
-
-
-def check_file_existence(directory, filename):
-    file_path = os.path.join(directory, filename)
-    return os.path.exists(file_path)
 
 
 def pick_images_cleverly(FilesToPickFrom: str, DestinationDir: str, fileType: str = ".jpg", downsamplePercent: float = 0.03, threshold: float = 0.78, printDeets: bool = False):
@@ -176,12 +312,29 @@ def pick_images_cleverly(FilesToPickFrom: str, DestinationDir: str, fileType: st
     print(f"processed: {n}    kept: {k/n*100} % ({k}/{n} files)")
 
 
+
+#### os handlers
+def copy_file(CopyThisFile: str, ToBecomeThisFile: str):
+    src = CopyThisFile
+    dst = ToBecomeThisFile
+    if os.name == 'nt':  # Windows
+        cmd = f'copy "{src}" "{dst}"'
+    else:  # Unix/Linux
+        cmd = f'cp "{src}" "{dst}"'
+    os.system(cmd)
+
+
+def check_file_existence(directory, filename):
+    file_path = os.path.join(directory, filename)
+    return os.path.exists(file_path)
+
+
 def slightly_change_names(dir: str, whatToAddInFrontOfName: str):
     for file in os.listdir(dir):
         os.rename(f"{dir}/{file}", f"{dir}/{whatToAddInFrontOfName}_{file}")
 
 
-def copy_random_files(FileOriginDir: str, DestinationDir: str, whatToAddInFrontOfName: str, percentage: int = 0.5):  # for windows
+def copy_random_files(FileOriginDir: str, DestinationDir: str, whatToAddInFrontOfName: str, percentage: int = 0.5):
     for file in os.listdir(FileOriginDir):
         if random.random() <= percentage:
             src = f'{FileOriginDir}\{file}'
@@ -193,6 +346,133 @@ def copy_random_files(FileOriginDir: str, DestinationDir: str, whatToAddInFrontO
             os.system(cmd)
 
 
+def force_remove_all(directory_path):
+    if not os.path.exists(directory_path):
+        print(f"The directory {directory_path} does not exist.")
+        return
+    for item in os.listdir(directory_path):
+        item_path = os.path.join(directory_path, item)
+        try:
+            if os.path.isdir(item_path):
+                shutil.rmtree(item_path)
+            else:
+                os.remove(item_path)
+        except Exception as e:
+            print(f"Failed to remove {item_path}: {e}")
+
+    print(f"All files and directories in {directory_path} have been removed.")
+
+
+def get_all_file_paths(pattern):
+    file_paths = []
+    
+    # If the pattern is a directory, process it as before
+    if os.path.isdir(pattern):
+        for root, _, files in os.walk(pattern):
+            for file in files:
+                file_path = os.path.join(root, file)
+                file_paths.append(file_path)
+    else:
+        # Use glob to handle patterns
+        for path in glob.glob(pattern, recursive=True):
+            if os.path.isfile(path):
+                file_paths.append(path)
+            elif os.path.isdir(path):
+                # If a directory matches the pattern, walk through it
+                for root, _, files in os.walk(path):
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        file_paths.append(file_path)
+    
+    return file_paths
+
+
+def open_on_web(file_path):
+    # Make sure the file path is absolute
+    abs_path = os.path.abspath(file_path)
+    webbrowser.open(abs_path)
+
+
+def get_file_type(path):
+    """
+    returns:
+    image, video, audio, document, archive, code, markdown, e-book, spreadsheet, presentation, database, configuration, log, script, font
+
+    last updated:
+    2024/7/21
+    """
+
+
+    file_extensions = {
+        "image": [".png", ".jpg", ".jpeg", ".gif", ".bmp", ".tiff", ".webp", ".heif", ".ico", ".svg"],
+        "video": [".mp4", ".mkv", ".avi", ".mov", ".wmv", ".flv", ".webm", ".mpeg", ".mpg", ".3gp", ".rm", ".ts"],
+        "audio": [".mp3", ".wav", ".aac", ".ogg", ".flac", ".m4a", ".wma", ".alac", ".opus", ".aiff"],
+        "document": [".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".rtf", ".odt", ".csv"],
+        "archive": [".zip", ".rar", ".7z", ".tar", ".gz", ".bz2", ".xz", ".iso"],
+        "code": [".py", ".java", ".cpp", ".c", ".js", ".html", ".css", ".rb", ".php", ".swift", ".go", ".rs"],
+        "markdown": [".md"],
+        "e-book": [".epub", ".mobi", ".azw"],
+        "spreadsheet": [".xls", ".xlsx", ".ods"],
+        "presentation": [".ppt", ".pptx", ".key"],
+        "database": [".sql", ".db", ".sqlite", ".mdb", ".accdb"],
+        "configuration": [".json", ".yaml", ".yml", ".xml", ".ini", ".cfg"],
+        "log": [".log"],
+        "script": [".sh", ".bat", ".ps1"],
+        "font": [".ttf", ".otf", ".woff", ".woff2", ".eot"],
+    }
+
+    _, ext = os.path.splitext(path.lower())
+
+    for file_type, extensions in file_extensions.items():
+        if ext in extensions:
+            return file_type
+
+    return "unknown"
+
+
+def getRandomFiles(paths:list,type:list,count:int):
+    """
+    type variable must be:
+    image, video, audio, document, archive, code, markdown, e-book, spreadsheet, presentation, database, configuration, log, script, font
+
+    path is a list of paths to get stuff from
+    """
+
+    all_paths = []
+    for path in paths:
+        for i in get_all_file_paths(path):
+            all_paths.append(i)
+    
+    files = [file for file in all_paths if get_file_type(file) in type]
+    return choose_random_objects(files,count)
+
+
+def copy_multiple_files(file_paths, target_directory):
+    # Ensure the target directory exists
+    os.makedirs(target_directory, exist_ok=True)
+
+    for file_path in file_paths:
+        # Extract the file name and extension
+        file_name = os.path.basename(file_path)
+        file_name_without_ext, file_ext = os.path.splitext(file_name)
+        
+        # Determine the target file path
+        target_file_path = os.path.join(target_directory, file_name)
+        
+        # Handle file name conflicts
+        counter = 1
+        while os.path.exists(target_file_path):
+            new_file_name = f"{file_name_without_ext}_{counter}{file_ext}"
+            target_file_path = os.path.join(target_directory, new_file_name)
+            counter += 1
+        
+        # Copy the file to the target directory
+        shutil.copy(file_path, target_file_path)
+        print(f"Copied {file_path} to {target_file_path}")
+
+
+
+#### number theory
 def checkPrime(n: int) -> bool:
     """Checks if n is a prime number or not"""
 
@@ -235,6 +515,8 @@ def factors(n: int) -> list:
     return rangePick(rmSame(factorD), 1, n)
 
 
+
+#### mathmatics
 def root(base: float, root: float) -> float:
     """takes the root of base"""
     return math.pow(base, 1/root)
@@ -366,80 +648,6 @@ def CompPow(base: list, power: float):
     return Polar2Cart(math.pow(base[0], power), base[1]*power)
 
 
-def Polar2Cart(r: float, theta: float, mode: str = "RAD") -> list:
-    """converts polar coordinate <r,theta> to cartigean coordinate (x,y) as a list [x,y]. Optional Argument "mode" can either be "RAD" for if theta is in radians, or "DEG" if it is in degrees. Default is "RAD"."""
-    if mode == "DEG":
-        theta = math.radians(theta)
-    return [r*math.cos(theta), r*math.sin(theta)]
-
-
-def Cart2Polar(x: float, y: float, mode: str = "RAD") -> list:
-    """converts cartigean coordinate (x,y) to polar coordinate <r,theta> as a list [r,theta]. Optional Argument "mode" can either be "RAD" for if you want theta to be in radians, or "DEG" for degrees. Default is "RAD"."""
-    if mode == "DEG":
-        if y >= 0:
-            return [math.sqrt(pow(x, 2)+pow(y, 2)), math.degrees(math.acos(x/(math.sqrt(pow(x, 2)+pow(y, 2)))))]
-        else:
-            return [math.sqrt(pow(x, 2)+pow(y, 2)), math.degrees(2*math.pi-math.acos(x/(math.sqrt(pow(x, 2)+pow(y, 2)))))]
-    else:
-        if y >= 0:
-            return [math.sqrt(pow(x, 2)+pow(y, 2)), math.acos(x/(math.sqrt(pow(x, 2)+pow(y, 2))))]
-        else:
-            return [math.sqrt(pow(x, 2)+pow(y, 2)), 2*math.pi-math.acos(x/(math.sqrt(pow(x, 2)+pow(y, 2))))]
-
-
-def str2list(str: str, divider: str) -> list:
-    """returns a string list made out of a string, where each element is distuingished with a divider (one letter). The divider is not included in the list"""
-    output = [""]
-    for i in str:
-        if i == divider:
-            output.append("")
-        else:
-            output[len(output)-1] += i
-    if str[len(str)-1] == divider:
-        output.pop()
-    return output
-
-
-def list2str(list: list, divider: str) -> str:
-    """returns a list made out of a list, where each element is distuingished with a divider (one letter). The divider is not included in the string"""
-    output = str(list[0])
-    for i in list[1:]:
-        output += divider + str(i)
-
-    return output
-
-
-def rmSame(x: list) -> list:
-    """removes any duplicated values"""
-    y = []
-    for i in x:
-        if i not in y:
-            y.append(i)
-    return y
-
-
-def rangePick(list: list, min: float, max: float = "inf") -> list:
-    """returns numbers in list that are bigger than min (included), smaller than max (included). leave max blank for infinity"""
-    output = []
-    if max == "inf":
-        for i in list:
-            if i >= min:
-                output.append(i)
-    else:
-        for i in list:
-            if (i >= min) and (i <= max):
-                output.append(i)
-    return output
-
-
-def ranList(length: int, min: float = 0, max: float = 1) -> list:
-    """returns a list with length length, each element being a random value between min and max"""
-    output = []
-    for i in range(length):
-        output.append(random.random()*(abs(max)+abs(min))-abs(min))
-    return output
-
-
 def polyPrint(eq: list) -> str:
     """returns a string that shows the polynominal equation in standard form"""
     output = ""
@@ -523,48 +731,63 @@ def polyExpand(roots: list):
             pass  # TODO
 
 
-def printTable(table: list):
-    try:
-        print(table)
-    except:
-        print("array must be a 2 dimensional array")
-        raise
+def calculateAreaOfTriangle(points:list):
+    if len(points) != 3:
+        raise ValueError("Input must be a list of three tuples representing the vertices of a triangle.")
+    
+    (x1, y1), (x2, y2), (x3, y3) = points[0],points[1],points[2]
+
+    # Calculate the area using the determinant method
+    area = 0.5 * abs(x1*(y2 - y3) + x2*(y3 - y1) + x3*(y1 - y2))
+    return area
 
 
+
+#### generators
 def genRandomWord(length: int = 5, pronouncible: bool = True):
     if not pronouncible:
         word = ""
-        for i in range(len):
+        for i in range(length):
             word += "qwertyuiopasdfghjklzxcvbnm"[random.randint(0,)]
-
-
-def controledInput(type: str = "float", prompt: str = "", rePrompt: bool = True, invalidTXT: str = "Invalid input"):
-    """"this only supports float and int controled input. When rePrompt is set to true, it will keep on prompting for the correct answer. invalidTXT is the text that appears when rePrompt is true, and the user inputed a wrong value. numMin <= <userinput> <= numMax This will return "" when rePrompt is False and the user inputs an invalid input."""
-    if rePrompt:
-        while True:
-            user_input = input(prompt)
-            try:
-                if type == "float":
-                    user_input = float(user_input)
-                    return user_input
-                elif type == "int":
-                    user_input = int(user_input)
-                    return user_input
-            except ValueError:
-                print(invalidTXT)
     else:
-        user_input = input(prompt)
-        try:
-            if type == "float":
-                user_input = float(user_input)
-                return user_input
-            elif type == "int":
-                user_input = int(user_input)
-                return user_input
-        except ValueError:
-            return ""
+        vowels = 'aeiou'
+        consonants = 'bcdfghjklmnpqrstvwxyz'
+        word = ''
+        
+        for i in range(length):
+            if i % 2 == 0:
+                # Even positions: prefer consonants, but allow some vowels
+                if random.random() < 0.8:
+                    word += random.choice(consonants)
+                else:
+                    word += random.choice(vowels)
+            else:
+                # Odd positions: prefer vowels, but allow some consonants
+                if random.random() < 0.8:
+                    word += random.choice(vowels)
+                else:
+                    word += random.choice(consonants)
+    
+    return word
 
 
+def print_styled(text, color_code, style_code="0",end="\n"):
+    print(f"\033[{style_code};{color_code}m{text}\033[0m",end=end)
+
+
+def createSimpleXLSX(collumNames:list,collumContent:list,output_folder:str,output_name:str="xls"):
+    workbook = xlsw.Workbook(os.path.join(output_folder,output_name+".xlsx"))
+    worksheet = workbook.add_worksheet()
+    for i in range(len(collumNames)):
+        worksheet.write(0,i,collumNames[i])
+    for i in range(len(collumContent)):
+        for j in range(len(collumContent[i])):
+            worksheet.write(j+1,i,collumContent[i][j])
+    
+    workbook.close()
+
+
+#### other
 def startStockGame():
     print("\n\n\nStock Market Minigame")
     print("\nEnter at least 1 player names. leave blank to go to next")
@@ -639,3 +862,4 @@ def startStockGame():
 
     printTable([["Companies"]+sharesName, ["Starting price"] +
                sharesPrice, ["aggresiveness"]+sharesStrength])
+
