@@ -430,10 +430,12 @@ def get_file_type(path):
     return "unknown"
 
 
-def getRandomFiles(paths:list,type:list,count:int):
+def getRandomFiles(paths:list,type,count:int):
     """
     type variable must be:
     image, video, audio, document, archive, code, markdown, e-book, spreadsheet, presentation, database, configuration, log, script, font
+    
+    if None, it will pick from everything
 
     path is a list of paths to get stuff from
     """
@@ -443,7 +445,10 @@ def getRandomFiles(paths:list,type:list,count:int):
         for i in get_all_file_paths(path):
             all_paths.append(i)
     
-    files = [file for file in all_paths if get_file_type(file) in type]
+    if type:
+      files = [file for file in all_paths if get_file_type(file) in type]
+    else:
+      files = all_paths
     return choose_random_objects(files,count)
 
 
