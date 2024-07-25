@@ -21,13 +21,4 @@ TimeCapsulePWDLinux = {
 
 TimeCapsulePWDWindowBASH = {
   "general":"/mnt/e",
-  "general":"/mnt/e",
-  "general":"/mnt/e",
-  "general":"/mnt/e",
-  "general":"/mnt/e",
-  "general":"/mnt/e",
-  "general":"/mnt/e",
-  "general":"/mnt/e",
-  "general":"/mnt/e",
-  "general":"/mnt/e",
 }

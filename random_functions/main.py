@@ -1,6 +1,8 @@
 # TODO: make everything complex number input supported
 # TODO: finish stock market game
 
+from mutagen.mp3 import MP3
+from mutagen.id3 import ID3NoHeaderError
 import math
 import random
 import os
@@ -10,12 +12,13 @@ import numpy as np
 import rawpy as r
 from PIL import Image
 Image.MAX_IMAGE_PIXELS = None
-import ffmpeg
 from moviepy.editor import ImageSequenceClip
 import shutil
 import xlsxwriter as xlsw
 import webbrowser
-
+import exifread
+import piexif
+from pymediainfo import MediaInfo
 
 
 
@@ -242,7 +245,7 @@ def choose_random_objects(array, num_objects):
 
 
 
-#### image, video handlers
+#### image handlers
 def compare_image(photoOne: str, photoTwo: str, downSamplePercentage: float = 1) -> float:
     A = Image.open(photoOne)
     A = A.resize((int(A.width * downSamplePercentage),
@@ -310,6 +313,58 @@ def pick_images_cleverly(FilesToPickFrom: str, DestinationDir: str, fileType: st
                         print(f"skipped {image}")
 
     print(f"processed: {n}    kept: {k/n*100} % ({k}/{n} files)")
+
+
+def get_image_metadata(filepath):
+    metadata = {}
+    try:
+        with open(filepath, 'rb') as f:
+            tags = exifread.process_file(f)
+            metadata['Date Taken'] = tags.get('EXIF DateTimeOriginal')
+            metadata['Camera Make'] = tags.get('Image Make')
+            metadata['Camera Model'] = tags.get('Image Model')
+            metadata['Orientation'] = tags.get('Image Orientation')
+            metadata['Width'] = tags.get('EXIF ExifImageWidth')
+            metadata['Height'] = tags.get('EXIF ExifImageLength')
+    except Exception as e:
+        print(f"Error reading EXIF data with exifread: {e}")
+
+    try:
+        img = Image.open(filepath)
+        exif_data = img.info.get('exif')
+        if exif_data:
+            exif_dict = piexif.load(exif_data)
+            metadata['Date Taken'] = exif_dict['Exif'].get(piexif.ExifIFD.DateTimeOriginal, metadata.get('Date Taken'))
+            metadata['Camera Make'] = exif_dict['0th'].get(piexif.ImageIFD.Make, metadata.get('Camera Make'))
+            metadata['Camera Model'] = exif_dict['0th'].get(piexif.ImageIFD.Model, metadata.get('Camera Model'))
+            metadata['Orientation'] = exif_dict['0th'].get(piexif.ImageIFD.Orientation, metadata.get('Orientation'))
+            metadata['Width'] = exif_dict['Exif'].get(piexif.ExifIFD.PixelXDimension, metadata.get('Width'))
+            metadata['Height'] = exif_dict['Exif'].get(piexif.ExifIFD.PixelYDimension, metadata.get('Height'))
+    except Exception as e:
+        print(f"Error reading EXIF data with Pillow and piexif: {e}")
+
+    return {k: (v.decode('utf-8') if isinstance(v, bytes) else v) for k, v in metadata.items()}
+
+
+
+#### video handlers
+def get_video_metadata(filepath):
+    metadata = {}
+    try:
+        media_info = MediaInfo.parse(filepath)
+        for track in media_info.tracks:
+            if track.track_type == "Video":
+                metadata['Title'] = track.title
+                metadata['Duration'] = track.duration
+                metadata['Width'] = track.width
+                metadata['Height'] = track.height
+                metadata['Frame Rate'] = track.frame_rate
+                metadata['Date Recorded'] = track.recorded_date
+                break  # Typically, you only need one video track
+    except Exception as e:
+        print(f"Error reading video metadata: {e}")
+    
+    return metadata
 
 
 
@@ -444,6 +499,7 @@ def getRandomFiles(paths:list,type,count:int):
     for path in paths:
         for i in get_all_file_paths(path):
             all_paths.append(i)
+    
     
     if type:
       files = [file for file in all_paths if get_file_type(file) in type]
