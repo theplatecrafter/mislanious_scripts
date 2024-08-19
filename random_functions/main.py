@@ -18,6 +18,7 @@ import xlsxwriter as xlsw
 import webbrowser
 import exifread
 import piexif
+import ffmpeg
 from pymediainfo import MediaInfo
 
 
@@ -317,32 +318,79 @@ def pick_images_cleverly(FilesToPickFrom: str, DestinationDir: str, fileType: st
 
 def get_image_metadata(filepath):
     metadata = {}
+    raw_tags = {}
+    
     try:
         with open(filepath, 'rb') as f:
             tags = exifread.process_file(f)
+            raw_tags['exifread'] = {str(k): str(v) for k, v in tags.items()}
             metadata['Date Taken'] = tags.get('EXIF DateTimeOriginal')
             metadata['Camera Make'] = tags.get('Image Make')
             metadata['Camera Model'] = tags.get('Image Model')
             metadata['Orientation'] = tags.get('Image Orientation')
             metadata['Width'] = tags.get('EXIF ExifImageWidth')
             metadata['Height'] = tags.get('EXIF ExifImageLength')
+            
+            # Check for GPS data
+            if 'GPS GPSLatitude' in tags and 'GPS GPSLongitude' in tags:
+                lat = tags['GPS GPSLatitude'].values
+                lon = tags['GPS GPSLongitude'].values
+                lat_ref = tags.get('GPS GPSLatitudeRef')
+                lon_ref = tags.get('GPS GPSLongitudeRef')
+                
+                lat = (float(lat[0].num) / lat[0].den +
+                       float(lat[1].num) / lat[1].den / 60 +
+                       float(lat[2].num) / lat[2].den / 3600)
+                lon = (float(lon[0].num) / lon[0].den +
+                       float(lon[1].num) / lon[1].den / 60 +
+                       float(lon[2].num) / lon[2].den / 3600)
+                
+                if lat_ref.values == 'S':
+                    lat = -lat
+                if lon_ref.values == 'W':
+                    lon = -lon
+                
+                metadata['GPS Latitude'] = lat
+                metadata['GPS Longitude'] = lon
+            
     except Exception as e:
         print(f"Error reading EXIF data with exifread: {e}")
 
     try:
         img = Image.open(filepath)
-        exif_data = img.info.get('exif')
+        exif_data = img._getexif()
         if exif_data:
-            exif_dict = piexif.load(exif_data)
+            raw_tags['pillow'] = {piexif.TAGS[k]: str(v) for k, v in exif_data.items() if k in piexif.TAGS}
+            exif_dict = piexif.load(img.info['exif'])
             metadata['Date Taken'] = exif_dict['Exif'].get(piexif.ExifIFD.DateTimeOriginal, metadata.get('Date Taken'))
             metadata['Camera Make'] = exif_dict['0th'].get(piexif.ImageIFD.Make, metadata.get('Camera Make'))
             metadata['Camera Model'] = exif_dict['0th'].get(piexif.ImageIFD.Model, metadata.get('Camera Model'))
             metadata['Orientation'] = exif_dict['0th'].get(piexif.ImageIFD.Orientation, metadata.get('Orientation'))
             metadata['Width'] = exif_dict['Exif'].get(piexif.ExifIFD.PixelXDimension, metadata.get('Width'))
             metadata['Height'] = exif_dict['Exif'].get(piexif.ExifIFD.PixelYDimension, metadata.get('Height'))
+            
+            # Check for GPS data
+            if piexif.GPSIFD.GPSLatitude in exif_dict['GPS'] and piexif.GPSIFD.GPSLongitude in exif_dict['GPS']:
+                lat = exif_dict['GPS'][piexif.GPSIFD.GPSLatitude]
+                lon = exif_dict['GPS'][piexif.GPSIFD.GPSLongitude]
+                lat_ref = exif_dict['GPS'].get(piexif.GPSIFD.GPSLatitudeRef)
+                lon_ref = exif_dict['GPS'].get(piexif.GPSIFD.GPSLongitudeRef)
+                
+                lat = float(lat[0][0]) / lat[0][1] + float(lat[1][0]) / lat[1][1] / 60 + float(lat[2][0]) / lat[2][1] / 3600
+                lon = float(lon[0][0]) / lon[0][1] + float(lon[1][0]) / lon[1][1] / 60 + float(lon[2][0]) / lon[2][1] / 3600
+                
+                if lat_ref == b'S':
+                    lat = -lat
+                if lon_ref == b'W':
+                    lon = -lon
+                
+                metadata['GPS Latitude'] = metadata.get('GPS Latitude', lat)
+                metadata['GPS Longitude'] = metadata.get('GPS Longitude', lon)
+            
     except Exception as e:
         print(f"Error reading EXIF data with Pillow and piexif: {e}")
 
+    metadata['Raw Tags'] = raw_tags
     return {k: (v.decode('utf-8') if isinstance(v, bytes) else v) for k, v in metadata.items()}
 
 
@@ -350,20 +398,58 @@ def get_image_metadata(filepath):
 #### video handlers
 def get_video_metadata(filepath):
     metadata = {}
-    try:
-        media_info = MediaInfo.parse(filepath)
-        for track in media_info.tracks:
-            if track.track_type == "Video":
-                metadata['Title'] = track.title
-                metadata['Duration'] = track.duration
-                metadata['Width'] = track.width
-                metadata['Height'] = track.height
-                metadata['Frame Rate'] = track.frame_rate
-                metadata['Date Recorded'] = track.recorded_date
-                break  # Typically, you only need one video track
-    except Exception as e:
-        print(f"Error reading video metadata: {e}")
+    raw_tags = {}
     
+    if not os.path.isfile(filepath):
+        print(f"File not found: {filepath}")
+        return None
+
+    file_extension = os.path.splitext(filepath)[1].lower()
+    if get_file_type(filepath) == "image":
+        print(f"Unsupported file type: {file_extension}")
+        return None
+
+    try:
+        probe = ffmpeg.probe(filepath)
+        raw_tags['ffprobe'] = probe
+        
+        video_stream = next((stream for stream in probe['streams'] if stream['codec_type'] == 'video'), None)
+        
+        if video_stream:
+            metadata['Width'] = video_stream.get('width')
+            metadata['Height'] = video_stream.get('height')
+            metadata['Duration'] = float(video_stream.get('duration', 0))
+            metadata['Codec'] = video_stream.get('codec_name')
+            metadata['Frame Rate'] = video_stream.get('avg_frame_rate')
+            metadata['Bit Rate'] = video_stream.get('bit_rate')
+        
+        if 'format' in probe:
+            metadata['Format'] = probe['format'].get('format_name')
+            metadata['File Size'] = int(probe['format'].get('size', 0))
+            metadata['Date Created'] = probe['format'].get('tags', {}).get('creation_time')
+        
+        # Check for GPS data
+        if 'tags' in probe['format']:
+            gps_latitude = probe['format']['tags'].get('location-lat')
+            gps_longitude = probe['format']['tags'].get('location-lng')
+            if gps_latitude and gps_longitude:
+                metadata['GPS Latitude'] = float(gps_latitude)
+                metadata['GPS Longitude'] = float(gps_longitude)
+        
+        # Check for additional metadata
+        if 'tags' in probe['format']:
+            metadata['Title'] = probe['format']['tags'].get('title')
+            metadata['Artist'] = probe['format']['tags'].get('artist')
+            metadata['Album'] = probe['format']['tags'].get('album')
+            metadata['Year'] = probe['format']['tags'].get('date')
+            metadata['Comment'] = probe['format']['tags'].get('comment')
+        
+        metadata['Raw Tags'] = raw_tags
+        
+    except Exception as e:
+        print(f"Error reading metadata from video file: {e}")
+        return None
+
     return metadata
 
 

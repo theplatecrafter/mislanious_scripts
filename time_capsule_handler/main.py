@@ -1,8 +1,9 @@
+import random_functions.main as rf
 import os
-from PIL import Image
-Image.MAX_IMAGE_PIXELS = None
-import ffmpeg
-import random
+from datetime import datetime
+import colorsys
+import folium
+from folium.plugins import MarkerCluster
 
 
 TimeCapsulePWDLinux = {
@@ -22,3 +23,77 @@ TimeCapsulePWDLinux = {
 TimeCapsulePWDWindowBASH = {
   "general":"/mnt/e",
 }
+
+def get_color_for_date(date_str):
+    try:
+        date = datetime.strptime(date_str, "%Y:%m:%d %H:%M:%S")
+        # Use the day of the year to determine color
+        hue = (date.timetuple().tm_yday % 365) / 365.0
+        rgb = colorsys.hsv_to_rgb(hue, 1.0, 1.0)
+        return '#{:02x}{:02x}{:02x}'.format(int(rgb[0]*255), int(rgb[1]*255), int(rgb[2]*255))
+    except:
+        return 'gray'  # Default color if date parsing fails
+
+def create_interactive_media_map(media_files, output_file='interactive_media_map.html'):
+    m = folium.Map()
+    marker_cluster = MarkerCluster().add_to(m)
+    map_created = False
+
+    for file_path in media_files:
+        file_extension = os.path.splitext(file_path)[1].lower()
+        
+        if file_extension in ['.jpg', '.jpeg', '.png', '.tiff', '.webp']:
+            metadata = rf.get_image_metadata(file_path)
+            is_image = True
+        elif file_extension in ['.mp4', '.mov', '.avi', '.mkv', '.webm']:
+            metadata = rf.get_video_metadata(file_path)
+            is_image = False
+        else:
+            print(f"Unsupported file type: {file_extension}")
+            continue
+
+        if metadata and 'GPS Latitude' in metadata and 'GPS Longitude' in metadata:
+            lat = metadata['GPS Latitude']
+            lon = metadata['GPS Longitude']
+
+            if not map_created:
+                m = folium.Map(location=[lat, lon], zoom_start=10)
+                marker_cluster = MarkerCluster().add_to(m)
+                map_created = True
+
+            # Create popup content
+            popup_content = f"""
+            <h3>{os.path.basename(file_path)}</h3>
+            <b>Type:</b> {'Image' if is_image else 'Video'}<br>
+            <b>Date Taken:</b> {metadata.get('Date Taken', 'Unknown')}<br>
+            <b>File Path:</b> {file_path}<br>
+            """
+            if 'Camera Make' in metadata and 'Camera Model' in metadata:
+                popup_content += f"<b>Camera:</b> {metadata['Camera Make']} {metadata['Camera Model']}<br>"
+            if 'Width' in metadata and 'Height' in metadata:
+                popup_content += f"<b>Resolution:</b> {metadata['Width']}x{metadata['Height']}<br>"
+            if 'Duration' in metadata:
+                popup_content += f"<b>Duration:</b> {metadata['Duration']:.2f} seconds<br>"
+
+            # Add link to view full-resolution media
+            full_res_link = f"file://{os.path.abspath(file_path)}"
+            popup_content += f'<a href="{full_res_link}" target="_blank">View Full Resolution</a>'
+
+            # Determine marker color based on creation date
+            color = get_color_for_date(metadata.get('Date Taken', ''))
+
+            # Add marker to the cluster
+            folium.CircleMarker(
+                location=[lat, lon],
+                radius=5,
+                popup=folium.Popup(popup_content, max_width=300),
+                color=color,
+                fill=True,
+                fillColor=color
+            ).add_to(marker_cluster)
+
+    if map_created:
+        m.save(output_file)
+        print(f"Interactive map created and saved as {output_file}")
+    else:
+        print("No media files with location data found.")
