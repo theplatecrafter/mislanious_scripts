@@ -34,12 +34,17 @@ def get_color_for_date(date_str):
     except:
         return 'gray'  # Default color if date parsing fails
 
-def create_interactive_media_map(media_files, output_file='interactive_media_map.html'):
+def create_interactive_media_map(media_path:str, output_dir:str = "", output_name:str='media_map'):
+    """creates media map based on where the media was created. returns the path to the html media map"""
+
     m = folium.Map()
-    marker_cluster = MarkerCluster().add_to(m)
     map_created = False
 
+    media_files = rf.get_all_file_paths(media_path)
+
+    count = 0
     for file_path in media_files:
+        count += 1
         file_extension = os.path.splitext(file_path)[1].lower()
         
         if file_extension in ['.jpg', '.jpeg', '.png', '.tiff', '.webp']:
@@ -58,7 +63,6 @@ def create_interactive_media_map(media_files, output_file='interactive_media_map
 
             if not map_created:
                 m = folium.Map(location=[lat, lon], zoom_start=10)
-                marker_cluster = MarkerCluster().add_to(m)
                 map_created = True
 
             # Create popup content
@@ -82,7 +86,7 @@ def create_interactive_media_map(media_files, output_file='interactive_media_map
             # Determine marker color based on creation date
             color = get_color_for_date(metadata.get('Date Taken', ''))
 
-            # Add marker to the cluster
+            # Add marker directly to the map
             folium.CircleMarker(
                 location=[lat, lon],
                 radius=5,
@@ -90,10 +94,16 @@ def create_interactive_media_map(media_files, output_file='interactive_media_map
                 color=color,
                 fill=True,
                 fillColor=color
-            ).add_to(marker_cluster)
+            ).add_to(m)
+            print(f"Success {count}/{len(media_files)}: loaded {file_path} to map")
+        else:
+            print(f"Fail {count}/{len(media_files)}: could not load {file_path} to map")
 
+    output_name += ".html"
     if map_created:
-        m.save(output_file)
-        print(f"Interactive map created and saved as {output_file}")
+        m.save(os.path.join(output_dir,output_name))
+        print(f"Interactive map created and saved as {os.path.join(output_dir,output_name)}")
+        return os.path.join(output_dir,output_name)
     else:
         print("No media files with location data found.")
+
