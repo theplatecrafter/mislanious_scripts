@@ -1,6 +1,8 @@
 # TODO: make everything complex number input supported
 # TODO: finish stock market game
 
+import json
+import subprocess
 from mutagen.mp3 import MP3
 from mutagen.id3 import ID3NoHeaderError
 import math
@@ -410,7 +412,10 @@ def get_video_metadata(filepath):
         return None
 
     try:
-        probe = ffmpeg.probe(filepath)
+        # Run ffprobe command
+        command = ['ffprobe', '-v', 'quiet', '-print_format', 'json', '-show_format', '-show_streams', filepath]
+        result = subprocess.run(command, capture_output=True, text=True, check=True)
+        probe = json.loads(result.stdout)
         raw_tags['ffprobe'] = probe
         
         video_stream = next((stream for stream in probe['streams'] if stream['codec_type'] == 'video'), None)
@@ -426,7 +431,7 @@ def get_video_metadata(filepath):
         if 'format' in probe:
             metadata['Format'] = probe['format'].get('format_name')
             metadata['File Size'] = int(probe['format'].get('size', 0))
-            metadata['Date Created'] = probe['format'].get('tags', {}).get('creation_time')
+            metadata['Date Taken'] = probe['format'].get('tags', {}).get('creation_time')
         
         # Check for GPS data
         if 'tags' in probe['format']:
@@ -446,8 +451,16 @@ def get_video_metadata(filepath):
         
         metadata['Raw Tags'] = raw_tags
         
+    except subprocess.CalledProcessError as e:
+        print(f"Error running ffprobe: {e}")
+        print(f"ffprobe output: {e.stdout}")
+        print(f"ffprobe error: {e.stderr}")
+        return None
+    except json.JSONDecodeError as e:
+        print(f"Error decoding ffprobe output: {e}")
+        return None
     except Exception as e:
-        print(f"Error reading metadata from video file: {e}")
+        print(f"Unexpected error reading metadata from video file: {e}")
         return None
 
     return metadata
@@ -463,6 +476,18 @@ def copy_file(CopyThisFile: str, ToBecomeThisFile: str):
     else:  # Unix/Linux
         cmd = f'cp "{src}" "{dst}"'
     os.system(cmd)
+
+
+def copy_file_path_generative(from_here, to_here):
+    """copies a file, but will make the neccessary directories to get it on the correct path"""
+    try:
+        os.makedirs(os.path.dirname(to_here), exist_ok=True)
+    except:
+        print(f"error creating folders {to_here}")
+    try:
+        shutil.copy2(from_here, to_here)
+    except:
+        print(f"error copying {to_here} from {from_here} possibly duplicate files")
 
 
 def check_file_existence(directory, filename):
@@ -616,6 +641,56 @@ def copy_multiple_files(file_paths, target_directory):
         # Copy the file to the target directory
         shutil.copy(file_path, target_file_path)
         print(f"Copied {file_path} to {target_file_path}")
+
+
+def combinePATH(list:list):
+    out = ""
+    for i in list:
+        out = os.path.join(out,i)
+    return out
+
+
+def prompt_for_path(prompt:str = "Please enter a path (or type 'cancel' to cancel)",check_exists:bool=True, must_be_directory:bool=False, allow_glob:bool=False) -> str:
+    """
+    Prompt the user for a valid path or glob pattern. The function ensures that the path exists,
+    is a directory (if required), and optionally accepts glob patterns.
+    Parameters:
+    - check_exists (bool): If True, the function will only accept existing paths or matching glob patterns.
+    - must_be_directory (bool): If True, the path must be a directory (ignored for glob patterns).
+    - allow_glob (bool): If True, the function will accept glob patterns and validate them.
+    Returns:
+    - str or list: The valid path or list of matching paths if a glob is used, or None if canceled.
+    """
+    while True:
+        path = input(f"{prompt}: ").strip()
+        # Handle cancellation
+        if path.lower() == 'cancel':
+            print("Action canceled.")
+            return None
+        # If glob patterns are allowed
+        if allow_glob and '*' in path:
+            matches = glob.glob(path)
+            if not matches:
+                print(f"Error: No files or directories match the pattern '{path}'. Please try again.")
+                continue
+            print(f"Matched paths: {matches}")
+            return matches
+        
+        # Check if path exists (if required)
+        if check_exists and not os.path.exists(path):
+            print(f"Error: The path '{path}' does not exist. Please try again.")
+            continue
+        # Check if the path should be a directory (if required)
+        if must_be_directory and not os.path.isdir(path):
+            print(f"Error: The path '{path}' is not a directory. Please try again.")
+            continue
+        # If check_exists is False, just check if the directory requirement is met
+        if not check_exists and must_be_directory and not os.path.isdir(path):
+            print(f"Error: The path '{path}' must be a directory. Please try again.")
+            continue
+        # If all checks pass, return the valid path
+        return path
+
 
 
 

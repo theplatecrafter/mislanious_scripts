@@ -6,4 +6,4 @@ import random_functions.main as rf
 
 
 
-rf.open_on_web(tch.create_interactive_media_map("/media/hans/Toren's Time Capsle/7) 2024"))
+rf.open_on_web(tch.create_interactive_media_map(["/media/hans/Toren's Time Capsle/7) 2024","/media/hans/Toren's Time Capsle/6) 2023","/media/hans/Toren's Time Capsle/5) 2022","/media/hans/Toren's Time Capsle/4) 2021"]))

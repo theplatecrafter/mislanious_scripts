@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 import colorsys
 import folium
-from folium.plugins import MarkerCluster
+
 
 
 TimeCapsulePWDLinux = {
@@ -34,13 +34,17 @@ def get_color_for_date(date_str):
     except:
         return 'gray'  # Default color if date parsing fails
 
-def create_interactive_media_map(media_path:str, output_dir:str = "", output_name:str='media_map'):
+
+def create_interactive_media_map(media_path:list, output_dir:str = "", output_name:str='media_map'):
     """creates media map based on where the media was created. returns the path to the html media map"""
 
     m = folium.Map()
     map_created = False
 
-    media_files = rf.get_all_file_paths(media_path)
+    media_files = []
+    for i in media_path:
+        for o in rf.get_all_file_paths(i):
+            media_files.append(o)
 
     count = 0
     for file_path in media_files:
@@ -53,6 +57,9 @@ def create_interactive_media_map(media_path:str, output_dir:str = "", output_nam
         elif file_extension in ['.mp4', '.mov', '.avi', '.mkv', '.webm']:
             metadata = rf.get_video_metadata(file_path)
             is_image = False
+            if metadata is None:
+                print(f"Failed to get metadata for video file: {file_path}")
+                continue
         else:
             print(f"Unsupported file type: {file_extension}")
             continue
@@ -96,8 +103,6 @@ def create_interactive_media_map(media_path:str, output_dir:str = "", output_nam
                 fillColor=color
             ).add_to(m)
             print(f"Success {count}/{len(media_files)}: loaded {file_path} to map")
-        else:
-            print(f"Fail {count}/{len(media_files)}: could not load {file_path} to map")
 
     output_name += ".html"
     if map_created:
@@ -107,3 +112,139 @@ def create_interactive_media_map(media_path:str, output_dir:str = "", output_nam
     else:
         print("No media files with location data found.")
 
+
+def get_date_metadata(path:str):
+    out = []
+    for file in rf.get_all_file_paths(path):
+        if rf.get_file_type(file) == "video":
+            try:
+                out.append((rf.get_video_metadata(file)["Date Taken"][:10],file))
+                print(f"successfully loaded {file}")
+            except:
+                out.append(("Unknown Date",file))
+                print(f"{file} has no date")
+        elif rf.get_file_type(file) == "image":
+            try:
+                out.append((rf.get_image_metadata(file)["Date Taken"][:10].replace(":","-"),file))
+                print(f"successfully loaded {file}")
+            except:
+                out.append(("Unknown Date",file))
+                print(f"{file} has no date")
+        else:
+            out.append(("Unknown Date",file))
+            print(f"{file} is unsupported")
+    
+    ouOUT = {}
+    
+    for media in out:
+        ouOUT[media[0]] = []
+    for media in out:
+        ouOUT[media[0]].append(media[1])
+    
+    sort = sorted(ouOUT)
+    out = {}
+    for date in sort:
+        out[date] = ouOUT[date]
+    
+    return out
+
+
+def add_media():
+    """a concel centered media adder"""
+    # Get metadata for each file (dates and associated files)
+    root = rf.prompt_for_path("Please enter root directory ('cancel' to cancel)",must_be_directory=True)
+    path = rf.prompt_for_path("Please enter media path (glob accepted) ('cancel' to cancel)",allow_glob=True)
+    dates_metadata = get_date_metadata(path)
+    
+    # Store the status (significant/insignificant) and title for each date
+    dates_data = {}
+    # Loop through each date and its associated files
+    for date, files in dates_metadata.items():
+        print(f"\nDate: {date} ({len(files)} files)")
+        
+        # Display the list of files
+        for idx, file in enumerate(files, start=1):
+            print(f"  {idx}. {file}")
+        
+        # Ask the user if the date is significant
+        while True:
+            status = input("Is this date significant? (yes/no): ").strip().lower()
+            if status in ["yes", "no"]:
+                status = "significant" if status == "yes" else "insignificant"
+                break
+            else:
+                print("Invalid input. Please type 'yes' or 'no'.")
+        
+        # Ask the user for an optional title for the date
+        title = input(f"Enter a title for {date} (optional, press Enter to skip): ").strip()
+        
+        # Store the date information
+        dates_data[date] = {"status": status, "files": files, "title": title}
+    
+    # Prepare the result data to send to add_media
+    result_data = {"significant": {}, "insignificant": {}}
+    
+    for date, data in dates_data.items():
+        category = result_data[data["status"]]
+        category[date] = {"title": data["title"], "files": data["files"]}
+    
+    DEVadd_media(result_data,root)
+    
+    
+def DEVadd_media(list,root):
+    print(list)
+    for date in list["significant"]:
+        if date == "Unknown Date":
+            home = list["significant"]["Unknown Date"]
+            title = home["title"]
+            files = home["files"]
+            out_dir = os.path.join(root,"Unknown Date")
+            for file in files:
+                rf.copy_file_path_generative(file,os.path.join(out_dir,os.path.split(file)[1]))
+                print(f"copied {file} to {os.path.join(out_dir,os.path.split(file)[1])}")
+        else:
+            year = int(date[:4])
+            month = int(date[5:7])
+            day = int(date[8:])
+            home = list["significant"][date]
+            title = home["title"]
+            files = home["files"]
+            if year < 2019:
+                out_dir = rf.combinePATH([root,"1) before 2019",f"{year}",f"{year}-{month}-{day}{title}"])
+            else:
+                out_dir = rf.combinePATH([root,f"{year-2017}) {year}",f"{year}-{month}-{day}{title}"])
+            for file in files:
+                rf.copy_file_path_generative(file,os.path.join(out_dir,os.path.split(file)[1]))
+                print(f"copied {file} to {os.path.join(out_dir,os.path.split(file)[1])} y: {year} m: {month} d: {day}")
+    
+    for date in list["insignificant"]:
+        if date == "Unknown Date":
+            home = list["insignificant"]["Unknown Date"]
+            title = home["title"]
+            files = home["files"]
+            out_dir = rf.combinePATH([root,"Unknown Date","other"])
+            for file in files:
+                rf.copy_file_path_generative(file,os.path.join(out_dir,os.path.split(file)[1]))
+                print(f"copied {file} to {os.path.join(out_dir,os.path.split(file)[1])}")
+        else:
+            year = int(date[:4])
+            month = int(date[5:7])
+            day = int(date[8:])
+            home = list["insignificant"][date]
+            title = home["title"]
+            files = home["files"]
+            if year < 2019:
+                out_dir = rf.combinePATH([root,"1) before 2019",f"{year}","other",f"{year}-{month}-{day}{title}"])
+            else:
+                out_dir = rf.combinePATH([root,f"{year-2017}) {year}","other",f"{year}-{month}-{day}{title}"])
+            for file in files:
+                rf.copy_file_path_generative(file,os.path.join(out_dir,os.path.split(file)[1]))
+                print(f"copied {file} to {os.path.join(out_dir,os.path.split(file)[1])} y: {year} m: {month} d: {day}")
+    
+    for group in list["grouped"]:
+        for date in list["grouped"][group]:
+            home = list["grouped"][group][date]
+            title = home["title"]
+            files = home["files"]
+            if year < 2019:
+                out_dir = rf.combinePATH([root,"1) before 2019"])
