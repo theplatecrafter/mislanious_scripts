@@ -7,16 +7,16 @@ import folium
 
 
 TimeCapsulePWDLinux = {
-    "general":"/media/hans/Toren's Time Capsle",
-    "unknown date":"/media/hans/Toren's Time Capsle/Unknown date",
-    "other":"/media/hans/Toren's Time Capsle/0) Other",
-    "before 2019":"/media/hans/Toren's Time Capsle/1) before 2019",
-    "2019":"/media/hans/Toren's Time Capsle/2) 2019",
-    "2020":"/media/hans/Toren's Time Capsle/3) 2020",
-    "2021":"/media/hans/Toren's Time Capsle/4) 2021",
-    "2022":"/media/hans/Toren's Time Capsle/5) 2022",
-    "2023":"/media/hans/Toren's Time Capsle/6) 2023",
-    "2024":"/media/hans/Toren's Time Capsle/7) 2024",
+    "general":"/media/hans/Torens_Time_Capsle",
+    "unknown date":"/media/hans/Torens_Time_Capsle/Unknown date",
+    "other":"/media/hans/Torens_Time_Capsle/0) Other",
+    "before 2019":"/media/hans/Torens_Time_Capsle/1) before 2019",
+    "2019":"/media/hans/Torens_Time_Capsle/2) 2019",
+    "2020":"/media/hans/Torens_Time_Capsle/3) 2020",
+    "2021":"/media/hans/Torens_Time_Capsle/4) 2021",
+    "2022":"/media/hans/Torens_Time_Capsle/5) 2022",
+    "2023":"/media/hans/Torens_Time_Capsle/6) 2023",
+    "2024":"/media/hans/Torens_Time_Capsle/7) 2024",
 }
 
 
@@ -153,7 +153,11 @@ def add_media():
     """a concel centered media adder"""
     # Get metadata for each file (dates and associated files)
     root = rf.prompt_for_path("Please enter root directory ('cancel' to cancel)",must_be_directory=True)
+    if not root:
+        return
     path = rf.prompt_for_path("Please enter media path (glob accepted) ('cancel' to cancel)",allow_glob=True)
+    if not path:
+        return
     dates_metadata = get_date_metadata(path)
     
     # Store the status (significant/insignificant) and title for each date

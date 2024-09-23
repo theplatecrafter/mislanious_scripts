@@ -22,7 +22,7 @@ import exifread
 import piexif
 import ffmpeg
 from pymediainfo import MediaInfo
-
+import tempfile
 
 
 #### converter
@@ -248,6 +248,43 @@ def choose_random_objects(array, num_objects):
 
 
 
+## text handlers
+def list_to_string(lst:list, separator:str=None) -> str:
+    """creates a string that has all the elements in lst, but seperated with separator. when sperator left blank, the program will automatically find an ascii charactor for seperation
+    outputs combined string, and seperator
+    """
+    # Convert all elements in the list to strings
+    lst = [str(item) for item in lst]
+    
+    # If no separator is given, find one that isn't used in the list
+    if separator is None:
+        all_chars = set(''.join(lst))
+        available_separators = set(chr(i) for i in range(33, 127)) - all_chars  # ASCII printable characters
+        if available_separators:
+            separator = available_separators.pop()
+        else:
+            raise ValueError("No available separator character found.")
+
+    # Join the list elements with the chosen or given separator
+    return separator.join(lst),separator
+
+
+def string_to_list(s:str, separator:str) -> list:
+    """convertes a string to a list, wheras the string is seperated by an ascii charactor"""
+    if not separator:
+        raise ValueError("Separator must be a non-empty character.")
+    
+    return s.split(separator)
+
+
+def list_to_file(lst:list, destination_path:str,file_name:str = "text.txt"):
+    """creates a file (file extension can be changed) with each line being an element in lst"""
+    with open(os.path.join(destination_path,file_name), 'w') as file:
+        for item in lst:
+            file.write(f"{item}\n")
+
+
+
 #### image handlers
 def compare_image(photoOne: str, photoTwo: str, downSamplePercentage: float = 1) -> float:
     A = Image.open(photoOne)
@@ -464,6 +501,71 @@ def get_video_metadata(filepath):
         return None
 
     return metadata
+
+
+def convert_video_format(input_file: str, video_codec="libx264", audio_codec="aac"):
+    """
+    Converts the input_file video format.
+    Video codec types:
+    - libx264: H.264 / AVC
+    - libx265: H.265 / HEVC
+    - libvpx: VP8
+    - libvpx-vp9: VP9
+    - libaom-av1: AV1
+    - mpeg4: MPEG-4 Part 2
+    - libxvid: Xvid
+    - mjpeg: Motion JPEG
+    - libtheora: Theora
+    
+    Audio codec types:
+    - aac: Advanced Audio Coding (AAC)
+    - libmp3lame: MP3
+    - libvorbis: Vorbis
+    - libopus: Opus
+    - pcm_s16le: 16-bit PCM (uncompressed)
+    - flac: FLAC (lossless)
+    - libtwolame: MP2
+    - ac3: Dolby Digital (AC-3)
+    - copy: Copy audio without re-encoding
+    """
+    try:
+        # Create a temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(input_file)[1]) as temp_file:
+            temp_output = temp_file.name
+
+        # Input
+        stream = ffmpeg.input(input_file)
+        
+        # Prepare output arguments
+        output_args = {}
+        if video_codec:
+            output_args['vcodec'] = video_codec
+        if audio_codec:
+            output_args['acodec'] = audio_codec
+        
+        # Output to temporary file, add '-y' to force overwrite
+        stream = ffmpeg.output(stream, temp_output, **output_args)
+        stream = ffmpeg.overwrite_output(stream)  # Force overwrite with -y flag
+        
+        # Run FFmpeg command
+        ffmpeg.run(stream)
+        
+        # Validate the output file
+        probe = ffmpeg.probe(temp_output)
+        
+        # If we reach this point, the conversion was successful
+        # and the output file is valid. Now we can safely overwrite the original.
+        os.remove(input_file)
+        os.rename(temp_output, input_file)
+        
+        print(f"Conversion complete and original file updated: {input_file}")
+        return True
+    except ffmpeg.Error as e:
+        print(f"An error occurred: {e.stderr.decode() if e.stderr else str(e)}")
+        # Clean up the temporary file if it exists
+        if 'temp_output' in locals() and os.path.exists(temp_output):
+            os.remove(temp_output)
+        return False
 
 
 

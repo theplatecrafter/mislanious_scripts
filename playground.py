@@ -5,5 +5,10 @@ import random_functions.main as rf
 
 
 
-
-rf.open_on_web(tch.create_interactive_media_map(["/media/hans/Toren's Time Capsle/7) 2024","/media/hans/Toren's Time Capsle/6) 2023","/media/hans/Toren's Time Capsle/5) 2022","/media/hans/Toren's Time Capsle/4) 2021"]))
+n = 0
+path = rf.get_all_file_paths("/home/hans/Pictures/photos")
+for i in path:
+    if rf.get_file_type(i) == "video":
+        if rf.convert_video_format(i):
+            n+=1
+print(f"succesfull: {n}/{len(path)}")
