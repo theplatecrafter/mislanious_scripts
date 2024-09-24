@@ -88,28 +88,6 @@ def Cart2Polar(x: float, y: float, mode: str = "RAD") -> list:
             return [math.sqrt(pow(x, 2)+pow(y, 2)), 2*math.pi-math.acos(x/(math.sqrt(pow(x, 2)+pow(y, 2))))]
 
 
-def str2list(str: str, divider: str) -> list:
-    """returns a string list made out of a string, where each element is distuingished with a divider (one letter). The divider is not included in the list"""
-    output = [""]
-    for i in str:
-        if i == divider:
-            output.append("")
-        else:
-            output[len(output)-1] += i
-    if str[len(str)-1] == divider:
-        output.pop()
-    return output
-
-
-def list2str(list: list, divider: str) -> str:
-    """returns a list made out of a list, where each element is distuingished with a divider (one letter). The divider is not included in the string"""
-    output = str(list[0])
-    for i in list[1:]:
-        output += divider + str(i)
-
-    return output
-
-
 def png2mp4(image_folder:str, output_folder:str,filename:str = "movie", fps=None):
     filename += ".mp4"
     image_files = sorted([os.path.join(image_folder, img)
@@ -205,11 +183,16 @@ def printTable(table: list):
         raise
 
 
-def controledInput(type: str = "float", prompt: str = "", rePrompt: bool = True, invalidTXT: str = "Invalid input"):
-    """"this only supports float and int controled input. When rePrompt is set to true, it will keep on prompting for the correct answer. invalidTXT is the text that appears when rePrompt is true, and the user inputed a wrong value. numMin <= <userinput> <= numMax This will return "" when rePrompt is False and the user inputs an invalid input."""
+def controledNumInput(type: str = "float", prompt: str = "Enter a number (blank to cancel)", rePrompt: bool = True, cancelAns:str = "",invalidTXT: str = "Invalid input") -> str:
+    """"
+    this only supports float and int controled input. When rePrompt is set to true, it will keep on prompting for the correct answer. invalidTXT is the text that appears when rePrompt is true, and the user inputed a wrong value. numMin <= <userinput> <= numMax This will return "" when rePrompt is False and the user inputs an invalid input.
+    when the prompt was canceled, the function will give back None
+    """
     if rePrompt:
         while True:
-            user_input = input(prompt)
+            user_input = input(prompt + ": ")
+            if user_input == cancelAns:
+                return None
             try:
                 if type == "float":
                     user_input = float(user_input)
@@ -221,6 +204,8 @@ def controledInput(type: str = "float", prompt: str = "", rePrompt: bool = True,
                 print(invalidTXT)
     else:
         user_input = input(prompt)
+        if user_input == cancelAns:
+            return None
         try:
             if type == "float":
                 user_input = float(user_input)
@@ -230,6 +215,45 @@ def controledInput(type: str = "float", prompt: str = "", rePrompt: bool = True,
                 return user_input
         except ValueError:
             return ""
+
+
+def controledStrInput(whiteList:list,blackList:list = None,prompt:str = "Enter string (blank to cancel)",UseWhiteList:bool = True,reprompt:bool = True,cancelAns:str = ""):
+    """
+    strings in whitelist are the only ones that can be entered. if the answer has one or more blacklisted characters of string, then that answer is not valid.
+    if the prompt has been canceled, then the function gives back None
+    """
+    if reprompt:
+        while True:
+            ans = input(prompt + ": ")
+            if ans == cancelAns:
+                return None
+            if UseWhiteList:
+                if ans in whiteList:
+                    return ans
+            else:
+                good = True
+                for i in blackList:
+                    if i in ans:
+                        good = False
+                        break
+                if good:
+                    return ans
+    else:
+        ans = input(prompt + ": ")
+        if ans == cancelAns:
+            return None
+        if UseWhiteList:
+            if ans in whiteList:
+                return ans
+        else:
+            good = True
+            for i in blackList:
+                if i in ans:
+                    good = False
+                    break
+            if good:
+                return ans
+        return ""
 
 
 def ranList(length: int, min: float = 0, max: float = 1) -> list:
@@ -254,6 +278,8 @@ def list_to_string(lst:list, separator:str=None) -> str:
     outputs combined string, and seperator
     """
     # Convert all elements in the list to strings
+    if len(lst) == 1:
+        return lst[0], separator
     lst = [str(item) for item in lst]
     
     # If no separator is given, find one that isn't used in the list
@@ -543,8 +569,8 @@ def convert_video_format(input_file: str, video_codec="libx264", audio_codec="aa
         if audio_codec:
             output_args['acodec'] = audio_codec
         
-        # Output to temporary file, add '-y' to force overwrite
-        stream = ffmpeg.output(stream, temp_output, **output_args)
+        # Output to temporary file, add '-y' to force overwrite and '-map_metadata 0' to preserve metadata
+        stream = ffmpeg.output(stream, temp_output, **output_args, map_metadata='0')
         stream = ffmpeg.overwrite_output(stream)  # Force overwrite with -y flag
         
         # Run FFmpeg command
@@ -752,47 +778,39 @@ def combinePATH(list:list):
     return out
 
 
-def prompt_for_path(prompt:str = "Please enter a path (or type 'cancel' to cancel)",check_exists:bool=True, must_be_directory:bool=False, allow_glob:bool=False) -> str:
-    """
-    Prompt the user for a valid path or glob pattern. The function ensures that the path exists,
-    is a directory (if required), and optionally accepts glob patterns.
-    Parameters:
-    - check_exists (bool): If True, the function will only accept existing paths or matching glob patterns.
-    - must_be_directory (bool): If True, the path must be a directory (ignored for glob patterns).
-    - allow_glob (bool): If True, the function will accept glob patterns and validate them.
-    Returns:
-    - str or list: The valid path or list of matching paths if a glob is used, or None if canceled.
-    """
-    while True:
-        path = input(f"{prompt}: ").strip()
-        # Handle cancellation
-        if path.lower() == 'cancel':
-            print("Action canceled.")
-            return None
-        # If glob patterns are allowed
-        if allow_glob and '*' in path:
-            matches = glob.glob(path)
-            if not matches:
-                print(f"Error: No files or directories match the pattern '{path}'. Please try again.")
-                continue
-            print(f"Matched paths: {matches}")
-            return matches
-        
-        # Check if path exists (if required)
-        if check_exists and not os.path.exists(path):
-            print(f"Error: The path '{path}' does not exist. Please try again.")
-            continue
-        # Check if the path should be a directory (if required)
-        if must_be_directory and not os.path.isdir(path):
-            print(f"Error: The path '{path}' is not a directory. Please try again.")
-            continue
-        # If check_exists is False, just check if the directory requirement is met
-        if not check_exists and must_be_directory and not os.path.isdir(path):
-            print(f"Error: The path '{path}' must be a directory. Please try again.")
-            continue
-        # If all checks pass, return the valid path
-        return path
+def checkStrValidicityOnPath(text:str):
+    try:
+        open(os.path.join(text+".txt"),"w")
+        os.remove(os.path.join(text+".txt"))
+        return True
+    except:
+        return False
 
+
+def split_path(path: str,noFile:bool = False) -> list:
+    # Normalize the path (to handle different slashes on different OS)
+    normalized_path = os.path.normpath(path)
+    
+    # Split the normalized path into directories and file
+    parts = []
+    
+    # Loop while there is still something to split
+    while True:
+        # Split the path into head (directory) and tail (last component)
+        head, tail = os.path.split(normalized_path)
+        
+        # If there's no more head (root directory), break
+        if tail:
+            parts.insert(0, tail)  # Insert at the beginning to keep order
+        if head == normalized_path:  # When head == normalized_path, it's root
+            parts.insert(0, head)
+            break
+        normalized_path = head
+    
+    if noFile and "." in parts[-1]:
+        parts.pop()
+    
+    return parts
 
 
 
@@ -1151,9 +1169,9 @@ def startStockGame():
         while userinput == "":
             userinput = input("Company 1 name... ")
         sharesName.append(userinput)
-        sharesPrice.append(controledInput(
+        sharesPrice.append(controledNumInput(
             "float", f"  {sharesName[-1]} starting price... "))
-        sharesStrength.append(controledInput(
+        sharesStrength.append(controledNumInput(
             "float", f"  {sharesName[-1]} aggresiveness... "))
         n = 2
         print("")
@@ -1164,19 +1182,19 @@ def startStockGame():
                 if userinput == "":
                     break
                 sharesName.append(userinput)
-                sharesPrice.append(controledInput(
+                sharesPrice.append(controledNumInput(
                     "float", f"  {sharesName[-1]} starting price... "))
-                sharesStrength.append(controledInput(
+                sharesStrength.append(controledNumInput(
                     "float", f"  {sharesName[-1]} aggresiveness... "))
                 print("")
             else:
                 print("That company name already exist. Please enter another one.")
     else:
         print("")
-        userinput = int(controledInput(
+        userinput = int(controledNumInput(
             "int", "How many companies woudl you like... "))
         while not (userinput >= 1):
-            userinput = int(controledInput(
+            userinput = int(controledNumInput(
                 "int", "How many companies woudl you like... "))
         for i in range(userinput):
             sharesName.append()
