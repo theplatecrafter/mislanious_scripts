@@ -23,6 +23,7 @@ import piexif
 import ffmpeg
 from pymediainfo import MediaInfo
 import tempfile
+import platform
 
 
 #### converter
@@ -554,6 +555,7 @@ def convert_video_format(input_file: str, video_codec="libx264", audio_codec="aa
     - ac3: Dolby Digital (AC-3)
     - copy: Copy audio without re-encoding
     """
+    input_file = normalize_path(input_file)
     try:
         # Create a temporary file
         with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(input_file)[1]) as temp_file:
@@ -811,6 +813,38 @@ def split_path(path: str,noFile:bool = False) -> list:
         parts.pop()
     
     return parts
+
+def normalize_path(path: str) -> str:
+    """
+    Converts a file path with spaces or special characters into a format
+    that can be recognized globally by programs without using quotes,
+    by escaping special characters (especially on Linux).
+    
+    Args:
+        path (str): The original file path.
+    
+    Returns:
+        str: The normalized file path with escaped characters for Linux.
+    """
+    # Check the current operating system
+    current_os = platform.system()
+
+    if current_os == 'Windows':
+        # On Windows, no need to escape anything, return as is
+        return path
+    else:
+        # On Linux, escape spaces and other special characters
+        special_chars = r' !"#$&\'()*,:;<=>?@[\\]^`{|}'
+        
+        escaped_path = ''
+        for char in path:
+            if char in special_chars:
+                escaped_path += '\\' + char  # Escape the character with a backslash
+            else:
+                escaped_path += char
+
+        return escaped_path
+
 
 
 
