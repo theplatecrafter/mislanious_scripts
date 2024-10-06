@@ -554,45 +554,44 @@ def convert_video_format(input_file: str, video_codec="libx264", audio_codec="aa
     - libtwolame: MP2
     - ac3: Dolby Digital (AC-3)
     - copy: Copy audio without re-encoding
+    
+    
+    must have ffmpeg sudo apt installed:
+    sudo apt install ffmpeg
     """
-    input_file = normalize_path(input_file)
+    # Create a temporary directory
     try:
-        # Create a temporary file
-        with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(input_file)[1]) as temp_file:
-            temp_output = temp_file.name
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Generate a simple filename for FFmpeg
+            temp_input = os.path.join(temp_dir, "temp_input.mp4")
+            temp_output = os.path.join(temp_dir, "temp_output.mp4")
+            
+            # Copy original file to the temporary location
+            shutil.copy2(input_file, temp_input)
+            
+            # Run FFmpeg on the temporary file
+            stream = ffmpeg.input(temp_input)
+            output_args = {}
+            if video_codec:
+                output_args['vcodec'] = video_codec
+            if audio_codec:
+                output_args['acodec'] = audio_codec
 
-        # Input
-        stream = ffmpeg.input(input_file)
-        
-        # Prepare output arguments
-        output_args = {}
-        if video_codec:
-            output_args['vcodec'] = video_codec
-        if audio_codec:
-            output_args['acodec'] = audio_codec
-        
-        # Output to temporary file, add '-y' to force overwrite and '-map_metadata 0' to preserve metadata
-        stream = ffmpeg.output(stream, temp_output, **output_args, map_metadata='0')
-        stream = ffmpeg.overwrite_output(stream)  # Force overwrite with -y flag
-        
-        # Run FFmpeg command
-        ffmpeg.run(stream)
-        
-        # Validate the output file
-        probe = ffmpeg.probe(temp_output)
-        
-        # If we reach this point, the conversion was successful
-        # and the output file is valid. Now we can safely overwrite the original.
-        os.remove(input_file)
-        os.rename(temp_output, input_file)
-        
-        print(f"Conversion complete and original file updated: {input_file}")
-        return True
+            # Output the converted file to another temporary location
+            stream = ffmpeg.output(stream, temp_output, **output_args, map_metadata='0')
+            stream = ffmpeg.overwrite_output(stream)
+            ffmpeg.run(stream)
+            
+            # Move the converted file back to the original location, replacing the original
+            shutil.move(temp_output, input_file)
+            
+            print(f"Conversion complete and original file updated: {input_file}")
+            return True
     except ffmpeg.Error as e:
         print(f"An error occurred: {e.stderr.decode() if e.stderr else str(e)}")
-        # Clean up the temporary file if it exists
-        if 'temp_output' in locals() and os.path.exists(temp_output):
-            os.remove(temp_output)
+        return False
+    except Exception as ex:
+        print(f"An unexpected error occurred: {str(ex)}")
         return False
 
 

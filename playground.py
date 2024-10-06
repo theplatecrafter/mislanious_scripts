@@ -4,15 +4,15 @@ import random_functions.main as rf
 #import ultimate_tick_tack_toe.game as uttt
 
 
-tch.time_capsule_handler("/media/hans/Torens_Time_Capsle")
-exit()
+#tch.time_capsule_handler("/media/hans/Torens_Time_Capsle")
+#exit()
 
 n = 0
-path = "/media/hans/Torens_Time_Capsle/7) 2024/2024-5-31 体育祭/from my camera (with リアル麻雀打ち上げ）"
+path = "/media/hans/Torens_Time_Capsle/7) 2024/other"
 
 
 paths = [i for i in rf.get_all_file_paths(path) if rf.get_file_type(i) == "video"]
-for i in path:
+for i in paths:
     if rf.convert_video_format(i):
         n+=1
-print(f"succesfull: {n}/{len(path)}")
+print(f"succesfull: {n}/{len(paths)}")
