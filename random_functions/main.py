@@ -272,6 +272,17 @@ def choose_random_objects(array, num_objects):
     return random.sample(array, num_objects)
 
 
+def count_elements(list:list):
+    out = {}
+    types = rmSame(list)
+    for i in types:
+        out[i] = 0
+    
+    for i in list:
+        out[i] += 1
+    return out
+    
+
 
 ## text handlers
 def list_to_string(lst:list, separator:str=None) -> str:

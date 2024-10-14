@@ -116,7 +116,11 @@ def create_Geo_Map(media_path:list, output_dir:str = "", output_name:str='media_
 
 def get_date_metadata(path:str):
     out = []
-    for file in rf.get_all_file_paths(path):
+    i = 0
+    paths = rf.get_all_file_paths(path)
+    for file in paths:
+        i += 1
+        print(f"{i}/{len(paths)}: ",end="")
         if rf.get_file_type(file) == "video":
             try:
                 out.append((rf.get_video_metadata(file)["Date Taken"][:10],file))
