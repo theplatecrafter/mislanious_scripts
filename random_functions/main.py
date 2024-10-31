@@ -24,6 +24,9 @@ import ffmpeg
 from pymediainfo import MediaInfo
 import tempfile
 import platform
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation, FFMpegWriter
+from scipy.integrate import odeint
 
 
 #### converter
@@ -899,6 +902,143 @@ def factors(n: int) -> list:
         for j in list:
             factorD.append(i*j)
     return rangePick(rmSame(factorD), 1, n)
+
+
+
+#### physics
+def solve_schrodinger(outputDirectory:str,filename:str = "out"):
+    # Collect inputs from the user
+    hbar = float(input("Enter the reduced Planck constant (in J·s): "))
+    m = float(input("Enter the mass of the particle (in kg): "))
+    L = float(input("Enter the width of the potential well (in meters): "))
+    N = int(input("Enter the number of points in the grid: "))
+    
+    # Grid spacing
+    dx = L / N
+    
+    # Potential function (infinite square well)
+    def potential(x):
+        return 0 if 0 <= x <= L else np.inf
+    
+    # Create the Hamiltonian matrix
+    H = np.zeros((N, N))
+    for i in range(1, N-1):
+        H[i, i] = -2
+        H[i, i-1] = H[i, i+1] = 1
+    H = -H * hbar**2 / (2 * m * dx**2)
+    
+    # Solve the eigenvalue problem
+    eigenvalues, eigenvectors = np.linalg.eigh(H)
+    
+    # Select the lowest energy eigenstate
+    psi = eigenvectors[:, 0]
+    psi = psi / np.sqrt(np.sum(psi**2) * dx)  # Normalize the wavefunction
+    x = np.linspace(0, L, N)
+    
+    # Plot the potential and wavefunction
+    plt.figure(figsize=(10, 6))
+    plt.plot(x, psi**2, label='Probability Density |ψ(x)|²')
+    plt.title('Wavefunction of a Particle in a 1D Infinite Potential Well')
+    plt.xlabel('Position x (m)')
+    plt.ylabel('Probability Density')
+    plt.legend()
+    plt.grid()
+    plt.show()
+    plt.savefig(os.path.join(outputDirectory,filename+".mp4"))
+    
+    # Print the ground state energy
+    E0 = eigenvalues[0]
+    print(f"Ground state energy: {E0} J")
+
+
+def multi_pendulum_simulation(n: int, thetas: list, ps: list, masses: list, lengths: list, outputDirectory: str, fileName: str = "simulation", g: float = 9.81, t_max: float = 20, dt: float = 0.01, trace: bool = True):
+    """
+    n: number of pendulums
+    thetas: initial angles
+    ps: initial momenta
+    masses: masses
+    lengths: lengths
+    g: gravity constant
+    t_max: time of simulation
+    dt: time width
+    trace: whether to trace the path of the tip of the pendulum
+    """
+    
+    def derivatives(state, t):
+        dstate_dt = np.zeros_like(state)
+        angles = state[:n]
+        momenta = state[n:]
+        
+        for i in range(n):
+            sum_theta_dot = 0
+            for j in range(i, n):
+                sum_theta_dot += lengths[j] * momenta[j]
+                
+            sum_theta_dot /= (masses[i] * lengths[i]**2)
+            dstate_dt[i] = sum_theta_dot
+
+        for i in range(n):
+            sum_p_dot = 0
+            for j in range(i, n):
+                sum_p_dot += -masses[j] * g * lengths[j] * np.sin(angles[i])
+                
+            dstate_dt[n + i] = sum_p_dot
+
+        return dstate_dt
+    
+    # Initial state
+    state = np.concatenate((thetas, ps))
+    
+    # Time array
+    t = np.arange(0, t_max, dt)
+    
+    # Solve ODE using Runge-Kutta method (odeint)
+    from scipy.integrate import odeint
+    states = odeint(derivatives, state, t)
+    
+    # Extract angles from states
+    angles = states[:, :n]
+    
+    # Convert to Cartesian coordinates
+    x = np.zeros((len(t), n))
+    y = np.zeros((len(t), n))
+    
+    for i in range(n):
+        x[:, i] = lengths[i] * np.sin(angles[:, i])
+        y[:, i] = -lengths[i] * np.cos(angles[:, i])
+        
+        if i > 0:
+            x[:, i] += x[:, i-1]
+            y[:, i] += y[:, i-1]
+    
+    # Animation function
+    fig, ax = plt.subplots()
+    ax.set_xlim(-sum(lengths), sum(lengths))
+    ax.set_ylim(-sum(lengths), sum(lengths))
+    line, = ax.plot([], [], 'o-', lw=2)
+    
+    if trace:
+        trace_line, = ax.plot([], [], 'r-', lw=1)
+    
+    def animate(i):
+        thisx = [0] + list(x[i])
+        thisy = [0] + list(y[i])
+        line.set_data(thisx, thisy)
+        
+        if trace:
+            trace_line.set_data(x[:i+1, -1], y[:i+1, -1])
+            return line, trace_line
+        
+        return line,
+    
+    ani = FuncAnimation(fig, animate, frames=len(t), interval=dt*1000, blit=True)
+    
+    # Save animation as MP4
+    writer = FFMpegWriter(fps=30, metadata=dict(artist='Me'), bitrate=1800)
+    ani.save(os.path.join(outputDirectory, fileName + ".mp4"), writer=writer)
+    
+    plt.show()
+
 
 
 

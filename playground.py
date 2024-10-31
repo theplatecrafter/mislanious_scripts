@@ -6,14 +6,5 @@ import random_functions.main as rf
 path = "/media/hans/Torens_Time_Capsle/TODO"
 
 
-print(rf.count_elements([rf.get_image_metadata(i)["Camera Model"] for i in [j for j in rf.get_all_file_paths(path) if rf.get_file_type(j) == "image"]]))
-
-exit()
-
-for file in [i for i in rf.getRandomFiles(rf.get_all_file_paths(path),"image",100) if rf.get_image_metadata(i)["Camera Model"] != "NIKON D90"]:
-    rf.open_on_web(file)
-
-exit()
-
-tch.time_capsule_handler("/media/hans/Torens_Time_Capsle")
-exit()
+n = 5
+rf.multi_pendulum_simulation(n, [rf.math.pi/((i+1)*2) for i in range(n)], [0 for i in range(n)], [1 for i in range(n)], [1 for i in range(n)],"","simulation",9.81,5,0.01)
