@@ -6,5 +6,7 @@ import random_functions.main as rf
 path = "/media/hans/Torens_Time_Capsle/TODO"
 
 
-n = 5
-rf.multi_pendulum_simulation(n, [rf.math.pi/((i+1)*2) for i in range(n)], [0 for i in range(n)], [1 for i in range(n)], [1 for i in range(n)],"","simulation",9.81,5,0.01)
+
+
+n = 2
+rf.pendulum_simulation(n, [-rf.math.pi/2,-rf.math.pi/2], [0 for i in range(n)], [0.1,1], [1 for i in range(n)],"output","simulation",9.81,50,0.01)

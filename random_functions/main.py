@@ -26,7 +26,7 @@ import tempfile
 import platform
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, FFMpegWriter
-from scipy.integrate import odeint
+from scipy.integrate import odeint, solve_ivp
 
 
 #### converter
@@ -860,7 +860,6 @@ def normalize_path(path: str) -> str:
 
 
 
-
 #### number theory
 def checkPrime(n: int) -> bool:
     """Checks if n is a prime number or not"""
@@ -951,8 +950,9 @@ def solve_schrodinger(outputDirectory:str,filename:str = "out"):
     print(f"Ground state energy: {E0} J")
 
 
-def multi_pendulum_simulation(n: int, thetas: list, ps: list, masses: list, lengths: list, outputDirectory: str, fileName: str = "simulation", g: float = 9.81, t_max: float = 20, dt: float = 0.01, trace: bool = True):
+def pendulum_simulation(n: int, thetas: list, ps: list, masses: list, lengths: list, outputDirectory: str, fileName: str = "simulation", g: float = 9.81, t_max: float = 20, dt: float = 0.01, trace: bool = True):
     """
+    visualizes a givin pendulum simulation
     n: number of pendulums
     thetas: initial angles
     ps: initial momenta
@@ -1039,6 +1039,55 @@ def multi_pendulum_simulation(n: int, thetas: list, ps: list, masses: list, leng
     
     plt.show()
 
+
+def grid_double_pendulum_simulation(firstPendMinMaxRot, firstPendStep, secondPendMinMaxRot, secondPendStep):
+    def double_pendulum_derivs(t, y, L1, L2, m1, m2):
+        g = 9.81
+        theta1, theta2, z1, z2 = y
+        c, s = np.cos(theta1-theta2), np.sin(theta1-theta2)
+        
+        theta1_dot = z1
+        theta2_dot = z2
+        
+        z1_dot = (m2*g*np.sin(theta2)*c - m2*s*(L1*z1**2*c + L2*z2**2) -
+                (m1 + m2)*g*np.sin(theta1)) / L1 / (m1 + m2*s**2)
+        z2_dot = ((m1 + m2)*(L1*z1**2*s - g*np.sin(theta2) + g*np.sin(theta1)*c) +
+                m2*L2*z2**2*s*c) / L2 / (m1 + m2*s**2)
+        
+        return [theta1_dot, theta2_dot, z1_dot, z2_dot]
+    
+    L1, L2 = 1.0, 1.0  # Lengths of the pendulums
+    m1, m2 = 1.0, 1.0  # Masses of the pendulums
+
+    theta1_range = np.arange(firstPendMinMaxRot[0], firstPendMinMaxRot[1], firstPendStep)
+    theta2_range = np.arange(secondPendMinMaxRot[0], secondPendMinMaxRot[1], secondPendStep)
+
+    T = 10  # Simulation time
+    dt = 0.05  # Time step
+    
+    fig, ax = plt.subplots(len(theta1_range), len(theta2_range), figsize=(15, 15))
+    
+    for i, theta1 in enumerate(theta1_range):
+        for j, theta2 in enumerate(theta2_range):
+            y0 = [theta1, theta2, 0, 0]
+            t_span = (0, T)
+            t_eval = np.arange(0, T, dt)
+            
+            sol = solve_ivp(double_pendulum_derivs, t_span, y0, t_eval=t_eval, args=(L1, L2, m1, m2))
+            x1 = L1 * np.sin(sol.y[0])
+            y1 = -L1 * np.cos(sol.y[0])
+            x2 = x1 + L2 * np.sin(sol.y[1])
+            y2 = y1 - L2 * np.cos(sol.y[1])
+            
+            ax[i, j].plot(x2, y2)
+            ax[i, j].legend()
+            ax[i, j].set_xlim(-2, 2)
+            ax[i, j].set_ylim(-2, 2)
+            ax[i, j].set_xticks([])
+            ax[i, j].set_yticks([])
+            
+    plt.tight_layout()
+    plt.show()
 
 
 
