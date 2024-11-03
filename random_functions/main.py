@@ -25,8 +25,12 @@ from pymediainfo import MediaInfo
 import tempfile
 import platform
 import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation, FFMpegWriter
+import matplotlib.animation as animation
 from scipy.integrate import odeint, solve_ivp
+import pygame
+
+# Initialize Pygame
+pygame.init()
 
 
 #### converter
@@ -963,81 +967,63 @@ def pendulum_simulation(n: int, thetas: list, ps: list, masses: list, lengths: l
     dt: time width
     trace: whether to trace the path of the tip of the pendulum
     """
-    
-    def derivatives(state, t):
-        dstate_dt = np.zeros_like(state)
-        angles = state[:n]
-        momenta = state[n:]
-        
-        for i in range(n):
-            sum_theta_dot = 0
-            for j in range(i, n):
-                sum_theta_dot += lengths[j] * momenta[j]
-                
-            sum_theta_dot /= (masses[i] * lengths[i]**2)
-            dstate_dt[i] = sum_theta_dot
+    # Convert lists to NumPy arrays with explicit floating-point types for element-wise operations
+    masses = np.array(masses, dtype=np.float64)
+    lengths = np.array(lengths, dtype=np.float64)
+    angles = np.zeros((int(t_max / dt), n), dtype=np.float64)
+    positions = np.zeros((int(t_max / dt), n, 2), dtype=np.float64)
 
-        for i in range(n):
-            sum_p_dot = 0
-            for j in range(i, n):
-                sum_p_dot += -masses[j] * g * lengths[j] * np.sin(angles[i])
-                
-            dstate_dt[n + i] = sum_p_dot
+    # Set initial conditions
+    angles[0] = thetas
+    p = np.array(ps, dtype=np.float64)  # Ensure p is a floating-point array
+    
+    # Function to calculate angular accelerations
+    def get_angular_accelerations(theta, p):
+        dtheta_dt = p / (masses * lengths)
+        dtheta_dt2 = - (g / lengths) * np.sin(theta)
+        return dtheta_dt, dtheta_dt2
 
-        return dstate_dt
-    
-    # Initial state
-    state = np.concatenate((thetas, ps))
-    
-    # Time array
-    t = np.arange(0, t_max, dt)
-    
-    # Solve ODE using Runge-Kutta method (odeint)
-    from scipy.integrate import odeint
-    states = odeint(derivatives, state, t)
-    
-    # Extract angles from states
-    angles = states[:, :n]
-    
-    # Convert to Cartesian coordinates
-    x = np.zeros((len(t), n))
-    y = np.zeros((len(t), n))
-    
-    for i in range(n):
-        x[:, i] = lengths[i] * np.sin(angles[:, i])
-        y[:, i] = -lengths[i] * np.cos(angles[:, i])
+    # Simulation loop
+    for t in range(1, angles.shape[0]):
+        # Calculate angular velocity and acceleration
+        dtheta_dt, dtheta_dt2 = get_angular_accelerations(angles[t-1], p)
         
-        if i > 0:
-            x[:, i] += x[:, i-1]
-            y[:, i] += y[:, i-1]
-    
-    # Animation function
-    fig, ax = plt.subplots()
-    ax.set_xlim(-sum(lengths), sum(lengths))
-    ax.set_ylim(-sum(lengths), sum(lengths))
-    line, = ax.plot([], [], 'o-', lw=2)
-    
+        # Update momentum and angle
+        p += dtheta_dt2 * dt
+        angles[t] = angles[t-1] + dtheta_dt * dt
+
+        # Convert polar coordinates (theta, lengths) to Cartesian coordinates for (x, y) position
+        x = np.cumsum(lengths * np.sin(angles[t]))
+        y = -np.cumsum(lengths * np.cos(angles[t]))
+        positions[t] = np.column_stack((x, y))
+
+    # Save results if trace is enabled
     if trace:
-        trace_line, = ax.plot([], [], 'r-', lw=1)
-    
-    def animate(i):
-        thisx = [0] + list(x[i])
-        thisy = [0] + list(y[i])
-        line.set_data(thisx, thisy)
-        
-        if trace:
-            trace_line.set_data(x[:i+1, -1], y[:i+1, -1])
-            return line, trace_line
-        
-        return line,
-    
-    ani = FuncAnimation(fig, animate, frames=len(t), interval=dt*1000, blit=True)
-    
-    # Save animation as MP4
-    writer = FFMpegWriter(fps=30, metadata=dict(artist='Me'), bitrate=1800)
-    ani.save(os.path.join(outputDirectory, fileName + ".mp4"), writer=writer)
-    
-    plt.show()
+        fig, ax = plt.subplots()
+        ax.set_aspect('equal')
+        ax.set_xlim(-sum(lengths), sum(lengths))
+        ax.set_ylim(-sum(lengths), sum(lengths))
+
+        # Plot
+        lines = [ax.plot([], [], 'o-', lw=2)[0] for _ in range(n)]
+
+        def update(frame):
+            for j, line in enumerate(lines):
+                xdata = [0] + list(positions[frame, :j+1, 0])
+                ydata = [0] + list(positions[frame, :j+1, 1])
+                line.set_data(xdata, ydata)
+            return lines
+
+        ani = animation.FuncAnimation(fig, update, frames=angles.shape[0], blit=True)
+
+
+        # Save the animation to the specified directory
+        os.makedirs(outputDirectory, exist_ok=True)
+        ani.save(os.path.join(outputDirectory, f"{fileName}.mp4"), fps=30, extra_args=['-vcodec', 'libx264'])
+        plt.close(fig)
+        plt.show(fig)
+
+    print("Simulation complete!")
 
 
 def grid_double_pendulum_simulation(firstPendMinMaxRot, firstPendStep, secondPendMinMaxRot, secondPendStep):
@@ -1088,6 +1074,90 @@ def grid_double_pendulum_simulation(firstPendMinMaxRot, firstPendStep, secondPen
             
     plt.tight_layout()
     plt.show()
+
+
+def double_pendulum_simulation(screen_size, theta1_range, theta2_range):
+    # Screen setup
+    screen = pygame.display.set_mode((screen_size, screen_size))
+    pygame.display.set_caption('Double Pendulum Chaos')
+
+    # Colors
+    black = (0, 0, 0)
+    white = (255, 255, 255)
+    
+    # Create a matrix to store the state of each pixel
+    chaos_matrix = np.zeros((screen_size, screen_size), dtype=bool)
+    
+    # Define the double pendulum equations
+    def derivatives(state, t, L1, L2, m1, m2):
+        g = 9.81
+        theta1, theta2, p1, p2 = state
+        delta = theta2 - theta1
+        
+        denom1 = (m1 + m2) * L1 - m2 * L1 * math.cos(delta) * math.cos(delta)
+        theta1_dot = (p1 * L2 - p2 * L1 * math.cos(delta)) / (L1**2 * L2 * (m1 + m2 * math.sin(delta)**2))
+        theta2_dot = (p2 * (m1 + m2) * L1 - p1 * m2 * L2 * math.cos(delta)) / (L1 * L2**2 * m2 * (m1 + m2 * math.sin(delta)**2))
+        
+        p1_dot = -(m1 + m2) * g * L1 * math.sin(theta1) - theta1_dot * theta2_dot * m2 * L2 * math.sin(delta)
+        p2_dot = -m2 * g * L2 * math.sin(theta2) + theta1_dot * theta2_dot * m2 * L1 * math.sin(delta)
+        
+        return [theta1_dot, theta2_dot, p1_dot, p2_dot]
+    
+    def simulate_double_pendulum(theta1, theta2, steps, dt):
+        L1 = L2 = 1.0
+        m1 = m2 = 1.0
+        state = [theta1, theta2, 0.0, 0.0]
+        t = np.linspace(0, 10, steps)
+        history = []
+
+        for i in range(1, len(t)):
+            k1 = np.array(derivatives(state, t[i-1], L1, L2, m1, m2))
+            k2 = np.array(derivatives(state + 0.5 * k1 * dt, t[i-1] + 0.5 * dt, L1, L2, m1, m2))
+            k3 = np.array(derivatives(state + 0.5 * k2 * dt, t[i-1] + 0.5 * dt, L1, L2, m1, m2))
+            k4 = np.array(derivatives(state + k3 * dt, t[i-1] + dt, L1, L2, m1, m2))
+            state += (k1 + 2 * k2 + 2 * k3 + k4) * dt / 6.0
+            history.append(state)
+
+            x1 = L1 * math.sin(state[0])
+            y1 = -L1 * math.cos(state[0])
+            x2 = x1 + L2 * math.sin(state[1])
+            y2 = y1 - L2 * math.cos(state[1])
+            
+            if (abs(x1 - x2) < 0.01 and abs(y1 - y2) < 0.01):
+                return True, history
+
+        return False, history
+    
+    # Main loop
+    running = True
+    dt = 0.01  # Define dt here
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+                
+        screen.fill(black)
+        
+        # Update pixels
+        for x in range(screen_size):
+            for y in range(screen_size):
+                if not chaos_matrix[x, y]:
+                    theta1 = theta1_range[0] + (theta1_range[1] - theta1_range[0]) * x / screen_size
+                    theta2 = theta2_range[0] + (theta2_range[1] - theta2_range[0]) * y / screen_size
+                    chaotic, _ = simulate_double_pendulum(theta1, theta2, 1000, dt)
+                    if chaotic:
+                        chaos_matrix[x, y] = True
+        
+        # Draw pixels
+        for x in range(screen_size):
+            for y in range(screen_size):
+                color = white if chaos_matrix[x, y] else black
+                screen.set_at((x, y), color)
+        
+        pygame.display.flip()
+    
+    pygame.quit()
+
 
 
 

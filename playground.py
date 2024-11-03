@@ -8,5 +8,8 @@ path = "/media/hans/Torens_Time_Capsle/TODO"
 
 
 
-n = 2
-rf.pendulum_simulation(n, [-rf.math.pi/2,-rf.math.pi/2], [0 for i in range(n)], [0.1,1], [1 for i in range(n)],"output","simulation",9.81,50,0.01)
+rf.double_pendulum_simulation(
+    screen_size=5,
+    theta1_range=[rf.math.pi / 4, 3 * rf.math.pi / 4],
+    theta2_range=[rf.math.pi / 4, 3 * rf.math.pi / 4]
+)
