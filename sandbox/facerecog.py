@@ -50,7 +50,7 @@ def group_images_by_faces(image_paths):
 
 
 # List of image paths to process
-image_paths = 
+image_paths = []
 
 # Group images by detected faces
 grouped_images = group_images_by_faces(image_paths)
