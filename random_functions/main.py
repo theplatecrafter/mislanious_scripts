@@ -954,6 +954,11 @@ def solve_schrodinger(outputDirectory:str,filename:str = "out"):
     print(f"Ground state energy: {E0} J")
 
 
+
+#### pendulum stuff
+def next_pendulum_state():
+    pass
+
 def pendulum_simulation(n: int, thetas: list, ps: list, masses: list, lengths: list, outputDirectory: str, fileName: str = "simulation", g: float = 9.81, t_max: float = 20, dt: float = 0.01, trace: bool = True):
     """
     visualizes a givin pendulum simulation
@@ -1074,90 +1079,6 @@ def grid_double_pendulum_simulation(firstPendMinMaxRot, firstPendStep, secondPen
             
     plt.tight_layout()
     plt.show()
-
-
-def double_pendulum_simulation(screen_size, theta1_range, theta2_range):
-    # Screen setup
-    screen = pygame.display.set_mode((screen_size, screen_size))
-    pygame.display.set_caption('Double Pendulum Chaos')
-
-    # Colors
-    black = (0, 0, 0)
-    white = (255, 255, 255)
-    
-    # Create a matrix to store the state of each pixel
-    chaos_matrix = np.zeros((screen_size, screen_size), dtype=bool)
-    
-    # Define the double pendulum equations
-    def derivatives(state, t, L1, L2, m1, m2):
-        g = 9.81
-        theta1, theta2, p1, p2 = state
-        delta = theta2 - theta1
-        
-        denom1 = (m1 + m2) * L1 - m2 * L1 * math.cos(delta) * math.cos(delta)
-        theta1_dot = (p1 * L2 - p2 * L1 * math.cos(delta)) / (L1**2 * L2 * (m1 + m2 * math.sin(delta)**2))
-        theta2_dot = (p2 * (m1 + m2) * L1 - p1 * m2 * L2 * math.cos(delta)) / (L1 * L2**2 * m2 * (m1 + m2 * math.sin(delta)**2))
-        
-        p1_dot = -(m1 + m2) * g * L1 * math.sin(theta1) - theta1_dot * theta2_dot * m2 * L2 * math.sin(delta)
-        p2_dot = -m2 * g * L2 * math.sin(theta2) + theta1_dot * theta2_dot * m2 * L1 * math.sin(delta)
-        
-        return [theta1_dot, theta2_dot, p1_dot, p2_dot]
-    
-    def simulate_double_pendulum(theta1, theta2, steps, dt):
-        L1 = L2 = 1.0
-        m1 = m2 = 1.0
-        state = [theta1, theta2, 0.0, 0.0]
-        t = np.linspace(0, 10, steps)
-        history = []
-
-        for i in range(1, len(t)):
-            k1 = np.array(derivatives(state, t[i-1], L1, L2, m1, m2))
-            k2 = np.array(derivatives(state + 0.5 * k1 * dt, t[i-1] + 0.5 * dt, L1, L2, m1, m2))
-            k3 = np.array(derivatives(state + 0.5 * k2 * dt, t[i-1] + 0.5 * dt, L1, L2, m1, m2))
-            k4 = np.array(derivatives(state + k3 * dt, t[i-1] + dt, L1, L2, m1, m2))
-            state += (k1 + 2 * k2 + 2 * k3 + k4) * dt / 6.0
-            history.append(state)
-
-            x1 = L1 * math.sin(state[0])
-            y1 = -L1 * math.cos(state[0])
-            x2 = x1 + L2 * math.sin(state[1])
-            y2 = y1 - L2 * math.cos(state[1])
-            
-            if (abs(x1 - x2) < 0.01 and abs(y1 - y2) < 0.01):
-                return True, history
-
-        return False, history
-    
-    # Main loop
-    running = True
-    dt = 0.01  # Define dt here
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-                
-        screen.fill(black)
-        
-        # Update pixels
-        for x in range(screen_size):
-            for y in range(screen_size):
-                if not chaos_matrix[x, y]:
-                    theta1 = theta1_range[0] + (theta1_range[1] - theta1_range[0]) * x / screen_size
-                    theta2 = theta2_range[0] + (theta2_range[1] - theta2_range[0]) * y / screen_size
-                    chaotic, _ = simulate_double_pendulum(theta1, theta2, 1000, dt)
-                    if chaotic:
-                        chaos_matrix[x, y] = True
-        
-        # Draw pixels
-        for x in range(screen_size):
-            for y in range(screen_size):
-                color = white if chaos_matrix[x, y] else black
-                screen.set_at((x, y), color)
-        
-        pygame.display.flip()
-    
-    pygame.quit()
-
 
 
 

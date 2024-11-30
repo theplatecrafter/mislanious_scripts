@@ -10,6 +10,6 @@ path = "/media/hans/Torens_Time_Capsle/TODO"
 
 rf.double_pendulum_simulation(
     screen_size=5,
-    theta1_range=[rf.math.pi / 4, 3 * rf.math.pi / 4],
-    theta2_range=[rf.math.pi / 4, 3 * rf.math.pi / 4]
+    theta1_range=[rf.math.pi, -1 * rf.math.pi],
+    theta2_range=[rf.math.pi, -1 * rf.math.pi]
 )
