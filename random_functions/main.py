@@ -295,7 +295,7 @@ def count_elements(list:list):
 
 ## text handlers
 def list_to_string(lst:list, separator:str=None) -> str:
-    """creates a string that has all the elements in lst, but seperated with separator. when sperator left blank, the program will automatically find an ascii charactor for seperation
+    """creates a string that has all the elements in lst, but separated with separator. when separator left blank, the program will automatically find an ascii charactor for seperation
     outputs combined string, and seperator
     """
     # Convert all elements in the list to strings
