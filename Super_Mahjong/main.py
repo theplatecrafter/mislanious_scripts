@@ -1,5 +1,5 @@
 import random
-from collections import defaultdict
+from collections import defaultdict, Counter
 
 # Define a Tile class to represent each Mahjong tile
 class Tile:
@@ -10,88 +10,157 @@ class Tile:
     def __repr__(self):
         return f"{self.value}{self.suit}"
 
-# Generate a large set of Mahjong tiles (2+ sets)
-def generate_tiles(num_sets=2):
+# Generate a standard set of Mahjong tiles
+def generate_tiles():
     suits = ["Man", "Pin", "Sou"]
     honors = ["East", "South", "West", "North", "White", "Green", "Red"]
     tiles = []
 
-    for _ in range(num_sets):
-        for suit in suits:
-            tiles.extend([Tile(suit, i) for i in range(1, 10)])  # 1-9 for suits
-        tiles.extend([Tile("Honor", h) for h in honors])  # Honor tiles
+    for suit in suits:
+        tiles.extend([Tile(suit, i) for i in range(1, 10)] * 4)  # 4 copies of 1-9 for suits
+    for honor in honors:
+        tiles.extend([Tile("Honor", honor)] * 4)  # 4 copies of each honor tile
 
     return tiles
 
 # Define a Player class to manage each player's hand
 class Player:
-    def __init__(self, name):
+    def __init__(self, name, is_bot=True):
         self.name = name
         self.hand = []
         self.discards = []
+        self.is_bot = is_bot  # Determines if player is a bot or human
+        self.riichi = False  # Track if player declared Riichi
+        self.wind = None  # Player's wind
+        self.points = 25000  # Standard starting points
 
     def draw_tile(self, tile):
         self.hand.append(tile)
 
-    def discard_tile(self, tile):
+    def discard_tile(self):
+        if self.is_bot:
+            tile = BotStrategy.analyze_hand(self.hand)  # Choose smarter discard
+        else:
+            self.show_hand()
+            tile_index = int(input(f"{self.name}, choose a tile to discard (0-{len(self.hand)-1}): "))
+            tile = self.hand[tile_index]
         self.hand.remove(tile)
         self.discards.append(tile)
         return tile
 
+
     def show_hand(self):
-        return self.hand
+        print(f"{self.name}'s hand: {[f'{i}: {tile}' for i, tile in enumerate(self.hand)]}")
+
+    def declare_riichi(self):
+        if not self.riichi:
+            print(f"{self.name} declares Riichi!")
+            self.riichi = True
+            return True
+        return False
 
     def check_win(self):
-        """Check if the hand is a winning hand (simplified for this version)."""
+        """Check if the hand is a winning hand (simplified Riichi Mahjong)."""
         counts = defaultdict(int)
         for tile in self.hand:
             counts[(tile.suit, tile.value)] += 1
         
         pairs = 0
         triples = 0
+        sequences = 0
 
+        # Count triples and pairs
         for _, count in counts.items():
-            if count >= 3:
+            while count >= 3:
                 triples += 1
                 count -= 3
-            if count >= 2:
+            while count >= 2:
                 pairs += 1
+                count -= 2
 
-        # Simple win condition: at least 1 pair and enough triples for a full hand
-        return pairs >= 1 and triples >= 4
+        # Winning hand: Must have 4 melds (triples/sequences) and 1 pair
+        return triples + sequences >= 4 and pairs >= 1
+
+    def has_yaku(self):
+        """Check for simplified Yaku. This includes hands like Tanyao, Yakuhai, etc."""
+        all_simples = all(tile.value not in [1, 9] and tile.suit != "Honor" for tile in self.hand)
+        all_honors = all(tile.suit == "Honor" for tile in self.hand)
+        yakuhai = any(tile.suit == "Honor" and tile.value in ["East", "South", "West", "North"] for tile in self.hand)
+        
+        yaku_list = []
+        if all_simples:
+            yaku_list.append("Tanyao (All Simples)")
+        if all_honors:
+            yaku_list.append("Honors Only")
+        if yakuhai:
+            yaku_list.append("Yakuhai (Value Honor)")
+
+        return yaku_list
+
+# Define the Bot Strategy
+class BotStrategy:
+    @staticmethod
+    def analyze_hand(hand):
+        """
+        Analyze hand and rank tiles based on their usefulness.
+        Tiles that are isolated or cannot form sets are prioritized for discard.
+        """
+        tile_counts = Counter((tile.suit, tile.value) for tile in hand)
+        tile_ranks = {}
+
+        for tile in hand:
+            key = (tile.suit, tile.value)
+            count = tile_counts[key]
+            
+            # Rank: Higher rank = less useful
+            if tile.suit == "Honor":
+                tile_ranks[tile] = 10 - count  # Isolated honors are bad
+            else:
+                neighbors = [
+                    (tile.suit, tile.value - 1),
+                    (tile.suit, tile.value + 1)
+                ]
+                useful_neighbors = sum(1 for n in neighbors if tile_counts.get(n, 0) > 0)
+                tile_ranks[tile] = 5 - (count + useful_neighbors)  # Prefer tiles with fewer neighbors
+
+        # Return the least useful tile
+        return sorted(tile_ranks.items(), key=lambda x: x[1], reverse=True)[0][0]
+
 
 # Define the game class
-class SuperLargeMahjong:
-    def __init__(self, num_players=4, num_sets=2):
-        self.players = [Player(f"Player {i+1}") for i in range(num_players)]
-        self.tiles = generate_tiles(num_sets)
+class RiichiMahjong:
+    def __init__(self, num_players=4, num_bots=3):
+        self.players = []
+        self.setup_players(num_players, num_bots)
+        self.tiles = generate_tiles()
         self.discard_pile = []
-        self.special_rules = []  # Placeholder for custom rules
         self.current_player_index = 0
+        self.round_wind = "East"  # Starting round wind
+        self.dealer_index = 0  # Tracks the current dealer
+
+    def setup_players(self, num_players, num_bots):
+        winds = ["East", "South", "West", "North"]
+        for i in range(num_players):
+            if i < num_bots:
+                player = Player(f"Bot {i+1}", is_bot=True)
+            else:
+                name = input(f"Enter name for Player {i+1}: ")
+                player = Player(name, is_bot=False)
+            player.wind = winds[i % 4]  # Assign player winds
+            self.players.append(player)
 
     def shuffle_tiles(self):
         random.shuffle(self.tiles)
 
     def deal_tiles(self):
-        # Deal 13 tiles per player (standard starting hand)
         hand_size = 13
         for _ in range(hand_size):
             for player in self.players:
                 if self.tiles:
                     player.draw_tile(self.tiles.pop())
 
-    def add_special_rule(self, rule_name, rule_func):
-        """Add a custom rule to the game. Rule must be a callable."""
-        self.special_rules.append((rule_name, rule_func))
-
-    def apply_special_rules(self, player):
-        """Apply all custom rules to a player's hand."""
-        for rule_name, rule_func in self.special_rules:
-            rule_func(player)
-
     def play_turn(self, player):
-        """Player's turn: Draw a tile, discard a tile, and check for win."""
-        print(f"\n{player.name}'s turn")
+        print(f"\n{player.name}'s turn ({player.wind} wind)")
         if self.tiles:
             drawn_tile = self.tiles.pop()
             player.draw_tile(drawn_tile)
@@ -100,44 +169,45 @@ class SuperLargeMahjong:
             print("No more tiles to draw!")
             return False
 
-        print(f"{player.name}'s hand: {player.show_hand()}")
+        if not player.is_bot:
+            player.show_hand()
+        
+        # Riichi Declaration
+        if not player.is_bot and not player.riichi:
+            if input(f"{player.name}, do you want to declare Riichi? (y/n): ").lower() == "y":
+                player.declare_riichi()
 
-        # Player discards a tile (simplified: discard the last tile)
-        discarded_tile = player.discard_tile(player.hand[-1])
+        discarded_tile = player.discard_tile()
         self.discard_pile.append(discarded_tile)
         print(f"{player.name} discarded {discarded_tile}")
 
         # Check for win condition
         if player.check_win():
-            print(f"{player.name} wins with hand: {player.show_hand()}!")
+            yaku = player.has_yaku()
+            if yaku:
+                print(f"{player.name} wins with Yaku: {', '.join(yaku)}")
+            else:
+                print(f"{player.name} wins with no Yaku!")
+            print(f"Winning hand: {player.hand}")
             return True
         return False
 
     def start_game(self):
         self.shuffle_tiles()
         self.deal_tiles()
+        print(f"Starting Riichi Mahjong - Round Wind: {self.round_wind}\n")
 
-        print("Starting Super Large Mahjong!\n")
-        
-        # Game loop
         while self.tiles:
             player = self.players[self.current_player_index]
             if self.play_turn(player):
                 print("Game Over!")
                 return
-
-            # Move to next player
             self.current_player_index = (self.current_player_index + 1) % len(self.players)
 
         print("Game over! No more tiles left.")
 
-# Example of a custom rule
-def example_special_rule(player):
-    """Example: Print the player's hand size if over 16."""
-    if len(player.hand) > 16:
-        print(f"{player.name} has an oversized hand with {len(player.hand)} tiles!")
-
 # Run the game
-game = SuperLargeMahjong(num_players=4, num_sets=3)
-game.add_special_rule("Example Rule", example_special_rule)
+num_players = int(input("Enter total number of players (including bots, max 4): "))
+num_bots = int(input(f"Enter number of bots (0-{num_players}): "))
+game = RiichiMahjong(num_players=num_players, num_bots=num_bots)
 game.start_game()
