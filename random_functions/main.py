@@ -26,9 +26,8 @@ import tempfile
 import platform
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from scipy.integrate import odeint, solve_ivp
+import scipy.integrate
 import pygame
-import face_recognition
 from collections import defaultdict
 
 # Initialize Pygame
@@ -479,54 +478,48 @@ def get_image_metadata(filepath):
     metadata['Raw Tags'] = raw_tags
     return {k: (v.decode('utf-8') if isinstance(v, bytes) else v) for k, v in metadata.items()}
 
+def remove_repeated_images(image_directory:str,threshold:float = 0.00000000001,downSamplePercentage: float = 0.2,printDeets:bool = False,save_deleted:bool = True):
+    images = [i for i in get_all_file_paths(image_directory) if get_file_type(i) == "image"]
+    image_vector = []
+    printIF(printDeets,f"Opened all {len(images)} images")
+    for image in images:
+        A = Image.open(image)
+        resized_image = A.resize((int(A.width * downSamplePercentage),
+                 int(A.height * downSamplePercentage)))
+        t = np.array(resized_image).flatten().astype(np.float64)
+        t -= t.mean()
+        image_vector.append(t)
+        A.close()
+        printIF(printDeets,f"Generated image vector for {image}")
 
-def group_images_by_faces(image_paths):
-    """
-    Groups images by the faces detected in them.
+    dl = 0
+    deleteThese = []
+    for i in range(len(images)-1):
+        for j in range(i+1,len(images)):
+            A = image_vector[i]
+            B = image_vector[j]
+            bottom = math.sqrt(np.dot(A, A))*math.sqrt(np.dot(B, B))
+            try:
+                similarity = np.dot(A, B)/(bottom)
+                printIF(printDeets,f"{images[i]} and {images[j]} similarity: {abs(similarity-1)}")
+            except:
+                similarity = threshold +500
+                pass
+            if abs(similarity-1)<= threshold:
+                if save_deleted:
+                    copy_file_path_generative(images[j],combinePATH([image_directory,"repeated_images",split_path(images[j])[-1]]))
+                deleteThese.append(images[j])
+                    
+                printIF(printDeets,f"removed {images[j]} as it was within threshold similarity with {images[i]}")
 
-    Args:
-        image_paths (list): List of file paths to the images.
+    for i in deleteThese:
+        if os.path.exists(i):
+            delete(i)
+            dl+=1
+    printIF(printDeets,f"successfully deleted {dl} repeating iamges out of {len(images)}")
 
-    Returns:
-        dict: A dictionary where keys are face IDs and values are lists of image paths
-              containing the corresponding face.
-    """
-    # A dictionary to map face encodings to the images where they appear
-    face_groups = defaultdict(list)
+    
 
-    # A list to store all known face encodings and their corresponding image indices
-    known_faces = []
-    f = 0
-    for img_path in image_paths:
-        f+=1
-        try:
-            # Load the image file
-            image = face_recognition.load_image_file(img_path)
-            print(f"{f}/{len(image_paths)}  loaded image: {img_path}")
-
-            # Find all face encodings in the image
-            face_encodings = face_recognition.face_encodings(image)
-            print("face recognized")
-
-            # Compare each face encoding with known faces
-            for face_encoding in face_encodings:
-                found_match = False
-                for idx, known_face in enumerate(known_faces):
-                    # Compare this face encoding with known ones
-                    matches = face_recognition.compare_faces([known_face], face_encoding, tolerance=0.6)
-                    if matches[0]:
-                        face_groups[idx].append(img_path)
-                        found_match = True
-                        break
-
-                if not found_match:
-                    # Add a new face to the known faces
-                    known_faces.append(face_encoding)
-                    face_groups[len(known_faces) - 1].append(img_path)
-        except Exception as e:
-            print(f"Error processing image {img_path}: {e}")
-
-    return face_groups
 
 
 #### video handlers
@@ -692,9 +685,11 @@ def check_file_existence(directory, filename):
     return os.path.exists(file_path)
 
 
-def slightly_change_names(dir: str, whatToAddInFrontOfName: str):
+def slightly_change_names(dir: str):
+    n=0
     for file in os.listdir(dir):
-        os.rename(f"{dir}/{file}", f"{dir}/{whatToAddInFrontOfName}_{file}")
+        n+=1
+        os.rename(f"{dir}/{file}", f"{dir}/{n}_{file}")
 
 
 def copy_random_files(FileOriginDir: str, DestinationDir: str, whatToAddInFrontOfName: str, percentage: int = 0.5):
@@ -709,21 +704,25 @@ def copy_random_files(FileOriginDir: str, DestinationDir: str, whatToAddInFrontO
             os.system(cmd)
 
 
-def force_remove_all(directory_path):
-    if not os.path.exists(directory_path):
-        print(f"The directory {directory_path} does not exist.")
-        return
-    for item in os.listdir(directory_path):
-        item_path = os.path.join(directory_path, item)
-        try:
-            if os.path.isdir(item_path):
-                shutil.rmtree(item_path)
-            else:
-                os.remove(item_path)
-        except Exception as e:
-            print(f"Failed to remove {item_path}: {e}")
+def delete(path):
+    """deletes directory/file"""
+    if os.path.isdir(path):
+        if not os.path.exists(path):
+            print(f"The directory {path} does not exist.")
+            return
+        for item in os.listdir(path):
+            item_path = os.path.join(path, item)
+            try:
+                if os.path.isdir(item_path):
+                    shutil.rmtree(item_path)
+                else:
+                    os.remove(item_path)
+            except Exception as e:
+                print(f"Failed to remove {item_path}: {e}")
+    elif os.path.isfile(path):
+        os.remove(path)
 
-    print(f"All files and directories in {directory_path} have been removed.")
+    print(f"All files and directories in {path} have been removed.")
 
 
 def get_all_file_paths(pattern):
@@ -1006,129 +1005,112 @@ def solve_schrodinger(outputDirectory:str,filename:str = "out"):
 
 
 #### pendulum stuff
-def next_pendulum_state():
-    pass
-
-def pendulum_simulation(n: int, thetas: list, ps: list, masses: list, lengths: list, outputDirectory: str, fileName: str = "simulation", g: float = 9.81, t_max: float = 20, dt: float = 0.01, trace: bool = True):
+def simulate_double_pendulum(theta1_0: float, theta2_0: float, t_max: float, m1: float = 1, m2: float = 1, l1: float = 1, l2: float = 1, g: float = 9.81, p1_0: float = 0, p2_0: float = 0, dt: float = 0.01):
     """
-    visualizes a givin pendulum simulation
-    n: number of pendulums
-    thetas: initial angles
-    ps: initial momenta
-    masses: masses
-    lengths: lengths
-    g: gravity constant
-    t_max: time of simulation
-    dt: time width
-    trace: whether to trace the path of the tip of the pendulum
+    Simulates a double pendulum using Hamiltonian mechanics.
+
+    Parameters:
+        m1, m2 : float - Masses of the pendulum arms
+        l1, l2 : float - Lengths of the rods
+        g      : float - Gravitational acceleration
+        theta1_0, theta2_0 : float - Initial angles (radians)
+        p1_0, p2_0 : float - Initial conjugate momenta
+        t_max  : float - Maximum simulation time
+        dt     : float - Time step between frames
+
+    Returns:
+        t_eval : ndarray - Time steps of the simulation
+        states : ndarray - Frame-by-frame state [theta1, theta2, p1, p2]
     """
-    # Convert lists to NumPy arrays with explicit floating-point types for element-wise operations
-    masses = np.array(masses, dtype=np.float64)
-    lengths = np.array(lengths, dtype=np.float64)
-    angles = np.zeros((int(t_max / dt), n), dtype=np.float64)
-    positions = np.zeros((int(t_max / dt), n, 2), dtype=np.float64)
 
-    # Set initial conditions
-    angles[0] = thetas
-    p = np.array(ps, dtype=np.float64)  # Ensure p is a floating-point array
+    def hamiltonian_derivatives(t, state):
+        """Computes time derivatives of the Hamiltonian system."""
+        θ1, θ2, p1, p2 = state
+        c = np.cos(θ1 - θ2)
+        s = np.sin(θ1 - θ2)
+        denom = m1 + m2 * s**2
+
+        # Angular velocities
+        θ1_dot = (p1 * (m2 * l2**2) - p2 * (m2 * l1 * l2 * c)) / (l1**2 * l2**2 * denom)
+        θ2_dot = (p2 * (m1 * l1**2 + m2 * l1**2 + m2 * l1 * l2 * c) - p1 * (m2 * l1 * l2 * c)) / (l1**2 * l2**2 * denom)
+
+        # Moment changes
+        p1_dot = -(m1 + m2) * g * l1 * np.sin(θ1) - m2 * l1 * l2 * (θ1_dot * θ2_dot * s)
+        p2_dot = -m2 * g * l2 * np.sin(θ2) + m2 * l1 * l2 * (θ1_dot * θ2_dot * s)
+
+        return [θ1_dot, θ2_dot, p1_dot, p2_dot]
+
+    # Initial conditions
+    state0 = [theta1_0, theta2_0, p1_0, p2_0]
+    t_eval = np.arange(0, t_max, dt)  # Time steps
+
+    # Solve equations using SciPy
+    solution = scipy.integrate.solve_ivp(
+        hamiltonian_derivatives, [0, t_max], state0, t_eval=t_eval, method='RK45'
+    )
+
+    return t_eval, solution.y.T  # Transposed so rows are time steps
+
+
+def visualize_double_pendulum(theta1_0:float, theta2_0:float, t_max:float, output_dir:str = "", video_name:str = "double_pendulum", m1:float = 1, m2:float = 1, l1:float = 1, l2:float = 1, g:float = 9.81, p1_0:float = 0, p2_0:float = 0, dt:float = 0.01):
+    """
+    Creates an animation of the double pendulum from the simulation data.
     
-    # Function to calculate angular accelerations
-    def get_angular_accelerations(theta, p):
-        dtheta_dt = p / (masses * lengths)
-        dtheta_dt2 = - (g / lengths) * np.sin(theta)
-        return dtheta_dt, dtheta_dt2
+    Parameters:
+        m1, m2 : float - Masses of the pendulum arms
+        l1, l2 : float - Lengths of the rods
+        g      : float - Gravitational acceleration
+        theta1_0, theta2_0 : float - Initial angles (radians)
+        p1_0, p2_0 : float - Initial conjugate momenta
+        t_max  : float - Maximum simulation time
+        dt     : float - Time step between frames
+    """
 
-    # Simulation loop
-    for t in range(1, angles.shape[0]):
-        # Calculate angular velocity and acceleration
-        dtheta_dt, dtheta_dt2 = get_angular_accelerations(angles[t-1], p)
-        
-        # Update momentum and angle
-        p += dtheta_dt2 * dt
-        angles[t] = angles[t-1] + dtheta_dt * dt
+    t_eval, states = simulate_double_pendulum(theta1_0, theta2_0, t_max, m1, m2, l1, l2, g, p1_0, p2_0, dt)
 
-        # Convert polar coordinates (theta, lengths) to Cartesian coordinates for (x, y) position
-        x = np.cumsum(lengths * np.sin(angles[t]))
-        y = -np.cumsum(lengths * np.cos(angles[t]))
-        positions[t] = np.column_stack((x, y))
-
-    # Save results if trace is enabled
-    if trace:
-        fig, ax = plt.subplots()
-        ax.set_aspect('equal')
-        ax.set_xlim(-sum(lengths), sum(lengths))
-        ax.set_ylim(-sum(lengths), sum(lengths))
-
-        # Plot
-        lines = [ax.plot([], [], 'o-', lw=2)[0] for _ in range(n)]
-
-        def update(frame):
-            for j, line in enumerate(lines):
-                xdata = [0] + list(positions[frame, :j+1, 0])
-                ydata = [0] + list(positions[frame, :j+1, 1])
-                line.set_data(xdata, ydata)
-            return lines
-
-        ani = animation.FuncAnimation(fig, update, frames=angles.shape[0], blit=True)
+    theta1, theta2 = states[:, 0], states[:, 1]
 
 
-        # Save the animation to the specified directory
-        os.makedirs(outputDirectory, exist_ok=True)
-        ani.save(os.path.join(outputDirectory, f"{fileName}.mp4"), fps=30, extra_args=['-vcodec', 'libx264'])
-        plt.close(fig)
-        plt.show(fig)
-
-    print("Simulation complete!")
+    x1, y1 = l1 * np.sin(theta1), -l1 * np.cos(theta1)
+    x2, y2 = x1 + l2 * np.sin(theta2), y1 - l2 * np.cos(theta2)
 
 
-def grid_double_pendulum_simulation(firstPendMinMaxRot, firstPendStep, secondPendMinMaxRot, secondPendStep):
-    def double_pendulum_derivs(t, y, L1, L2, m1, m2):
-        g = 9.81
-        theta1, theta2, z1, z2 = y
-        c, s = np.cos(theta1-theta2), np.sin(theta1-theta2)
-        
-        theta1_dot = z1
-        theta2_dot = z2
-        
-        z1_dot = (m2*g*np.sin(theta2)*c - m2*s*(L1*z1**2*c + L2*z2**2) -
-                (m1 + m2)*g*np.sin(theta1)) / L1 / (m1 + m2*s**2)
-        z2_dot = ((m1 + m2)*(L1*z1**2*s - g*np.sin(theta2) + g*np.sin(theta1)*c) +
-                m2*L2*z2**2*s*c) / L2 / (m1 + m2*s**2)
-        
-        return [theta1_dot, theta2_dot, z1_dot, z2_dot]
+    fig, ax = plt.subplots(figsize=(5, 5))
+    ax.set_xlim(-l1 - l2 - 0.1, l1 + l2 + 0.1)
+    ax.set_ylim(-l1 - l2 - 0.1, l1 + l2 + 0.1)
+    ax.set_aspect('equal')
+    ax.grid()
+
+    line, = ax.plot([], [], 'o-', lw=2)
+    trace, = ax.plot([], [], 'r-', alpha=0.5, lw=1)
+    trace_x, trace_y = [], []
+
+    def init():
+        line.set_data([], [])
+        trace.set_data([], [])
+        return line, trace
+
+    def update(i):
+        # Update pendulum positions
+        line.set_data([0, x1[i], x2[i]], [0, y1[i], y2[i]])
+
+        # Update trace
+        trace_x.append(x2[i])
+        trace_y.append(y2[i])
+        trace.set_data(trace_x, trace_y)
+
+        return line, trace
+
     
-    L1, L2 = 1.0, 1.0  # Lengths of the pendulums
-    m1, m2 = 1.0, 1.0  # Masses of the pendulums
 
-    theta1_range = np.arange(firstPendMinMaxRot[0], firstPendMinMaxRot[1], firstPendStep)
-    theta2_range = np.arange(secondPendMinMaxRot[0], secondPendMinMaxRot[1], secondPendStep)
+    ani = animation.FuncAnimation(fig, update, frames=len(t_eval), init_func=init, blit=True)
 
-    T = 10  # Simulation time
-    dt = 0.05  # Time step
-    
-    fig, ax = plt.subplots(len(theta1_range), len(theta2_range), figsize=(15, 15))
-    
-    for i, theta1 in enumerate(theta1_range):
-        for j, theta2 in enumerate(theta2_range):
-            y0 = [theta1, theta2, 0, 0]
-            t_span = (0, T)
-            t_eval = np.arange(0, T, dt)
-            
-            sol = solve_ivp(double_pendulum_derivs, t_span, y0, t_eval=t_eval, args=(L1, L2, m1, m2))
-            x1 = L1 * np.sin(sol.y[0])
-            y1 = -L1 * np.cos(sol.y[0])
-            x2 = x1 + L2 * np.sin(sol.y[1])
-            y2 = y1 - L2 * np.cos(sol.y[1])
-            
-            ax[i, j].plot(x2, y2)
-            ax[i, j].legend()
-            ax[i, j].set_xlim(-2, 2)
-            ax[i, j].set_ylim(-2, 2)
-            ax[i, j].set_xticks([])
-            ax[i, j].set_yticks([])
-            
-    plt.tight_layout()
-    plt.show()
+    # Save as MP4 video
+    out = os.path.join(output_dir,video_name+".mp4")
+    ani.save(out, fps=1/dt, writer="ffmpeg")
+    plt.close(fig)  # Close figure to avoid display issues
+
+    print(f"Animation saved as {out}")
 
 
 

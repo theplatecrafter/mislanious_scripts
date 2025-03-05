@@ -1,133 +1,118 @@
 import numpy as np
-import pygame
-import math
+import scipy.integrate
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+import os
 
-# Parameters for the double pendulum
-g = 9.81      # Gravitational constant
-dt = 0.01     # Time step for the simulation
-L1, L2 = 1.0, 1.0  # Lengths of the pendulums
 
-# Helper function to determine chaos in the double pendulum
-def is_chaotic(theta1, theta2):
-    # Calculate the positions of the first and second nodes
-    x1 = L1 * math.sin(theta1)
-    y1 = -L1 * math.cos(theta1)
-    x2 = x1 + L2 * math.sin(theta2)
-    y2 = y1 - L2 * math.cos(theta2)
+def simulate_double_pendulum(theta1_0: float, theta2_0: float, t_max: float, m1: float = 1, m2: float = 1, l1: float = 1, l2: float = 1, g: float = 9.81, p1_0: float = 0, p2_0: float = 0, dt: float = 0.01):
+    """
+    Simulates a double pendulum using Hamiltonian mechanics.
+
+    Parameters:
+        m1, m2 : float - Masses of the pendulum arms
+        l1, l2 : float - Lengths of the rods
+        g      : float - Gravitational acceleration
+        theta1_0, theta2_0 : float - Initial angles (radians)
+        p1_0, p2_0 : float - Initial conjugate momenta
+        t_max  : float - Maximum simulation time
+        dt     : float - Time step between frames
+
+    Returns:
+        t_eval : ndarray - Time steps of the simulation
+        states : ndarray - Frame-by-frame state [theta1, theta2, p1, p2]
+    """
+
+    def hamiltonian_derivatives(t, state):
+        """Computes time derivatives of the Hamiltonian system."""
+        θ1, θ2, p1, p2 = state
+        c = np.cos(θ1 - θ2)
+        s = np.sin(θ1 - θ2)
+        denom = m1 + m2 * s**2
+
+        # Angular velocities
+        θ1_dot = (p1 * (m2 * l2**2) - p2 * (m2 * l1 * l2 * c)) / (l1**2 * l2**2 * denom)
+        θ2_dot = (p2 * (m1 * l1**2 + m2 * l1**2 + m2 * l1 * l2 * c) - p1 * (m2 * l1 * l2 * c)) / (l1**2 * l2**2 * denom)
+
+        # Moment changes
+        p1_dot = -(m1 + m2) * g * l1 * np.sin(θ1) - m2 * l1 * l2 * (θ1_dot * θ2_dot * s)
+        p2_dot = -m2 * g * l2 * np.sin(θ2) + m2 * l1 * l2 * (θ1_dot * θ2_dot * s)
+
+        return [θ1_dot, θ2_dot, p1_dot, p2_dot]
+
+    # Initial conditions
+    state0 = [theta1_0, theta2_0, p1_0, p2_0]
+    t_eval = np.arange(0, t_max, dt)  # Time steps
+
+    # Solve equations using SciPy
+    solution = scipy.integrate.solve_ivp(
+        hamiltonian_derivatives, [0, t_max], state0, t_eval=t_eval, method='RK45'
+    )
+
+    return t_eval, solution.y.T  # Transposed so rows are time steps
+
+
+def visualize_double_pendulum(theta1_0:float, theta2_0:float, t_max:float, output_dir:str = "", video_name:str = "double_pendulum", m1:float = 1, m2:float = 1, l1:float = 1, l2:float = 1, g:float = 9.81, p1_0:float = 0, p2_0:float = 0, dt:float = 0.01):
+    """
+    Creates an animation of the double pendulum from the simulation data.
     
-    # Debugging: Print positions of nodes for specific pixels
-    if np.random.rand() < 0.0001:  # Print for a random pixel to avoid overwhelming output
-        print(f"Node 1 position: (x1={x1}, y1={y1}), Node 2 position: (x2={x2}, y2={y2})")
+    Parameters:
+        m1, m2 : float - Masses of the pendulum arms
+        l1, l2 : float - Lengths of the rods
+        g      : float - Gravitational acceleration
+        theta1_0, theta2_0 : float - Initial angles (radians)
+        p1_0, p2_0 : float - Initial conjugate momenta
+        t_max  : float - Maximum simulation time
+        dt     : float - Time step between frames
+    """
+
+    t_eval, states = simulate_double_pendulum(theta1_0, theta2_0, t_max, m1, m2, l1, l2, g, p1_0, p2_0, dt)
+
+    theta1, theta2 = states[:, 0], states[:, 1]
+
+
+    x1, y1 = l1 * np.sin(theta1), -l1 * np.cos(theta1)
+    x2, y2 = x1 + l2 * np.sin(theta2), y1 - l2 * np.cos(theta2)
+
+
+    fig, ax = plt.subplots(figsize=(5, 5))
+    ax.set_xlim(-l1 - l2 - 0.1, l1 + l2 + 0.1)
+    ax.set_ylim(-l1 - l2 - 0.1, l1 + l2 + 0.1)
+    ax.set_aspect('equal')
+    ax.grid()
+
+    line, = ax.plot([], [], 'o-', lw=2)
+    trace, = ax.plot([], [], 'r-', alpha=0.5, lw=1)
+    trace_x, trace_y = [], []
+
+    def init():
+        line.set_data([], [])
+        trace.set_data([], [])
+        return line, trace
+
+    def update(i):
+        # Update pendulum positions
+        line.set_data([0, x1[i], x2[i]], [0, y1[i], y2[i]])
+
+        # Update trace
+        trace_x.append(x2[i])
+        trace_y.append(y2[i])
+        trace.set_data(trace_x, trace_y)
+
+        return line, trace
+
     
-    # Check if either node is above the y-coordinate of the pivot point (y = 0)
-    return y1 > 0 or y2 > 0
 
-# Draw a button with text
-def draw_button(screen, rect, color, text, font, text_color=(0, 0, 0)):
-    pygame.draw.rect(screen, color, rect)
-    text_surface = font.render(text, True, text_color)
-    text_rect = text_surface.get_rect(center=rect.center)
-    screen.blit(text_surface, text_rect)
+    ani = animation.FuncAnimation(fig, update, frames=len(t_eval), init_func=init, blit=True)
 
-# Function to initialize and run the double pendulum chaos simulation
-def double_pendulum_chaos_sim(screen_size, theta1_range, theta2_range):
-    width, height = screen_size
-    pygame.init()
-    screen = pygame.display.set_mode((width, height + 50))
-    pygame.display.set_caption("Double Pendulum Chaos Simulation")
+    # Save as MP4 video
+    out = os.path.join(output_dir,video_name+".mp4")
+    ani.save(out, fps=1/dt, writer="ffmpeg")
+    plt.close(fig)  # Close figure to avoid display issues
 
-    # Set up font and buttons
-    font = pygame.font.Font(None, 30)
-    button_pause = pygame.Rect(10, height + 10, 80, 30)
-    button_step = pygame.Rect(100, height + 10, 80, 30)
-    button_max_speed = pygame.Rect(190, height + 10, 120, 30)
+    print(f"Animation saved as {out}")
 
-    chaotic_grid = np.zeros((width, height), dtype=bool)
-    theta1_grid = np.linspace(theta1_range[0], theta1_range[1], width)
-    theta2_grid = np.linspace(theta2_range[0], theta2_range[1], height)
-    theta1_dot_grid = np.zeros((width, height))
-    theta2_dot_grid = np.zeros((width, height))
 
-    paused = False
-    max_speed = False
 
-    def update_simulation():
-        # Perform simulation step
-        for i in range(width):
-            for j in range(height):
-                if not chaotic_grid[i, j]:  # Only simulate if not already chaotic
-                    theta1 = theta1_grid[i]
-                    theta2 = theta2_grid[j]
-                    theta1_dot = theta1_dot_grid[i, j]
-                    theta2_dot = theta2_dot_grid[i, j]
-                    
-                    delta_theta = theta2 - theta1
-                    denominator1 = (2 - math.cos(2 * delta_theta))
-                    denominator2 = (2 - math.cos(delta_theta)**2)
-                    
-                    theta1_ddot = (-g * (2 * math.sin(theta1) - math.sin(delta_theta) * math.cos(delta_theta)) - 
-                                   math.sin(delta_theta) * theta2_dot**2 * math.sin(delta_theta)) / denominator1
-                    theta2_ddot = (2 * math.sin(delta_theta) * (theta1_dot**2 * math.sin(delta_theta) +
-                                   g * math.cos(theta2))) / denominator2
-                    
-                    theta1_dot += theta1_ddot * dt
-                    theta2_dot += theta2_ddot * dt
-                    theta1 += theta1_dot * dt
-                    theta2 += theta2_dot * dt
-                    
-                    # Debugging: Print the angles and their derivatives for a few pixels
-                    if (i, j) == (0, 0) or (i, j) == (width // 2, height // 2):  # Check edge and center pixels
-                        print(f"Pixel ({i}, {j}): theta1={theta1}, theta2={theta2}, theta1_dot={theta1_dot}, theta2_dot={theta2_dot}")
 
-                    theta1_grid[i] = theta1
-                    theta2_grid[j] = theta2
-                    theta1_dot_grid[i, j] = theta1_dot
-                    theta2_dot_grid[i, j] = theta2_dot
-                    
-                    # Check if pendulum has gone chaotic
-                    if is_chaotic(theta1, theta2):
-                        chaotic_grid[i, j] = True
-
-    running = True
-    while running:
-        screen.fill((0, 0, 0))  # Clear the screen
-        
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                if button_pause.collidepoint(event.pos):
-                    paused = not paused
-                elif button_step.collidepoint(event.pos) and paused:
-                    update_simulation()  # Step once if paused
-                elif button_max_speed.collidepoint(event.pos):
-                    max_speed = not max_speed
-
-        # Draw buttons
-        draw_button(screen, button_pause, (200, 200, 200), "Pause" if not paused else "Unpause", font)
-        draw_button(screen, button_step, (200, 200, 200), "Step", font)
-        draw_button(screen, button_max_speed, (200, 200, 200), "Max Speed" if not max_speed else "Normal Speed", font)
-
-        # Simulation logic
-        if not paused or (paused and max_speed):
-            update_simulation()
-
-        # Draw chaotic grid
-        for i in range(width):
-            for j in range(height):
-                color = (255, 255, 255) if chaotic_grid[i, j] else (0, 0, 0)
-                screen.set_at((i, j), color)
-
-        pygame.display.flip()
-
-        # Control speed if not in max speed mode
-        if not max_speed:
-            pygame.time.delay(30)
-    
-    pygame.quit()
-
-# Example usage
-screen_size = (200, 200)
-theta1_range = [math.pi / 4, 3 * math.pi / 4]
-theta2_range = [math.pi / 4, 3 * math.pi / 4]
-double_pendulum_chaos_sim(screen_size, theta1_range, theta2_range)
+visualize_double_pendulum(np.pi/2,np.pi/3+1,3)
