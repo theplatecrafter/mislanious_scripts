@@ -5,4 +5,5 @@ import random_functions.main as rf
 
 import numpy as np
 
-rf.double_pendulum_chaos_grid((-np.pi/2,np.pi/2),(-np.pi/2,np.pi/2),60,[2,3],"outputs","DP_grid",printDeets=True,sim_height=100,sim_width=100)
+
+rf.double_pendulum_chaos_grid((np.pi/3,np.pi/12*5),(np.pi/3,np.pi/12*5),10,[2],"outputs","DP_grid",printDeets=True,sim_height=50,sim_width=50)

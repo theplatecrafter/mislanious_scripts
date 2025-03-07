@@ -1,6 +1,7 @@
 # TODO: make everything complex number input supported
 # TODO: finish stock market game
 
+from numba import jit
 import copy
 import json
 import subprocess
@@ -1007,49 +1008,55 @@ def solve_schrodinger(outputDirectory:str,filename:str = "out"):
 
 
 #### pendulum stuff
-def simulate_double_pendulum(theta1_0: float, theta2_0: float, t_max: float, m1: float = 1, m2: float = 1, l1: float = 1, l2: float = 1, g: float = 9.81, p1_0: float = 0, p2_0: float = 0, dt: float = 0.01):
+@jit(nopython=True)
+def hamiltonian_derivatives(t, state, m1, m2, l1, l2, g):
+    """Computes time derivatives of the Hamiltonian system more efficiently."""
+    θ1, θ2, p1, p2 = state
+
+    c, s = np.cos(θ1 - θ2), np.sin(θ1 - θ2)
+    denom = m1 + m2 * s**2
+
+    # Precompute common terms
+    l1_sq, l2_sq = l1**2, l2**2
+    m2_l2_sq = m2 * l2_sq
+    m2_l1_l2_c = m2 * l1 * l2 * c
+
+    # Angular velocities
+    θ1_dot = (p1 * m2_l2_sq - p2 * m2_l1_l2_c) / (l1_sq * l2_sq * denom)
+    θ2_dot = (p2 * (m1 * l1_sq + m2 * l1_sq + m2_l1_l2_c) - p1 * m2_l1_l2_c) / (l1_sq * l2_sq * denom)
+
+    # Moment changes
+    p1_dot = -(m1 + m2) * g * l1 * np.sin(θ1) - m2 * l1 * l2 * θ1_dot * θ2_dot * s
+    p2_dot = -m2 * g * l2 * np.sin(θ2) + m2 * l1 * l2 * θ1_dot * θ2_dot * s
+
+    return np.array([θ1_dot, θ2_dot, p1_dot, p2_dot])
+
+def simulate_double_pendulum(theta1_0, theta2_0, t_max, m1=1, m2=1, l1=1, l2=1, 
+                             g=9.81, p1_0=0, p2_0=0, dt=0.01):
     """
-    Simulates a double pendulum using Hamiltonian mechanics.
+    Simulates a double pendulum using Hamiltonian mechanics efficiently.
 
     Parameters:
-        m1, m2 : float - Masses of the pendulum arms
-        l1, l2 : float - Lengths of the rods
-        g      : float - Gravitational acceleration
         theta1_0, theta2_0 : float - Initial angles (radians)
         p1_0, p2_0 : float - Initial conjugate momenta
         t_max  : float - Maximum simulation time
         dt     : float - Time step between frames
+        m1, m2 : float - Masses of the pendulum arms
+        l1, l2 : float - Lengths of the rods
+        g      : float - Gravitational acceleration
 
     Returns:
         t_eval : ndarray - Time steps of the simulation
         states : ndarray - Frame-by-frame state [theta1, theta2, p1, p2]
-
     """
-
-    def hamiltonian_derivatives(t, state):
-        """Computes time derivatives of the Hamiltonian system."""
-        θ1, θ2, p1, p2 = state
-        c = np.cos(θ1 - θ2)
-        s = np.sin(θ1 - θ2)
-        denom = m1 + m2 * s**2
-
-        # Angular velocities
-        θ1_dot = (p1 * (m2 * l2**2) - p2 * (m2 * l1 * l2 * c)) / (l1**2 * l2**2 * denom)
-        θ2_dot = (p2 * (m1 * l1**2 + m2 * l1**2 + m2 * l1 * l2 * c) - p1 * (m2 * l1 * l2 * c)) / (l1**2 * l2**2 * denom)
-
-        # Moment changes
-        p1_dot = -(m1 + m2) * g * l1 * np.sin(θ1) - m2 * l1 * l2 * (θ1_dot * θ2_dot * s)
-        p2_dot = -m2 * g * l2 * np.sin(θ2) + m2 * l1 * l2 * (θ1_dot * θ2_dot * s)
-
-        return [θ1_dot, θ2_dot, p1_dot, p2_dot]
-
-    # Initial conditions
-    state0 = [theta1_0, theta2_0, p1_0, p2_0]
+    
+    state0 = np.array([theta1_0, theta2_0, p1_0, p2_0])
     t_eval = np.arange(0, t_max, dt)  # Time steps
 
-    # Solve equations using SciPy
+    # Solve ODEs using DOP853 (higher-order Runge-Kutta, better for chaotic systems)
     solution = scipy.integrate.solve_ivp(
-        hamiltonian_derivatives, [0, t_max], state0, t_eval=t_eval, method='RK45'
+        lambda t, y: hamiltonian_derivatives(t, y, m1, m2, l1, l2, g),
+        [0, t_max], state0, t_eval=t_eval, method='DOP853'
     )
 
     return t_eval, solution.y.T  # Transposed so rows are time steps
@@ -1214,8 +1221,8 @@ def double_pendulum_chaos_grid(theta1_range:tuple,theta2_range:tuple, t_max: flo
     for i in range(sim_height):
         all_DP_states.append([])
         for j in range(sim_width):
-            theta1 = abs(theta1_range[1]-theta1_range[0])/sim_width*j+min(theta1_range)
-            theta2 = abs(theta2_range[1]-theta2_range[0])/sim_height*i+min(theta2_range)
+            theta1 = (theta1_range[1]-theta1_range[0])/(sim_width-1)*j+theta1_range[0]
+            theta2 = (theta2_range[1]-theta2_range[0])/(sim_height-1)*i+theta2_range[0]
             t_eval, state = simulate_double_pendulum(theta1,theta2,t_max,m1,m2,l1,l2,g,p1_0,p2_0,dt)
             all_DP_states[-1].append(state)
         printIF(printDeets,f"completed all double pendulum simulation for row {i+1}/{sim_height}")
@@ -1360,8 +1367,63 @@ def double_pendulum_chaos_grid(theta1_range:tuple,theta2_range:tuple, t_max: flo
             plt.close(fig)  # Close to free memory
 
             print(f"Double pendulum grid animation saved as {save_path}")
+    if 4 in video_type:
+        num_frames, height, width = len(grid_state), len(grid_state[0]), len(grid_state[0][0])
 
-        return grid_state
+        fig, axes = plt.subplots(height,width,figsize=(width*3,height*3))
+        axes = np.array(axes)
+
+        lines = [[axes[i,j].plot([],[],"o-",lw=2)[0] for j in range(width)] for i in range(height)]
+        traces = [[axes[i,j].plot([],[],"r-",alpha = 0.5,lw=1)[0] for j in range(width)] for i in range(height)]
+        trace_x, trace_y = [[[] for j in range(width)] for i in range(height)], [[[] for j in range(width)] for i in range(height)]
+        printIF(printDeets,f"vars initialized for {width*height} total double pendulums")
+        
+        def init():
+            for i in range(height):
+                for j in range(width):
+                    axes[i,j].set_xlim(-l1 - l2 - 0.1, l1 + l2 + 0.1)
+                    axes[i,j].set_ylim(-l1 - l2 - 0.1, l1 + l2 + 0.1)
+                    axes[i,j].set_aspect('equal')
+                    axes[i,j].grid()
+                    lines[i][j].set_data([],[])
+                    traces[i][j].set_data([],[])
+            
+            return sum(lines, []) + sum(traces, [])
+        
+        def update(t):
+            for i in range(height):
+                for j in range(width):
+                    theta1, theta2, p_1, p_2 = grid_state[t][i][j]
+                    x1, y1 = l1 * np.sin(theta1), -l1 * np.cos(theta1)
+                    x2, y2 = x1 + l2 * np.sin(theta2), y1 - l2 * np.cos(theta2)
+
+                    lines[i][j].set_data([0,x1,x2],[0,y1,y2])
+
+                    trace_x[i][j].append(x2)
+                    trace_y[i][j].append(y2)
+                    traces[i][j].set_data(trace_x[i][j], trace_y[i][j])
+                
+            printIF(printDeets,f"frame: {t+1}/{num_frames} animated")
+            
+            return sum(lines, []) + sum(traces, [])
+        
+        ani = animation.FuncAnimation(fig, update, frames = num_frames, init_func=init, blit=True)
+
+        if len(video_type) == 1:
+                save_path = os.path.join(output_dir,video_name+".mp4")
+        else:
+            save_path = os.path.join(output_dir,video_name+f"_type3"+".mp4")
+        
+        ani.save(save_path, fps=1/dt, writer="ffmpeg")
+        printIF(printDeets,f"Double pendulum grid animation saved as {save_path}")
+        plt.close(fig)
+
+    return grid_state
+
+
+
+
+
 
 
 
