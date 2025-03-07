@@ -1,6 +1,7 @@
 # TODO: make everything complex number input supported
 # TODO: finish stock market game
 
+import copy
 import json
 import subprocess
 from mutagen.mp3 import MP3
@@ -1054,7 +1055,7 @@ def simulate_double_pendulum(theta1_0: float, theta2_0: float, t_max: float, m1:
     return t_eval, solution.y.T  # Transposed so rows are time steps
 
 
-def visualize_double_pendulum(theta1_0:float, theta2_0:float, t_max:float, output_dir:str = "", video_name:str = "double_pendulum", m1:float = 1, m2:float = 1, l1:float = 1, l2:float = 1, g:float = 9.81, p1_0:float = 0, p2_0:float = 0, dt:float = 0.01):
+def visualize_double_pendulum(theta1_0:float, theta2_0:float, t_max:float, output_dir:str = "", video_name:str = "double_pendulum", m1:float = 1, m2:float = 1, l1:float = 1, l2:float = 1, g:float = 9.81, p1_0:float = 0, p2_0:float = 0, dt:float = 0.01,printDeets:bool = False):
     """
     Creates an animation of the double pendulum from the simulation data.
     
@@ -1100,12 +1101,14 @@ def visualize_double_pendulum(theta1_0:float, theta2_0:float, t_max:float, outpu
         trace_x.append(x2[i])
         trace_y.append(y2[i])
         trace.set_data(trace_x, trace_y)
+        printIF(printDeets,f"frame {i+1}/{len(states)} - done")
 
         return line, trace
 
     
 
     ani = animation.FuncAnimation(fig, update, frames=len(t_eval), init_func=init, blit=True)
+    printIF(printDeets,"video created")
 
     # Save as MP4 video
     out = os.path.join(output_dir,video_name+".mp4")
@@ -1157,7 +1160,7 @@ def is_double_pendulum_chaotic(state:tuple, prev_state:tuple, l1:float = 1, l2:f
     return False  # Otherwise, assume it's not chaotic (yet)
 
 
-def double_pendulum_chaos_grid(theta1_range:tuple,theta2_range:tuple, t_max: float, video_type:int = 0, output_dir:str = "", video_name:str = "double_pendulum_grid", sim_height:int = 50, sim_width:int = 50, m1: float = 1, m2: float = 1, l1: float = 1, l2: float = 1, g: float = 9.81, p1_0: float = 0, p2_0: float = 0, dt: float = 0.01, chaotic_threshold_omega:float=5.0, chaotic_threshold_alpha:float=10.0):
+def double_pendulum_chaos_grid(theta1_range:tuple,theta2_range:tuple, t_max: float, video_type:list = [], output_dir:str = "", video_name:str = "double_pendulum_grid", sim_height:int = 50, sim_width:int = 50, m1: float = 1, m2: float = 1, l1: float = 1, l2: float = 1, g: float = 9.81, p1_0: float = 0, p2_0: float = 0, dt: float = 0.01, chaotic_threshold_omega:float=5.0, chaotic_threshold_alpha:float=10.0,printDeets:bool = False):
     """
     Simulates a grid of double pendulums with different initial conditions and determines 
     whether each simulation is chaotic at each time step.
@@ -1166,8 +1169,7 @@ def double_pendulum_chaos_grid(theta1_range:tuple,theta2_range:tuple, t_max: flo
         theta1_range (tuple): Range of initial θ1 values (min, max).
         theta2_range (tuple): Range of initial θ2 values (min, max).
         t_max (float): Maximum simulation time.
-        video_type (int, set to 0):
-            type 0: do not create video.
+        video_type (list, set to 0): put in any number below to generate videos
             type 1: if chaotic, color white. if not, color black.
             type 2: color each one according to the angles of the double pendulum.
             type 3: color each one according to the momentum of the double pendulum.
@@ -1216,6 +1218,7 @@ def double_pendulum_chaos_grid(theta1_range:tuple,theta2_range:tuple, t_max: flo
             theta2 = abs(theta2_range[1]-theta2_range[0])/sim_height*i+min(theta2_range)
             t_eval, state = simulate_double_pendulum(theta1,theta2,t_max,m1,m2,l1,l2,g,p1_0,p2_0,dt)
             all_DP_states[-1].append(state)
+        printIF(printDeets,f"completed all double pendulum simulation for row {i+1}/{sim_height}")
     
     grid_state = [[[] for i in range(sim_height)] for j in range(len(t_eval))]
 
@@ -1225,23 +1228,26 @@ def double_pendulum_chaos_grid(theta1_range:tuple,theta2_range:tuple, t_max: flo
                 state = all_DP_states[j][k][i]
                 
                 grid_state[i][j].append(state)
+    printIF(printDeets,"grid_state list created")
 
 
-    save_path = os.path.join(output_dir,video_name+".mp4")
-    if video_type == 0:
-        return grid_state
-    elif video_type == 1:
+    
+    if 1 in video_type:
         # Convert grid_state to a NumPy array for better handling
-        for i in reversed(range(len(grid_state))):
-            for j in range(len(grid_state[i])):
-                for k in range(len(grid_state[i][j])):
+        
+        t = copy.deepcopy(grid_state)
+        for i in reversed(range(len(t))):
+            for j in range(len(t[i])):
+                for k in range(len(t[i][j])):
                     if i == 0:
-                        prev_state = grid_state[i][j][k]
+                        prev_state = t[i][j][k]
                     else:
-                        prev_state = grid_state[i-1][j][k]
-                    grid_state[i][j][k] = is_double_pendulum_chaotic(grid_state[i][j][k],prev_state,l1,l2,dt,chaotic_threshold_omega,chaotic_threshold_alpha)
-        grid_array = np.array(grid_state)  # Shape: (num_frames, height, width)
-
+                        prev_state = t[i-1][j][k]
+                    
+                    t[i][j][k] = is_double_pendulum_chaotic(t[i][j][k],prev_state,l1,l2,dt,chaotic_threshold_omega,chaotic_threshold_alpha)
+                printIF(printDeets,f"frame: {len(t)-i}/{len(t)} --- chaotic checked")
+        grid_array = np.array(t)  # Shape: (num_frames, height, width)
+        
         # Get simulation dimensions
         num_frames, height, width = grid_array.shape
 
@@ -1257,61 +1263,103 @@ def double_pendulum_chaos_grid(theta1_range:tuple,theta2_range:tuple, t_max: flo
         def update(frame):
             im.set_array(grid_array[frame])
             ax.set_title(f"Time: {frame * dt:.2f} s")
+            printIF(printDeets,f"frame {frame +1}/{len(t_eval)} done")
             return [im]
 
         ani = animation.FuncAnimation(fig, update, frames=num_frames, interval=1000 / (1/dt), blit=False)
 
         # Save as MP4 video
-        
+        if len(video_type) == 1:
+            save_path = os.path.join(output_dir,video_name+".mp4")
+        else:
+            save_path = os.path.join(output_dir,video_name+f"_type1"+".mp4")
+
         ani.save(save_path, fps=1/dt, writer="ffmpeg")
         plt.close(fig)  # Close the figure to free up memory
 
         print(f"Chaos grid animation saved as {save_path}")
-        return grid_state
-    elif video_type in [2,3]:
+    if 2 in video_type or 3 in video_type:
         num_frames, height, width = len(grid_state), len(grid_state[0]), len(grid_state[0][0])
 
         # Convert grid_state into an RGB image sequence
-        frames_rgb = np.zeros((num_frames, height, width, 3))  # RGB frames
+        frames_rgb_theta = np.zeros((num_frames, height, width, 3))  # RGB frames
+        frames_rgb_p = np.zeros((num_frames, height, width, 3))  # RGB frames
 
         for t in range(num_frames):
             for i in range(height):
                 for j in range(width):
-                    theta1, theta2,p1,p2 = grid_state[t][i][j]  # Extract θ1, θ2, p1, p2 at (i, j) for frame t
-                    if video_type == 2: # color definied from theta values
-                        hue = (theta1 % (2 * np.pi)) / (2 * np.pi)  # Normalize to range [0, 1]
-                        brightness = 0.3 + 0.7 * abs(np.sin(theta2))  # Use sine for variation, range [0.3, 1]
-                    elif video_type == 3: #color definied from momentum (p1,p2) values
-                        # Normalize p1 to the hue range [0, 1] (assuming p1 range is unknown but we clip it)
-                        hue = (np.arctan2(p1, p2) / (2 * np.pi)) % 1  # Angle-based hue for smooth transition
-                        # Normalize brightness based on magnitude of momentum
-                        p_mag = np.sqrt(p1**2 + p2**2)  # Compute total momentum magnitude
-                        brightness = 0.3 + 0.7 * (np.tanh(p_mag / 10))  # Normalize using tanh for smooth scaling
-
                     saturation = 1.0  # Full saturation
-                    frames_rgb[t, i, j] = colorsys.hsv_to_rgb(hue, saturation, brightness)
+                    theta1, theta2,p1,p2 = grid_state[t][i][j]  # Extract θ1, θ2, p1, p2 at (i, j) for frame t
+                    hue = (theta1 % (2 * np.pi)) / (2 * np.pi)  # Normalize to range [0, 1]
+                    brightness = 0.3 + 0.7 * abs(np.sin(theta2))  # Use sine for variation, range [0.3, 1]
+                    frames_rgb_theta[t, i, j] = colorsys.hsv_to_rgb(hue, saturation, brightness)
+
+                    # Normalize p1 to the hue range [0, 1] (assuming p1 range is unknown but we clip it)
+                    hue = (np.arctan2(p1, p2) / (2 * np.pi)) % 1  # Angle-based hue for smooth transition
+                    # Normalize brightness based on magnitude of momentum
+                    p_mag = np.sqrt(p1**2 + p2**2)  # Compute total momentum magnitude
+                    brightness = 0.3 + 0.7 * (np.tanh(p_mag / 10))  # Normalize using tanh for smooth scaling
+                    frames_rgb_p[t, i, j] = colorsys.hsv_to_rgb(hue, saturation, brightness)
+
+                    
+                    
+            printIF(printDeets,f"frame: {t+1}/{len(grid_state)} --- RGB value mapped")
 
 
-        # Set up the figure
-        fig, ax = plt.subplots(figsize=(5, 5))
-        ax.set_xticks([])
-        ax.set_yticks([])
-        ax.set_title("Double Pendulum Grid (Angle Coloring)")
+        if 2 in video_type:
+            # Set up the figure
+            fig, ax = plt.subplots(figsize=(5, 5))
+            ax.set_xticks([])
+            ax.set_yticks([])
+            ax.set_title("Double Pendulum Grid (Angle Coloring)")
 
-        im = ax.imshow(frames_rgb[0])  # Display first frame
+            im = ax.imshow(frames_rgb_theta[0])  # Display first frame
 
-        def update(frame):
-            im.set_array(frames_rgb[frame])
-            ax.set_title(f"Time: {frame * dt:.2f} s")
-            return [im]
+            def update(frame):
+                im.set_array(frames_rgb_theta[frame])
+                ax.set_title(f"Time: {frame * dt:.2f} s")
+                printIF(printDeets,f"frame {frame +1}/{len(t_eval)} done")
+                return [im]
 
-        ani = animation.FuncAnimation(fig, update, frames=num_frames, interval=1000 / (1/dt), blit=False)
+            ani = animation.FuncAnimation(fig, update, frames=num_frames, interval=1000 / (1/dt), blit=False)
 
-        # Save as MP4 video
-        ani.save(save_path, fps=(1/dt), writer="ffmpeg")
-        plt.close(fig)  # Close to free memory
+            if len(video_type) == 1:
+                save_path = os.path.join(output_dir,video_name+".mp4")
+            else:
+                save_path = os.path.join(output_dir,video_name+f"_type2"+".mp4")
 
-        print(f"Double pendulum grid animation saved as {save_path}")
+            # Save as MP4 video
+            ani.save(save_path, fps=(1/dt), writer="ffmpeg")
+            plt.close(fig)  # Close to free memory
+
+            print(f"Double pendulum grid animation saved as {save_path}")
+        if 3 in video_type:
+            # Set up the figure
+            fig, ax = plt.subplots(figsize=(5, 5))
+            ax.set_xticks([])
+            ax.set_yticks([])
+            ax.set_title("Double Pendulum Grid (Angle Coloring)")
+
+            im = ax.imshow(frames_rgb_theta[0])  # Display first frame
+
+            def update(frame):
+                im.set_array(frames_rgb_p[frame])
+                ax.set_title(f"Time: {frame * dt:.2f} s")
+                printIF(printDeets,f"frame {frame +1}/{len(t_eval)} done")
+                return [im]
+
+            ani = animation.FuncAnimation(fig, update, frames=num_frames, interval=1000 / (1/dt), blit=False)
+
+            if len(video_type) == 1:
+                save_path = os.path.join(output_dir,video_name+".mp4")
+            else:
+                save_path = os.path.join(output_dir,video_name+f"_type3"+".mp4")
+
+            # Save as MP4 video
+            ani.save(save_path, fps=(1/dt), writer="ffmpeg")
+            plt.close(fig)  # Close to free memory
+
+            print(f"Double pendulum grid animation saved as {save_path}")
 
         return grid_state
 
