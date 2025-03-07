@@ -29,6 +29,7 @@ import matplotlib.animation as animation
 import scipy.integrate
 import pygame
 from collections import defaultdict
+import colorsys
 
 # Initialize Pygame
 pygame.init()
@@ -1021,6 +1022,7 @@ def simulate_double_pendulum(theta1_0: float, theta2_0: float, t_max: float, m1:
     Returns:
         t_eval : ndarray - Time steps of the simulation
         states : ndarray - Frame-by-frame state [theta1, theta2, p1, p2]
+
     """
 
     def hamiltonian_derivatives(t, state):
@@ -1111,6 +1113,207 @@ def visualize_double_pendulum(theta1_0:float, theta2_0:float, t_max:float, outpu
     plt.close(fig)  # Close figure to avoid display issues
 
     print(f"Animation saved as {out}")
+
+
+def is_double_pendulum_chaotic(state:tuple, prev_state:tuple, l1:float = 1, l2:float = 1, dt:float = 0.01, threshold_omega:float=5.0, threshold_alpha:float=10.0):
+    """
+    Determines if a double pendulum is in a chaotic state based on a single frame.
+    
+    Parameters:
+        state : list [θ1, θ2, p1, p2] - Current state of the system
+        prev_state : list [θ1, θ2, p1, p2] - Previous state (for velocity estimation)
+        l1, l2 : float - Lengths of the rods
+        dt : float - Time step between frames
+        threshold_omega : float - Angular velocity threshold for chaos
+        threshold_alpha : float - Angular acceleration threshold for chaos
+    
+    Returns:
+        bool - True if chaotic, False otherwise
+    """
+
+    # Extract current and previous states
+    θ1, θ2, p1, p2 = state
+    θ1_prev, θ2_prev, p1_prev, p2_prev = prev_state
+
+    # Compute angular velocities (ω = dθ/dt)
+    ω1 = (θ1 - θ1_prev) / dt
+    ω2 = (θ2 - θ2_prev) / dt
+
+    # Compute angular accelerations (α = dω/dt)
+    α1 = (ω1 - (θ1_prev - θ1) / dt) / dt
+    α2 = (ω2 - (θ2_prev - θ2) / dt) / dt
+
+    # Chaotic condition checks
+    if abs(ω1) > threshold_omega or abs(ω2) > threshold_omega:
+        return True  # High angular velocity detected (fast unpredictable motion)
+    
+    if abs(α1) > threshold_alpha or abs(α2) > threshold_alpha:
+        return True  # High angular acceleration detected (torque spikes)
+
+    # Additional heuristic: If the second mass is moving unexpectedly fast compared to the first
+    if abs(ω2 - ω1) > threshold_omega:
+        return True
+
+    return False  # Otherwise, assume it's not chaotic (yet)
+
+
+def double_pendulum_chaos_grid(theta1_range:tuple,theta2_range:tuple, t_max: float, video_type:int = 0, output_dir:str = "", video_name:str = "double_pendulum_grid", sim_height:int = 50, sim_width:int = 50, m1: float = 1, m2: float = 1, l1: float = 1, l2: float = 1, g: float = 9.81, p1_0: float = 0, p2_0: float = 0, dt: float = 0.01, chaotic_threshold_omega:float=5.0, chaotic_threshold_alpha:float=10.0):
+    """
+    Simulates a grid of double pendulums with different initial conditions and determines 
+    whether each simulation is chaotic at each time step.
+
+    Parameters:
+        theta1_range (tuple): Range of initial θ1 values (min, max).
+        theta2_range (tuple): Range of initial θ2 values (min, max).
+        t_max (float): Maximum simulation time.
+        video_type (int, set to 0):
+            type 0: do not create video.
+            type 1: if chaotic, color white. if not, color black.
+            type 2: color each one according to the angles of the double pendulum.
+            type 3: color each one according to the momentum of the double pendulum.
+        sim_height (int, optional): Number of grid points in the θ2 direction. Default is 50.
+        sim_width (int, optional): Number of grid points in the θ1 direction. Default is 50.
+        m1 (float, optional): Mass of the first pendulum. Default is 1.
+        m2 (float, optional): Mass of the second pendulum. Default is 1.
+        l1 (float, optional): Length of the first pendulum rod. Default is 1.
+        l2 (float, optional): Length of the second pendulum rod. Default is 1.
+        g (float, optional): Gravitational acceleration. Default is 9.81.
+        p1_0 (float, optional): Initial momentum of the first pendulum. Default is 0.
+        p2_0 (float, optional): Initial momentum of the second pendulum. Default is 0.
+        dt (float, optional): Time step for the simulation. Default is 0.01.
+        threshold_omega (float, optional): Angular velocity threshold to classify as chaotic. Default is 5.0.
+        threshold_alpha (float, optional): Angular acceleration threshold to classify as chaotic. Default is 10.0.
+
+    Returns:
+        list: A 3D list `grid_state`, where `grid_state[t][i][j]` is True if the (i, j)-th double pendulum 
+              is chaotic at time step `t`, and False otherwise.
+
+    Example Usage:
+    --------------
+    # Define the range of initial angles for θ1 and θ2
+    theta1_range = (0, np.pi)
+    theta2_range = (0, np.pi)
+    t_max = 5.0  # Simulate for 5 seconds
+
+    # Run the chaos grid simulation
+    chaos_grid = double_pendulum_chaos_grid(theta1_range, theta2_range, t_max)
+
+    # Visualizing the first time step (grid of True/False values)
+    import matplotlib.pyplot as plt
+    plt.imshow(chaos_grid[0], cmap='gray', origin='lower')
+    plt.colorbar(label='Chaotic (1) or Not (0)')
+    plt.title("Chaotic Regions at t = 0")
+    plt.show()
+    """
+    
+    
+    all_DP_states = []
+    t_eval = []
+    for i in range(sim_height):
+        all_DP_states.append([])
+        for j in range(sim_width):
+            theta1 = abs(theta1_range[1]-theta1_range[0])/sim_width*j+min(theta1_range)
+            theta2 = abs(theta2_range[1]-theta2_range[0])/sim_height*i+min(theta2_range)
+            t_eval, state = simulate_double_pendulum(theta1,theta2,t_max,m1,m2,l1,l2,g,p1_0,p2_0,dt)
+            all_DP_states[-1].append(state)
+    
+    grid_state = [[[] for i in range(sim_height)] for j in range(len(t_eval))]
+
+    for i in range(len(grid_state)):
+        for j in range(sim_height):
+            for k in range(sim_width):
+                state = all_DP_states[j][k][i]
+                
+                grid_state[i][j].append(state)
+
+
+    save_path = os.path.join(output_dir,video_name+".mp4")
+    if video_type == 0:
+        return grid_state
+    elif video_type == 1:
+        # Convert grid_state to a NumPy array for better handling
+        for i in reversed(range(len(grid_state))):
+            for j in range(len(grid_state[i])):
+                for k in range(len(grid_state[i][j])):
+                    if i == 0:
+                        prev_state = grid_state[i][j][k]
+                    else:
+                        prev_state = grid_state[i-1][j][k]
+                    grid_state[i][j][k] = is_double_pendulum_chaotic(grid_state[i][j][k],prev_state,l1,l2,dt,chaotic_threshold_omega,chaotic_threshold_alpha)
+        grid_array = np.array(grid_state)  # Shape: (num_frames, height, width)
+
+        # Get simulation dimensions
+        num_frames, height, width = grid_array.shape
+
+        # Set up the figure
+        fig, ax = plt.subplots(figsize=(5, 5))
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_title("Double Pendulum Chaos Grid")
+
+        # Display first frame
+        im = ax.imshow(grid_array[0], cmap="gray", vmin=0, vmax=1)
+
+        def update(frame):
+            im.set_array(grid_array[frame])
+            ax.set_title(f"Time: {frame * dt:.2f} s")
+            return [im]
+
+        ani = animation.FuncAnimation(fig, update, frames=num_frames, interval=1000 / (1/dt), blit=False)
+
+        # Save as MP4 video
+        
+        ani.save(save_path, fps=1/dt, writer="ffmpeg")
+        plt.close(fig)  # Close the figure to free up memory
+
+        print(f"Chaos grid animation saved as {save_path}")
+        return grid_state
+    elif video_type in [2,3]:
+        num_frames, height, width = len(grid_state), len(grid_state[0]), len(grid_state[0][0])
+
+        # Convert grid_state into an RGB image sequence
+        frames_rgb = np.zeros((num_frames, height, width, 3))  # RGB frames
+
+        for t in range(num_frames):
+            for i in range(height):
+                for j in range(width):
+                    theta1, theta2,p1,p2 = grid_state[t][i][j]  # Extract θ1, θ2, p1, p2 at (i, j) for frame t
+                    if video_type == 2: # color definied from theta values
+                        hue = (theta1 % (2 * np.pi)) / (2 * np.pi)  # Normalize to range [0, 1]
+                        brightness = 0.3 + 0.7 * abs(np.sin(theta2))  # Use sine for variation, range [0.3, 1]
+                    elif video_type == 3: #color definied from momentum (p1,p2) values
+                        # Normalize p1 to the hue range [0, 1] (assuming p1 range is unknown but we clip it)
+                        hue = (np.arctan2(p1, p2) / (2 * np.pi)) % 1  # Angle-based hue for smooth transition
+                        # Normalize brightness based on magnitude of momentum
+                        p_mag = np.sqrt(p1**2 + p2**2)  # Compute total momentum magnitude
+                        brightness = 0.3 + 0.7 * (np.tanh(p_mag / 10))  # Normalize using tanh for smooth scaling
+
+                    saturation = 1.0  # Full saturation
+                    frames_rgb[t, i, j] = colorsys.hsv_to_rgb(hue, saturation, brightness)
+
+
+        # Set up the figure
+        fig, ax = plt.subplots(figsize=(5, 5))
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_title("Double Pendulum Grid (Angle Coloring)")
+
+        im = ax.imshow(frames_rgb[0])  # Display first frame
+
+        def update(frame):
+            im.set_array(frames_rgb[frame])
+            ax.set_title(f"Time: {frame * dt:.2f} s")
+            return [im]
+
+        ani = animation.FuncAnimation(fig, update, frames=num_frames, interval=1000 / (1/dt), blit=False)
+
+        # Save as MP4 video
+        ani.save(save_path, fps=(1/dt), writer="ffmpeg")
+        plt.close(fig)  # Close to free memory
+
+        print(f"Double pendulum grid animation saved as {save_path}")
+
+        return grid_state
 
 
 
