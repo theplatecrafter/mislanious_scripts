@@ -1262,7 +1262,7 @@ def double_pendulum_chaos_grid(theta1_range:tuple,theta2_range:tuple, t_max: flo
 
         def update(frame):
             im.set_array(grid_array[frame])
-            ax.set_title(f"Time: {frame * dt:.2f} s")
+            ax.set_title(f"Mode: B/W = Chaotic/not Chaotic --- Time: {frame * dt:.2f} s")
             printIF(printDeets,f"frame {frame +1}/{len(t_eval)} done")
             return [im]
 
@@ -1317,7 +1317,7 @@ def double_pendulum_chaos_grid(theta1_range:tuple,theta2_range:tuple, t_max: flo
 
             def update(frame):
                 im.set_array(frames_rgb_theta[frame])
-                ax.set_title(f"Time: {frame * dt:.2f} s")
+                ax.set_title(f"Mode: colors based off of theta values --- Time: {frame * dt:.2f} s")
                 printIF(printDeets,f"frame {frame +1}/{len(t_eval)} done")
                 return [im]
 
@@ -1344,7 +1344,7 @@ def double_pendulum_chaos_grid(theta1_range:tuple,theta2_range:tuple, t_max: flo
 
             def update(frame):
                 im.set_array(frames_rgb_p[frame])
-                ax.set_title(f"Time: {frame * dt:.2f} s")
+                ax.set_title(f"Mode: colors based off of momentum valuesTime: {frame * dt:.2f} s")
                 printIF(printDeets,f"frame {frame +1}/{len(t_eval)} done")
                 return [im]
 
