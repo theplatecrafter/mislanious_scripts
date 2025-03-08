@@ -1,6 +1,22 @@
 # TODO: make everything complex number input supported
 # TODO: finish stock market game
 
+import colorsys
+from collections import defaultdict
+import pygame
+import scipy.integrate
+import matplotlib.animation as animation
+import matplotlib.pyplot as plt
+import platform
+import tempfile
+from pymediainfo import MediaInfo
+import ffmpeg
+import piexif
+import exifread
+import webbrowser
+import xlsxwriter as xlsw
+import shutil
+from moviepy.editor import ImageSequenceClip
 from numba import jit
 import copy
 import json
@@ -16,67 +32,54 @@ import numpy as np
 import rawpy as r
 from PIL import Image
 Image.MAX_IMAGE_PIXELS = None
-from moviepy.editor import ImageSequenceClip
-import shutil
-import xlsxwriter as xlsw
-import webbrowser
-import exifread
-import piexif
-import ffmpeg
-from pymediainfo import MediaInfo
-import tempfile
-import platform
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-import scipy.integrate
-import pygame
-from collections import defaultdict
-import colorsys
 
 # Initialize Pygame
 pygame.init()
 
 
-#### converter
-def RAW2JPG(RAWfolderPATH:str,printDeets:bool=False,DetectingExtenstionName:list = [
-"3fr",
-"ari", "arw",
-"bay",
-"braw", "crw", "cr2", "cr3",
-"cap",
-"data", "dcs", "dcr", "dng",
-"drf",
-"eip", "erf",
-"fff",
-"gpr",
-"iiq",
-"k25", "kdc",
-"mdc", "mef", "mos", "mrw",
-"nef", "nrw",
-"obm", "orf",
-"pef", "ptx", "pxn",
-"r3d", "raf", "raw", "rwl", "rw2", "rwz",
-"sr2", "srf", "srw",
-"tif",
-"x3f"]):
+# converter
+def RAW2JPG(RAWfolderPATH: str, printDeets: bool = False, DetectingExtenstionName: list = [
+    "3fr",
+    "ari", "arw",
+    "bay",
+    "braw", "crw", "cr2", "cr3",
+    "cap",
+    "data", "dcs", "dcr", "dng",
+    "drf",
+    "eip", "erf",
+    "fff",
+    "gpr",
+    "iiq",
+    "k25", "kdc",
+    "mdc", "mef", "mos", "mrw",
+    "nef", "nrw",
+    "obm", "orf",
+    "pef", "ptx", "pxn",
+    "r3d", "raf", "raw", "rwl", "rw2", "rwz",
+    "sr2", "srf", "srw",
+    "tif",
+        "x3f"]):
     """Converts all .nef files in the inputted directory into jpg. This will create a new directory inside the inputted directory for the output. glob not supported"""
-    files = [file for file in os.listdir(RAWfolderPATH) if os.path.splitext(file.lower())[1][1:] in DetectingExtenstionName]
-    printIF(printDeets,f"Imported {len(files)} raw files from {RAWfolderPATH}")
-    out = os.path.join(RAWfolderPATH,"RAWtoJPGconversionOUTPUT")
+    files = [file for file in os.listdir(RAWfolderPATH) if os.path.splitext(
+        file.lower())[1][1:] in DetectingExtenstionName]
+    printIF(
+        printDeets, f"Imported {len(files)} raw files from {RAWfolderPATH}")
+    out = os.path.join(RAWfolderPATH, "RAWtoJPGconversionOUTPUT")
     os.mkdir(out)
-    printIF(printDeets,f"Created output folder at {out}")
+    printIF(printDeets, f"Created output folder at {out}")
     n = 0
     for i in files:
         n += 1
-        file_path = os.path.join(RAWfolderPATH,i)
+        file_path = os.path.join(RAWfolderPATH, i)
         with r.imread(file_path) as raw:
             rgb_iamge = raw.postprocess()
-            printIF(printDeets,f"Converted {i} to rgb array")
+            printIF(printDeets, f"Converted {i} to rgb array")
         img = Image.fromarray(rgb_iamge)
-        printIF(printDeets,"Created new jpg image from rgb array")
+        printIF(printDeets, "Created new jpg image from rgb array")
         outIMGname = os.path.splitext(i)[1][1:]+os.path.splitext(i)[0]+".jpg"
-        img.save(os.path.join(out,outIMGname),"JPEG")
-        printIF(printDeets,f"saved {i} as {outIMGname} to {out} {n}/{len(files)}")
+        img.save(os.path.join(out, outIMGname), "JPEG")
+        printIF(
+            printDeets, f"saved {i} as {outIMGname} to {out} {n}/{len(files)}")
 
 
 def Polar2Cart(r: float, theta: float, mode: str = "RAD") -> list:
@@ -100,65 +103,65 @@ def Cart2Polar(x: float, y: float, mode: str = "RAD") -> list:
             return [math.sqrt(pow(x, 2)+pow(y, 2)), 2*math.pi-math.acos(x/(math.sqrt(pow(x, 2)+pow(y, 2))))]
 
 
-def png2mp4(image_folder:str, output_folder:str,filename:str = "movie", fps=None):
+def png2mp4(image_folder: str, output_folder: str, filename: str = "movie", fps=None):
     filename += ".mp4"
     image_files = sorted([os.path.join(image_folder, img)
                           for img in os.listdir(image_folder)
                           if img.endswith(".png")])
-    
+
     if fps == None:
-        fps = int(math.log(len(image_files)+1,1.3))
+        fps = int(math.log(len(image_files)+1, 1.3))
 
     clip = ImageSequenceClip(image_files, fps=fps)
-    
-    clip.write_videofile(os.path.join(output_folder,filename), codec="libx264")
+
+    clip.write_videofile(os.path.join(
+        output_folder, filename), codec="libx264")
 
 
-
-#### polygons
-def polygonDetails(points:list) -> dict:
+# polygons
+def polygonDetails(points: list) -> dict:
     """gives details of the givin polygon drawn in order of the points list. points = [(x1,y1),(x2,y2),(x3,y3)...(xn,yn)]"""
     vertices = len(points)
     area = 0
     for i in range(vertices):
         x1, y1 = points[i]
-        x2, y2 = points[(i+1)%vertices]
+        x2, y2 = points[(i+1) % vertices]
         area += x1*y2
         area -= x2*y1
     area = 0.5*abs(area)
 
     angles = []
     for i in range(vertices):
-        x1, y1 = points[(i-1)%vertices]
+        x1, y1 = points[(i-1) % vertices]
         x2, y2 = points[i]
-        x3, y3 = points[(i+1)%vertices]
+        x3, y3 = points[(i+1) % vertices]
 
-        a = math.sqrt(math.pow(x1-x2,2)+math.pow(y1-y2,2))
-        b = math.sqrt(math.pow(x1-x3,2)+math.pow(y1-y3,2))
-        c = math.sqrt(math.pow(x3-x2,2)+math.pow(y3-y2,2))
-        angles.append(math.acos((math.pow(a,2)+math.pow(c,2)-math.pow(b,2))/(2*a*c)))
+        a = math.sqrt(math.pow(x1-x2, 2)+math.pow(y1-y2, 2))
+        b = math.sqrt(math.pow(x1-x3, 2)+math.pow(y1-y3, 2))
+        c = math.sqrt(math.pow(x3-x2, 2)+math.pow(y3-y2, 2))
+        angles.append(
+            math.acos((math.pow(a, 2)+math.pow(c, 2)-math.pow(b, 2))/(2*a*c)))
 
     return {
-        "area":area,
-        "vertices":vertices,
-        "angles":angles,
-        "anglesDEG":[i*180/math.pi for i in angles]
+        "area": area,
+        "vertices": vertices,
+        "angles": angles,
+        "anglesDEG": [i*180/math.pi for i in angles]
     }
 
 
-def randomPolygon(sides:int,maxCord:tuple=(10,10),minCord:tuple=(-10,-10)) -> list:
+def randomPolygon(sides: int, maxCord: tuple = (10, 10), minCord: tuple = (-10, -10)) -> list:
     """returns a random polygon with points = [(x1,y1),(x2,y2),(x3,y3)...(xn,yn)]"""
-    return [(randFloat(minCord[0],maxCord[0]),randFloat(minCord[1],maxCord[1])) for i in range(sides)]
+    return [(randFloat(minCord[0], maxCord[0]), randFloat(minCord[1], maxCord[1])) for i in range(sides)]
 
 
-
-#### programming tools
-def randFloat(start:float,stop:float) -> float:
+# programming tools
+def randFloat(start: float, stop: float) -> float:
     """returns a random float between start and stop (both ends included)"""
     return random.random()*(stop-start)+start
 
 
-def printIF(boolean:bool,printString:str):
+def printIF(boolean: bool, printString: str):
     """prints printString if boolean == True"""
     if boolean:
         print(printString)
@@ -195,7 +198,7 @@ def printTable(table: list):
         raise
 
 
-def controledNumInput(type: str = "float", prompt: str = "Enter a number (blank to cancel)", rePrompt: bool = True, cancelAns:str = "",invalidTXT: str = "Invalid input") -> str:
+def controledNumInput(type: str = "float", prompt: str = "Enter a number (blank to cancel)", rePrompt: bool = True, cancelAns: str = "", invalidTXT: str = "Invalid input") -> str:
     """"
     this only supports float and int controled input. When rePrompt is set to true, it will keep on prompting for the correct answer. invalidTXT is the text that appears when rePrompt is true, and the user inputed a wrong value. numMin <= <userinput> <= numMax This will return "" when rePrompt is False and the user inputs an invalid input.
     when the prompt was canceled, the function will give back None
@@ -229,7 +232,7 @@ def controledNumInput(type: str = "float", prompt: str = "Enter a number (blank 
             return ""
 
 
-def controledStrInput(whiteList:list,blackList:list = None,prompt:str = "Enter string (blank to cancel)",UseWhiteList:bool = True,reprompt:bool = True,cancelAns:str = ""):
+def controledStrInput(whiteList: list, blackList: list = None, prompt: str = "Enter string (blank to cancel)", UseWhiteList: bool = True, reprompt: bool = True, cancelAns: str = ""):
     """
     strings in whitelist are the only ones that can be entered. if the answer has one or more blacklisted characters of string, then that answer is not valid.
     if the prompt has been canceled, then the function gives back None
@@ -278,25 +281,25 @@ def ranList(length: int, min: float = 0, max: float = 1) -> list:
 
 def choose_random_objects(array, num_objects):
     if num_objects > len(array):
-        raise ValueError("Number of objects to choose cannot be greater than the array length")
-    
+        raise ValueError(
+            "Number of objects to choose cannot be greater than the array length")
+
     return random.sample(array, num_objects)
 
 
-def count_elements(list:list):
+def count_elements(list: list):
     out = {}
     types = rmSame(list)
     for i in types:
         out[i] = 0
-    
+
     for i in list:
         out[i] += 1
     return out
-    
 
 
-## text handlers
-def list_to_string(lst:list, separator:str=None) -> str:
+# text handlers
+def list_to_string(lst: list, separator: str = None) -> str:
     """creates a string that has all the elements in lst, but separated with separator. when separator left blank, the program will automatically find an ascii charactor for seperation
     outputs combined string, and seperator
     """
@@ -304,37 +307,37 @@ def list_to_string(lst:list, separator:str=None) -> str:
     if len(lst) == 1:
         return lst[0], separator
     lst = [str(item) for item in lst]
-    
+
     # If no separator is given, find one that isn't used in the list
     if separator is None:
         all_chars = set(''.join(lst))
-        available_separators = set(chr(i) for i in range(33, 127)) - all_chars  # ASCII printable characters
+        available_separators = set(chr(i) for i in range(
+            33, 127)) - all_chars  # ASCII printable characters
         if available_separators:
             separator = available_separators.pop()
         else:
             raise ValueError("No available separator character found.")
 
     # Join the list elements with the chosen or given separator
-    return separator.join(lst),separator
+    return separator.join(lst), separator
 
 
-def string_to_list(s:str, separator:str) -> list:
+def string_to_list(s: str, separator: str) -> list:
     """convertes a string to a list, wheras the string is seperated by an ascii charactor"""
     if not separator:
         raise ValueError("Separator must be a non-empty character.")
-    
+
     return s.split(separator)
 
 
-def list_to_file(lst:list, destination_path:str,file_name:str = "text.txt"):
+def list_to_file(lst: list, destination_path: str, file_name: str = "text.txt"):
     """creates a file (file extension can be changed) with each line being an element in lst"""
-    with open(os.path.join(destination_path,file_name), 'w') as file:
+    with open(os.path.join(destination_path, file_name), 'w') as file:
         for item in lst:
             file.write(f"{item}\n")
 
 
-
-#### image handlers
+# image handlers
 def compare_image(photoOne: str, photoTwo: str, downSamplePercentage: float = 1) -> float:
     A = Image.open(photoOne)
     A = A.resize((int(A.width * downSamplePercentage),
@@ -407,7 +410,7 @@ def pick_images_cleverly(FilesToPickFrom: str, DestinationDir: str, fileType: st
 def get_image_metadata(filepath):
     metadata = {}
     raw_tags = {}
-    
+
     try:
         with open(filepath, 'rb') as f:
             tags = exifread.process_file(f)
@@ -418,29 +421,29 @@ def get_image_metadata(filepath):
             metadata['Orientation'] = tags.get('Image Orientation')
             metadata['Width'] = tags.get('EXIF ExifImageWidth')
             metadata['Height'] = tags.get('EXIF ExifImageLength')
-            
+
             # Check for GPS data
             if 'GPS GPSLatitude' in tags and 'GPS GPSLongitude' in tags:
                 lat = tags['GPS GPSLatitude'].values
                 lon = tags['GPS GPSLongitude'].values
                 lat_ref = tags.get('GPS GPSLatitudeRef')
                 lon_ref = tags.get('GPS GPSLongitudeRef')
-                
+
                 lat = (float(lat[0].num) / lat[0].den +
                        float(lat[1].num) / lat[1].den / 60 +
                        float(lat[2].num) / lat[2].den / 3600)
                 lon = (float(lon[0].num) / lon[0].den +
                        float(lon[1].num) / lon[1].den / 60 +
                        float(lon[2].num) / lon[2].den / 3600)
-                
+
                 if lat_ref.values == 'S':
                     lat = -lat
                 if lon_ref.values == 'W':
                     lon = -lon
-                
+
                 metadata['GPS Latitude'] = lat
                 metadata['GPS Longitude'] = lon
-            
+
     except Exception as e:
         print(f"Error reading EXIF data with exifread: {e}")
 
@@ -448,88 +451,100 @@ def get_image_metadata(filepath):
         img = Image.open(filepath)
         exif_data = img._getexif()
         if exif_data:
-            raw_tags['pillow'] = {piexif.TAGS[k]: str(v) for k, v in exif_data.items() if k in piexif.TAGS}
+            raw_tags['pillow'] = {piexif.TAGS[k]: str(
+                v) for k, v in exif_data.items() if k in piexif.TAGS}
             exif_dict = piexif.load(img.info['exif'])
-            metadata['Date Taken'] = exif_dict['Exif'].get(piexif.ExifIFD.DateTimeOriginal, metadata.get('Date Taken'))
-            metadata['Camera Make'] = exif_dict['0th'].get(piexif.ImageIFD.Make, metadata.get('Camera Make'))
-            metadata['Camera Model'] = exif_dict['0th'].get(piexif.ImageIFD.Model, metadata.get('Camera Model'))
-            metadata['Orientation'] = exif_dict['0th'].get(piexif.ImageIFD.Orientation, metadata.get('Orientation'))
-            metadata['Width'] = exif_dict['Exif'].get(piexif.ExifIFD.PixelXDimension, metadata.get('Width'))
-            metadata['Height'] = exif_dict['Exif'].get(piexif.ExifIFD.PixelYDimension, metadata.get('Height'))
-            
+            metadata['Date Taken'] = exif_dict['Exif'].get(
+                piexif.ExifIFD.DateTimeOriginal, metadata.get('Date Taken'))
+            metadata['Camera Make'] = exif_dict['0th'].get(
+                piexif.ImageIFD.Make, metadata.get('Camera Make'))
+            metadata['Camera Model'] = exif_dict['0th'].get(
+                piexif.ImageIFD.Model, metadata.get('Camera Model'))
+            metadata['Orientation'] = exif_dict['0th'].get(
+                piexif.ImageIFD.Orientation, metadata.get('Orientation'))
+            metadata['Width'] = exif_dict['Exif'].get(
+                piexif.ExifIFD.PixelXDimension, metadata.get('Width'))
+            metadata['Height'] = exif_dict['Exif'].get(
+                piexif.ExifIFD.PixelYDimension, metadata.get('Height'))
+
             # Check for GPS data
             if piexif.GPSIFD.GPSLatitude in exif_dict['GPS'] and piexif.GPSIFD.GPSLongitude in exif_dict['GPS']:
                 lat = exif_dict['GPS'][piexif.GPSIFD.GPSLatitude]
                 lon = exif_dict['GPS'][piexif.GPSIFD.GPSLongitude]
                 lat_ref = exif_dict['GPS'].get(piexif.GPSIFD.GPSLatitudeRef)
                 lon_ref = exif_dict['GPS'].get(piexif.GPSIFD.GPSLongitudeRef)
-                
-                lat = float(lat[0][0]) / lat[0][1] + float(lat[1][0]) / lat[1][1] / 60 + float(lat[2][0]) / lat[2][1] / 3600
-                lon = float(lon[0][0]) / lon[0][1] + float(lon[1][0]) / lon[1][1] / 60 + float(lon[2][0]) / lon[2][1] / 3600
-                
+
+                lat = float(lat[0][0]) / lat[0][1] + float(lat[1][0]) / \
+                    lat[1][1] / 60 + float(lat[2][0]) / lat[2][1] / 3600
+                lon = float(lon[0][0]) / lon[0][1] + float(lon[1][0]) / \
+                    lon[1][1] / 60 + float(lon[2][0]) / lon[2][1] / 3600
+
                 if lat_ref == b'S':
                     lat = -lat
                 if lon_ref == b'W':
                     lon = -lon
-                
+
                 metadata['GPS Latitude'] = metadata.get('GPS Latitude', lat)
                 metadata['GPS Longitude'] = metadata.get('GPS Longitude', lon)
-            
+
     except Exception as e:
         print(f"Error reading EXIF data with Pillow and piexif: {e}")
 
     metadata['Raw Tags'] = raw_tags
     return {k: (v.decode('utf-8') if isinstance(v, bytes) else v) for k, v in metadata.items()}
 
-def remove_repeated_images(image_directory:str,threshold:float = 0.00000000001,downSamplePercentage: float = 0.2,printDeets:bool = False,save_deleted:bool = True):
-    images = [i for i in get_all_file_paths(image_directory) if get_file_type(i) == "image"]
+
+def remove_repeated_images(image_directory: str, threshold: float = 0.00000000001, downSamplePercentage: float = 0.2, printDeets: bool = False, save_deleted: bool = True):
+    images = [i for i in get_all_file_paths(
+        image_directory) if get_file_type(i) == "image"]
     image_vector = []
-    printIF(printDeets,f"Opened all {len(images)} images")
+    printIF(printDeets, f"Opened all {len(images)} images")
     for image in images:
         A = Image.open(image)
         resized_image = A.resize((int(A.width * downSamplePercentage),
-                 int(A.height * downSamplePercentage)))
+                                  int(A.height * downSamplePercentage)))
         t = np.array(resized_image).flatten().astype(np.float64)
         t -= t.mean()
         image_vector.append(t)
         A.close()
-        printIF(printDeets,f"Generated image vector for {image}")
+        printIF(printDeets, f"Generated image vector for {image}")
 
     dl = 0
     deleteThese = []
     for i in range(len(images)-1):
-        for j in range(i+1,len(images)):
+        for j in range(i+1, len(images)):
             A = image_vector[i]
             B = image_vector[j]
             bottom = math.sqrt(np.dot(A, A))*math.sqrt(np.dot(B, B))
             try:
                 similarity = np.dot(A, B)/(bottom)
-                printIF(printDeets,f"{images[i]} and {images[j]} similarity: {abs(similarity-1)}")
+                printIF(
+                    printDeets, f"{images[i]} and {images[j]} similarity: {abs(similarity-1)}")
             except:
-                similarity = threshold +500
+                similarity = threshold + 500
                 pass
-            if abs(similarity-1)<= threshold:
+            if abs(similarity-1) <= threshold:
                 if save_deleted:
-                    copy_file_path_generative(images[j],combinePATH([image_directory,"repeated_images",split_path(images[j])[-1]]))
+                    copy_file_path_generative(images[j], combinePATH(
+                        [image_directory, "repeated_images", split_path(images[j])[-1]]))
                 deleteThese.append(images[j])
-                    
-                printIF(printDeets,f"removed {images[j]} as it was within threshold similarity with {images[i]}")
+
+                printIF(
+                    printDeets, f"removed {images[j]} as it was within threshold similarity with {images[i]}")
 
     for i in deleteThese:
         if os.path.exists(i):
             delete(i)
-            dl+=1
-    printIF(printDeets,f"successfully deleted {dl} repeating iamges out of {len(images)}")
-
-    
-
+            dl += 1
+    printIF(
+        printDeets, f"successfully deleted {dl} repeating iamges out of {len(images)}")
 
 
-#### video handlers
+# video handlers
 def get_video_metadata(filepath):
     metadata = {}
     raw_tags = {}
-    
+
     if not os.path.isfile(filepath):
         print(f"File not found: {filepath}")
         return None
@@ -541,13 +556,16 @@ def get_video_metadata(filepath):
 
     try:
         # Run ffprobe command
-        command = ['ffprobe', '-v', 'quiet', '-print_format', 'json', '-show_format', '-show_streams', filepath]
-        result = subprocess.run(command, capture_output=True, text=True, check=True)
+        command = ['ffprobe', '-v', 'quiet', '-print_format',
+                   'json', '-show_format', '-show_streams', filepath]
+        result = subprocess.run(
+            command, capture_output=True, text=True, check=True)
         probe = json.loads(result.stdout)
         raw_tags['ffprobe'] = probe
-        
-        video_stream = next((stream for stream in probe['streams'] if stream['codec_type'] == 'video'), None)
-        
+
+        video_stream = next(
+            (stream for stream in probe['streams'] if stream['codec_type'] == 'video'), None)
+
         if video_stream:
             metadata['Width'] = video_stream.get('width')
             metadata['Height'] = video_stream.get('height')
@@ -555,12 +573,13 @@ def get_video_metadata(filepath):
             metadata['Codec'] = video_stream.get('codec_name')
             metadata['Frame Rate'] = video_stream.get('avg_frame_rate')
             metadata['Bit Rate'] = video_stream.get('bit_rate')
-        
+
         if 'format' in probe:
             metadata['Format'] = probe['format'].get('format_name')
             metadata['File Size'] = int(probe['format'].get('size', 0))
-            metadata['Date Taken'] = probe['format'].get('tags', {}).get('creation_time')
-        
+            metadata['Date Taken'] = probe['format'].get(
+                'tags', {}).get('creation_time')
+
         # Check for GPS data
         if 'tags' in probe['format']:
             gps_latitude = probe['format']['tags'].get('location-lat')
@@ -568,7 +587,7 @@ def get_video_metadata(filepath):
             if gps_latitude and gps_longitude:
                 metadata['GPS Latitude'] = float(gps_latitude)
                 metadata['GPS Longitude'] = float(gps_longitude)
-        
+
         # Check for additional metadata
         if 'tags' in probe['format']:
             metadata['Title'] = probe['format']['tags'].get('title')
@@ -576,9 +595,9 @@ def get_video_metadata(filepath):
             metadata['Album'] = probe['format']['tags'].get('album')
             metadata['Year'] = probe['format']['tags'].get('date')
             metadata['Comment'] = probe['format']['tags'].get('comment')
-        
+
         metadata['Raw Tags'] = raw_tags
-        
+
     except subprocess.CalledProcessError as e:
         print(f"Error running ffprobe: {e}")
         print(f"ffprobe output: {e.stdout}")
@@ -607,7 +626,7 @@ def convert_video_format(input_file: str, video_codec="libx264", audio_codec="aa
     - libxvid: Xvid
     - mjpeg: Motion JPEG
     - libtheora: Theora
-    
+
     Audio codec types:
     - aac: Advanced Audio Coding (AAC)
     - libmp3lame: MP3
@@ -618,8 +637,8 @@ def convert_video_format(input_file: str, video_codec="libx264", audio_codec="aa
     - libtwolame: MP2
     - ac3: Dolby Digital (AC-3)
     - copy: Copy audio without re-encoding
-    
-    
+
+
     must have ffmpeg sudo apt installed:
     sudo apt install ffmpeg
     """
@@ -629,10 +648,10 @@ def convert_video_format(input_file: str, video_codec="libx264", audio_codec="aa
             # Generate a simple filename for FFmpeg
             temp_input = os.path.join(temp_dir, "temp_input.mp4")
             temp_output = os.path.join(temp_dir, "temp_output.mp4")
-            
+
             # Copy original file to the temporary location
             shutil.copy2(input_file, temp_input)
-            
+
             # Run FFmpeg on the temporary file
             stream = ffmpeg.input(temp_input)
             output_args = {}
@@ -642,25 +661,27 @@ def convert_video_format(input_file: str, video_codec="libx264", audio_codec="aa
                 output_args['acodec'] = audio_codec
 
             # Output the converted file to another temporary location
-            stream = ffmpeg.output(stream, temp_output, **output_args, map_metadata='0')
+            stream = ffmpeg.output(stream, temp_output,
+                                   **output_args, map_metadata='0')
             stream = ffmpeg.overwrite_output(stream)
             ffmpeg.run(stream)
-            
+
             # Move the converted file back to the original location, replacing the original
             shutil.move(temp_output, input_file)
-            
-            print(f"Conversion complete and original file updated: {input_file}")
+
+            print(
+                f"Conversion complete and original file updated: {input_file}")
             return True
     except ffmpeg.Error as e:
-        print(f"An error occurred: {e.stderr.decode() if e.stderr else str(e)}")
+        print(
+            f"An error occurred: {e.stderr.decode() if e.stderr else str(e)}")
         return False
     except Exception as ex:
         print(f"An unexpected error occurred: {str(ex)}")
         return False
 
 
-
-#### os handlers
+# os handlers
 def copy_file(CopyThisFile: str, ToBecomeThisFile: str):
     src = CopyThisFile
     dst = ToBecomeThisFile
@@ -680,7 +701,8 @@ def copy_file_path_generative(from_here, to_here):
     try:
         shutil.copy2(from_here, to_here)
     except:
-        print(f"error copying {to_here} from {from_here} possibly duplicate files")
+        print(
+            f"error copying {to_here} from {from_here} possibly duplicate files")
 
 
 def check_file_existence(directory, filename):
@@ -689,9 +711,9 @@ def check_file_existence(directory, filename):
 
 
 def slightly_change_names(dir: str):
-    n=0
+    n = 0
     for file in os.listdir(dir):
-        n+=1
+        n += 1
         os.rename(f"{dir}/{file}", f"{dir}/{n}_{file}")
 
 
@@ -730,7 +752,7 @@ def delete(path):
 
 def get_all_file_paths(pattern):
     file_paths = []
-    
+
     # If the pattern is a directory, process it as before
     if os.path.isdir(pattern):
         for root, _, files in os.walk(pattern):
@@ -748,7 +770,7 @@ def get_all_file_paths(pattern):
                     for file in files:
                         file_path = os.path.join(root, file)
                         file_paths.append(file_path)
-    
+
     return file_paths
 
 
@@ -766,7 +788,6 @@ def get_file_type(path):
     last updated:
     2024/7/21
     """
-
 
     file_extensions = {
         "image": [".png", ".jpg", ".jpeg", ".gif", ".bmp", ".tiff", ".webp", ".heif", ".ico", ".svg"],
@@ -795,11 +816,11 @@ def get_file_type(path):
     return "unknown"
 
 
-def getRandomFiles(paths:list,type,count:int):
+def getRandomFiles(paths: list, type, count: int):
     """
     type variable must be:
     image, video, audio, document, archive, code, markdown, e-book, spreadsheet, presentation, database, configuration, log, script, font
-    
+
     if None, it will pick from everything
 
     path is a list of paths to get stuff from
@@ -809,13 +830,12 @@ def getRandomFiles(paths:list,type,count:int):
     for path in paths:
         for i in get_all_file_paths(path):
             all_paths.append(i)
-    
-    
+
     if type:
-      files = [file for file in all_paths if get_file_type(file) in type]
+        files = [file for file in all_paths if get_file_type(file) in type]
     else:
-      files = all_paths
-    return choose_random_objects(files,count)
+        files = all_paths
+    return choose_random_objects(files, count)
 
 
 def copy_multiple_files(file_paths, target_directory):
@@ -826,50 +846,50 @@ def copy_multiple_files(file_paths, target_directory):
         # Extract the file name and extension
         file_name = os.path.basename(file_path)
         file_name_without_ext, file_ext = os.path.splitext(file_name)
-        
+
         # Determine the target file path
         target_file_path = os.path.join(target_directory, file_name)
-        
+
         # Handle file name conflicts
         counter = 1
         while os.path.exists(target_file_path):
             new_file_name = f"{file_name_without_ext}_{counter}{file_ext}"
             target_file_path = os.path.join(target_directory, new_file_name)
             counter += 1
-        
+
         # Copy the file to the target directory
         shutil.copy(file_path, target_file_path)
         print(f"Copied {file_path} to {target_file_path}")
 
 
-def combinePATH(list:list):
+def combinePATH(list: list):
     out = ""
     for i in list:
-        out = os.path.join(out,i)
+        out = os.path.join(out, i)
     return out
 
 
-def checkStrValidicityOnPath(text:str):
+def checkStrValidicityOnPath(text: str):
     try:
-        open(os.path.join(text+".txt"),"w")
+        open(os.path.join(text+".txt"), "w")
         os.remove(os.path.join(text+".txt"))
         return True
     except:
         return False
 
 
-def split_path(path: str,noFile:bool = False) -> list:
+def split_path(path: str, noFile: bool = False) -> list:
     # Normalize the path (to handle different slashes on different OS)
     normalized_path = os.path.normpath(path)
-    
+
     # Split the normalized path into directories and file
     parts = []
-    
+
     # Loop while there is still something to split
     while True:
         # Split the path into head (directory) and tail (last component)
         head, tail = os.path.split(normalized_path)
-        
+
         # If there's no more head (root directory), break
         if tail:
             parts.insert(0, tail)  # Insert at the beginning to keep order
@@ -877,21 +897,22 @@ def split_path(path: str,noFile:bool = False) -> list:
             parts.insert(0, head)
             break
         normalized_path = head
-    
+
     if noFile and "." in parts[-1]:
         parts.pop()
-    
+
     return parts
+
 
 def normalize_path(path: str) -> str:
     """
     Converts a file path with spaces or special characters into a format
     that can be recognized globally by programs without using quotes,
     by escaping special characters (especially on Linux).
-    
+
     Args:
         path (str): The original file path.
-    
+
     Returns:
         str: The normalized file path with escaped characters for Linux.
     """
@@ -904,7 +925,7 @@ def normalize_path(path: str) -> str:
     else:
         # On Linux, escape spaces and other special characters
         special_chars = r' !"#$&\'()*,:;<=>?@[\\]^`{|}'
-        
+
         escaped_path = ''
         for char in path:
             if char in special_chars:
@@ -915,8 +936,7 @@ def normalize_path(path: str) -> str:
         return escaped_path
 
 
-
-#### number theory
+# number theory
 def checkPrime(n: int) -> bool:
     """Checks if n is a prime number or not"""
 
@@ -959,37 +979,36 @@ def factors(n: int) -> list:
     return rangePick(rmSame(factorD), 1, n)
 
 
-
-#### physics
-def solve_schrodinger(outputDirectory:str,filename:str = "out"):
+# physics
+def solve_schrodinger(outputDirectory: str, filename: str = "out"):
     # Collect inputs from the user
     hbar = float(input("Enter the reduced Planck constant (in J·s): "))
     m = float(input("Enter the mass of the particle (in kg): "))
     L = float(input("Enter the width of the potential well (in meters): "))
     N = int(input("Enter the number of points in the grid: "))
-    
+
     # Grid spacing
     dx = L / N
-    
+
     # Potential function (infinite square well)
     def potential(x):
         return 0 if 0 <= x <= L else np.inf
-    
+
     # Create the Hamiltonian matrix
     H = np.zeros((N, N))
     for i in range(1, N-1):
         H[i, i] = -2
         H[i, i-1] = H[i, i+1] = 1
     H = -H * hbar**2 / (2 * m * dx**2)
-    
+
     # Solve the eigenvalue problem
     eigenvalues, eigenvectors = np.linalg.eigh(H)
-    
+
     # Select the lowest energy eigenstate
     psi = eigenvectors[:, 0]
     psi = psi / np.sqrt(np.sum(psi**2) * dx)  # Normalize the wavefunction
     x = np.linspace(0, L, N)
-    
+
     # Plot the potential and wavefunction
     plt.figure(figsize=(10, 6))
     plt.plot(x, psi**2, label='Probability Density |ψ(x)|²')
@@ -999,15 +1018,14 @@ def solve_schrodinger(outputDirectory:str,filename:str = "out"):
     plt.legend()
     plt.grid()
     plt.show()
-    plt.savefig(os.path.join(outputDirectory,filename+".mp4"))
-    
+    plt.savefig(os.path.join(outputDirectory, filename+".mp4"))
+
     # Print the ground state energy
     E0 = eigenvalues[0]
     print(f"Ground state energy: {E0} J")
 
 
-
-#### pendulum stuff
+# pendulum stuff
 @jit(nopython=True)
 def hamiltonian_derivatives(t, state, m1, m2, l1, l2, g):
     """Computes time derivatives of the Hamiltonian system more efficiently."""
@@ -1023,15 +1041,18 @@ def hamiltonian_derivatives(t, state, m1, m2, l1, l2, g):
 
     # Angular velocities
     θ1_dot = (p1 * m2_l2_sq - p2 * m2_l1_l2_c) / (l1_sq * l2_sq * denom)
-    θ2_dot = (p2 * (m1 * l1_sq + m2 * l1_sq + m2_l1_l2_c) - p1 * m2_l1_l2_c) / (l1_sq * l2_sq * denom)
+    θ2_dot = (p2 * (m1 * l1_sq + m2 * l1_sq + m2_l1_l2_c) -
+              p1 * m2_l1_l2_c) / (l1_sq * l2_sq * denom)
 
     # Moment changes
-    p1_dot = -(m1 + m2) * g * l1 * np.sin(θ1) - m2 * l1 * l2 * θ1_dot * θ2_dot * s
+    p1_dot = -(m1 + m2) * g * l1 * np.sin(θ1) - \
+        m2 * l1 * l2 * θ1_dot * θ2_dot * s
     p2_dot = -m2 * g * l2 * np.sin(θ2) + m2 * l1 * l2 * θ1_dot * θ2_dot * s
 
     return np.array([θ1_dot, θ2_dot, p1_dot, p2_dot])
 
-def simulate_double_pendulum(theta1_0, theta2_0, t_max, m1=1, m2=1, l1=1, l2=1, 
+
+def simulate_double_pendulum(theta1_0, theta2_0, t_max, m1=1, m2=1, l1=1, l2=1,
                              g=9.81, p1_0=0, p2_0=0, dt=0.01):
     """
     Simulates a double pendulum using Hamiltonian mechanics efficiently.
@@ -1049,7 +1070,7 @@ def simulate_double_pendulum(theta1_0, theta2_0, t_max, m1=1, m2=1, l1=1, l2=1,
         t_eval : ndarray - Time steps of the simulation
         states : ndarray - Frame-by-frame state [theta1, theta2, p1, p2]
     """
-    
+
     state0 = np.array([theta1_0, theta2_0, p1_0, p2_0])
     t_eval = np.arange(0, t_max, dt)  # Time steps
 
@@ -1062,10 +1083,10 @@ def simulate_double_pendulum(theta1_0, theta2_0, t_max, m1=1, m2=1, l1=1, l2=1,
     return t_eval, solution.y.T  # Transposed so rows are time steps
 
 
-def visualize_double_pendulum(theta1_0:float, theta2_0:float, t_max:float, output_dir:str = "", video_name:str = "double_pendulum", m1:float = 1, m2:float = 1, l1:float = 1, l2:float = 1, g:float = 9.81, p1_0:float = 0, p2_0:float = 0, dt:float = 0.01,printDeets:bool = False):
+def visualize_double_pendulum(theta1_0: float, theta2_0: float, t_max: float, output_dir: str = "", video_name: str = "double_pendulum", m1: float = 1, m2: float = 1, l1: float = 1, l2: float = 1, g: float = 9.81, p1_0: float = 0, p2_0: float = 0, dt: float = 0.01, printDeets: bool = False):
     """
     Creates an animation of the double pendulum from the simulation data.
-    
+
     Parameters:
         m1, m2 : float - Masses of the pendulum arms
         l1, l2 : float - Lengths of the rods
@@ -1076,14 +1097,13 @@ def visualize_double_pendulum(theta1_0:float, theta2_0:float, t_max:float, outpu
         dt     : float - Time step between frames
     """
 
-    t_eval, states = simulate_double_pendulum(theta1_0, theta2_0, t_max, m1, m2, l1, l2, g, p1_0, p2_0, dt)
+    t_eval, states = simulate_double_pendulum(
+        theta1_0, theta2_0, t_max, m1, m2, l1, l2, g, p1_0, p2_0, dt)
 
     theta1, theta2 = states[:, 0], states[:, 1]
 
-
     x1, y1 = l1 * np.sin(theta1), -l1 * np.cos(theta1)
     x2, y2 = x1 + l2 * np.sin(theta2), y1 - l2 * np.cos(theta2)
-
 
     fig, ax = plt.subplots(figsize=(5, 5))
     ax.set_xlim(-l1 - l2 - 0.1, l1 + l2 + 0.1)
@@ -1108,27 +1128,26 @@ def visualize_double_pendulum(theta1_0:float, theta2_0:float, t_max:float, outpu
         trace_x.append(x2[i])
         trace_y.append(y2[i])
         trace.set_data(trace_x, trace_y)
-        printIF(printDeets,f"frame {i+1}/{len(states)} - done")
+        printIF(printDeets, f"frame {i+1}/{len(states)} - done")
 
         return line, trace
 
-    
-
-    ani = animation.FuncAnimation(fig, update, frames=len(t_eval), init_func=init, blit=True)
-    printIF(printDeets,"video created")
+    ani = animation.FuncAnimation(
+        fig, update, frames=len(t_eval), init_func=init, blit=True)
+    printIF(printDeets, "video created")
 
     # Save as MP4 video
-    out = os.path.join(output_dir,video_name+".mp4")
+    out = os.path.join(output_dir, video_name+".mp4")
     ani.save(out, fps=1/dt, writer="ffmpeg")
     plt.close(fig)  # Close figure to avoid display issues
 
     print(f"Animation saved as {out}")
 
 
-def is_double_pendulum_chaotic(state:tuple, prev_state:tuple, l1:float = 1, l2:float = 1, dt:float = 0.01, threshold_omega:float=5.0, threshold_alpha:float=10.0):
+def is_double_pendulum_chaotic(state: tuple, prev_state: tuple, l1: float = 1, l2: float = 1, dt: float = 0.01, threshold_omega: float = 5.0, threshold_alpha: float = 10.0):
     """
     Determines if a double pendulum is in a chaotic state based on a single frame.
-    
+
     Parameters:
         state : list [θ1, θ2, p1, p2] - Current state of the system
         prev_state : list [θ1, θ2, p1, p2] - Previous state (for velocity estimation)
@@ -1136,7 +1155,7 @@ def is_double_pendulum_chaotic(state:tuple, prev_state:tuple, l1:float = 1, l2:f
         dt : float - Time step between frames
         threshold_omega : float - Angular velocity threshold for chaos
         threshold_alpha : float - Angular acceleration threshold for chaos
-    
+
     Returns:
         bool - True if chaotic, False otherwise
     """
@@ -1155,8 +1174,9 @@ def is_double_pendulum_chaotic(state:tuple, prev_state:tuple, l1:float = 1, l2:f
 
     # Chaotic condition checks
     if abs(ω1) > threshold_omega or abs(ω2) > threshold_omega:
-        return True  # High angular velocity detected (fast unpredictable motion)
-    
+        # High angular velocity detected (fast unpredictable motion)
+        return True
+
     if abs(α1) > threshold_alpha or abs(α2) > threshold_alpha:
         return True  # High angular acceleration detected (torque spikes)
 
@@ -1167,7 +1187,7 @@ def is_double_pendulum_chaotic(state:tuple, prev_state:tuple, l1:float = 1, l2:f
     return False  # Otherwise, assume it's not chaotic (yet)
 
 
-def double_pendulum_chaos_grid(theta1_range:tuple,theta2_range:tuple, t_max: float, video_type:list = [], output_dir:str = "", video_name:str = "double_pendulum_grid", sim_height:int = 50, sim_width:int = 50, m1: float = 1, m2: float = 1, l1: float = 1, l2: float = 1, g: float = 9.81, p1_0: float = 0, p2_0: float = 0, dt: float = 0.01, chaotic_threshold_omega:float=5.0, chaotic_threshold_alpha:float=10.0,printDeets:bool = False):
+def double_pendulum_chaos_grid(theta1_range: tuple, theta2_range: tuple, t_max: float, video_type: list = [], output_dir: str = "", video_name: str = "double_pendulum_grid", sim_height: int = 50, sim_width: int = 50, m1: float = 1, m2: float = 1, l1: float = 1, l2: float = 1, g: float = 9.81, p1_0: float = 0, p2_0: float = 0, dt: float = 0.01, chaotic_threshold_omega: float = 5.0, chaotic_threshold_alpha: float = 10.0, printDeets: bool = False):
     """
     Simulates a grid of double pendulums with different initial conditions and determines 
     whether each simulation is chaotic at each time step.
@@ -1214,34 +1234,34 @@ def double_pendulum_chaos_grid(theta1_range:tuple,theta2_range:tuple, t_max: flo
     plt.title("Chaotic Regions at t = 0")
     plt.show()
     """
-    
-    
+
     all_DP_states = []
     t_eval = []
     for i in range(sim_height):
         all_DP_states.append([])
         for j in range(sim_width):
-            theta1 = (theta1_range[1]-theta1_range[0])/(sim_width-1)*j+theta1_range[0]
-            theta2 = (theta2_range[1]-theta2_range[0])/(sim_height-1)*i+theta2_range[0]
-            t_eval, state = simulate_double_pendulum(theta1,theta2,t_max,m1,m2,l1,l2,g,p1_0,p2_0,dt)
+            theta1 = (theta1_range[1]-theta1_range[0]) / \
+                (sim_width-1)*j+theta1_range[0]
+            theta2 = (theta2_range[1]-theta2_range[0]) / \
+                (sim_height-1)*i+theta2_range[0]
+            t_eval, state = simulate_double_pendulum(theta1, theta2, t_max, m1, m2, l1, l2, g, p1_0, p2_0, dt)
             all_DP_states[-1].append(state)
-        printIF(printDeets,f"completed all double pendulum simulation for row {i+1}/{sim_height}")
-    
+        printIF(
+            printDeets, f"completed all double pendulum simulation for row {i+1}/{sim_height}")
+
     grid_state = [[[] for i in range(sim_height)] for j in range(len(t_eval))]
 
     for i in range(len(grid_state)):
         for j in range(sim_height):
             for k in range(sim_width):
                 state = all_DP_states[j][k][i]
-                
+
                 grid_state[i][j].append(state)
-    printIF(printDeets,"grid_state list created")
+    printIF(printDeets, "grid_state list created")
 
-
-    
     if 1 in video_type:
         # Convert grid_state to a NumPy array for better handling
-        
+
         t = copy.deepcopy(grid_state)
         for i in reversed(range(len(t))):
             for j in range(len(t[i])):
@@ -1250,11 +1270,13 @@ def double_pendulum_chaos_grid(theta1_range:tuple,theta2_range:tuple, t_max: flo
                         prev_state = t[i][j][k]
                     else:
                         prev_state = t[i-1][j][k]
-                    
-                    t[i][j][k] = is_double_pendulum_chaotic(t[i][j][k],prev_state,l1,l2,dt,chaotic_threshold_omega,chaotic_threshold_alpha)
-                printIF(printDeets,f"frame: {len(t)-i}/{len(t)} --- chaotic checked")
+
+                    t[i][j][k] = is_double_pendulum_chaotic(
+                        t[i][j][k], prev_state, l1, l2, dt, chaotic_threshold_omega, chaotic_threshold_alpha)
+                printIF(
+                    printDeets, f"frame: {len(t)-i}/{len(t)} --- chaotic checked")
         grid_array = np.array(t)  # Shape: (num_frames, height, width)
-        
+
         # Get simulation dimensions
         num_frames, height, width = grid_array.shape
 
@@ -1269,49 +1291,59 @@ def double_pendulum_chaos_grid(theta1_range:tuple,theta2_range:tuple, t_max: flo
 
         def update(frame):
             im.set_array(grid_array[frame])
-            ax.set_title(f"Mode: B/W = Chaotic/not Chaotic --- Time: {frame * dt:.2f} s")
-            printIF(printDeets,f"frame {frame +1}/{len(t_eval)} done")
+            ax.set_title(
+                f"Mode: B/W = Chaotic/not Chaotic --- Time: {frame * dt:.2f} s")
+            printIF(printDeets, f"frame {frame +1}/{len(t_eval)} done")
             return [im]
 
-        ani = animation.FuncAnimation(fig, update, frames=num_frames, interval=1000 / (1/dt), blit=False)
+        ani = animation.FuncAnimation(
+            fig, update, frames=num_frames, interval=1000 / (1/dt), blit=False)
 
         # Save as MP4 video
         if len(video_type) == 1:
-            save_path = os.path.join(output_dir,video_name+".mp4")
+            save_path = os.path.join(output_dir, video_name+".mp4")
         else:
-            save_path = os.path.join(output_dir,video_name+f"_type1"+".mp4")
+            save_path = os.path.join(output_dir, video_name+f"_type1"+".mp4")
 
         ani.save(save_path, fps=1/dt, writer="ffmpeg")
         plt.close(fig)  # Close the figure to free up memory
 
         print(f"Chaos grid animation saved as {save_path}")
     if 2 in video_type or 3 in video_type:
-        num_frames, height, width = len(grid_state), len(grid_state[0]), len(grid_state[0][0])
+        num_frames, height, width = len(grid_state), len(
+            grid_state[0]), len(grid_state[0][0])
 
         # Convert grid_state into an RGB image sequence
-        frames_rgb_theta = np.zeros((num_frames, height, width, 3))  # RGB frames
+        frames_rgb_theta = np.zeros(
+            (num_frames, height, width, 3))  # RGB frames
         frames_rgb_p = np.zeros((num_frames, height, width, 3))  # RGB frames
 
         for t in range(num_frames):
             for i in range(height):
                 for j in range(width):
                     saturation = 1.0  # Full saturation
-                    theta1, theta2,p1,p2 = grid_state[t][i][j]  # Extract θ1, θ2, p1, p2 at (i, j) for frame t
-                    hue = (theta1 % (2 * np.pi)) / (2 * np.pi)  # Normalize to range [0, 1]
-                    brightness = 0.3 + 0.7 * abs(np.sin(theta2))  # Use sine for variation, range [0.3, 1]
-                    frames_rgb_theta[t, i, j] = colorsys.hsv_to_rgb(hue, saturation, brightness)
+                    # Extract θ1, θ2, p1, p2 at (i, j) for frame t
+                    theta1, theta2, p1, p2 = grid_state[t][i][j]
+                    # Normalize to range [0, 1]
+                    hue = (theta1 % (2 * np.pi)) / (2 * np.pi)
+                    # Use sine for variation, range [0.3, 1]
+                    brightness = 0.3 + 0.7 * abs(np.sin(theta2))
+                    frames_rgb_theta[t, i, j] = colorsys.hsv_to_rgb(
+                        hue, saturation, brightness)
 
                     # Normalize p1 to the hue range [0, 1] (assuming p1 range is unknown but we clip it)
-                    hue = (np.arctan2(p1, p2) / (2 * np.pi)) % 1  # Angle-based hue for smooth transition
+                    # Angle-based hue for smooth transition
+                    hue = (np.arctan2(p1, p2) / (2 * np.pi)) % 1
                     # Normalize brightness based on magnitude of momentum
-                    p_mag = np.sqrt(p1**2 + p2**2)  # Compute total momentum magnitude
-                    brightness = 0.3 + 0.7 * (np.tanh(p_mag / 10))  # Normalize using tanh for smooth scaling
-                    frames_rgb_p[t, i, j] = colorsys.hsv_to_rgb(hue, saturation, brightness)
+                    # Compute total momentum magnitude
+                    p_mag = np.sqrt(p1**2 + p2**2)
+                    # Normalize using tanh for smooth scaling
+                    brightness = 0.3 + 0.7 * (np.tanh(p_mag / 10))
+                    frames_rgb_p[t, i, j] = colorsys.hsv_to_rgb(
+                        hue, saturation, brightness)
 
-                    
-                    
-            printIF(printDeets,f"frame: {t+1}/{len(grid_state)} --- RGB value mapped")
-
+            printIF(
+                printDeets, f"frame: {t+1}/{len(grid_state)} --- RGB value mapped")
 
         if 2 in video_type:
             # Set up the figure
@@ -1324,16 +1356,19 @@ def double_pendulum_chaos_grid(theta1_range:tuple,theta2_range:tuple, t_max: flo
 
             def update(frame):
                 im.set_array(frames_rgb_theta[frame])
-                ax.set_title(f"Mode: colors based off of theta values --- Time: {frame * dt:.2f} s")
-                printIF(printDeets,f"frame {frame +1}/{len(t_eval)} done")
+                ax.set_title(
+                    f"Mode: colors based off of theta values --- Time: {frame * dt:.2f} s")
+                printIF(printDeets, f"frame {frame +1}/{len(t_eval)} done")
                 return [im]
 
-            ani = animation.FuncAnimation(fig, update, frames=num_frames, interval=1000 / (1/dt), blit=False)
+            ani = animation.FuncAnimation(
+                fig, update, frames=num_frames, interval=1000 / (1/dt), blit=False)
 
             if len(video_type) == 1:
-                save_path = os.path.join(output_dir,video_name+".mp4")
+                save_path = os.path.join(output_dir, video_name+".mp4")
             else:
-                save_path = os.path.join(output_dir,video_name+f"_type2"+".mp4")
+                save_path = os.path.join(
+                    output_dir, video_name+f"_type2"+".mp4")
 
             # Save as MP4 video
             ani.save(save_path, fps=(1/dt), writer="ffmpeg")
@@ -1351,16 +1386,19 @@ def double_pendulum_chaos_grid(theta1_range:tuple,theta2_range:tuple, t_max: flo
 
             def update(frame):
                 im.set_array(frames_rgb_p[frame])
-                ax.set_title(f"Mode: colors based off of momentum valuesTime: {frame * dt:.2f} s")
-                printIF(printDeets,f"frame {frame +1}/{len(t_eval)} done")
+                ax.set_title(
+                    f"Mode: colors based off of momentum valuesTime: {frame * dt:.2f} s")
+                printIF(printDeets, f"frame {frame +1}/{len(t_eval)} done")
                 return [im]
 
-            ani = animation.FuncAnimation(fig, update, frames=num_frames, interval=1000 / (1/dt), blit=False)
+            ani = animation.FuncAnimation(
+                fig, update, frames=num_frames, interval=1000 / (1/dt), blit=False)
 
             if len(video_type) == 1:
-                save_path = os.path.join(output_dir,video_name+".mp4")
+                save_path = os.path.join(output_dir, video_name+".mp4")
             else:
-                save_path = os.path.join(output_dir,video_name+f"_type3"+".mp4")
+                save_path = os.path.join(
+                    output_dir, video_name+f"_type3"+".mp4")
 
             # Save as MP4 video
             ani.save(save_path, fps=(1/dt), writer="ffmpeg")
@@ -1368,28 +1406,33 @@ def double_pendulum_chaos_grid(theta1_range:tuple,theta2_range:tuple, t_max: flo
 
             print(f"Double pendulum grid animation saved as {save_path}")
     if 4 in video_type:
-        num_frames, height, width = len(grid_state), len(grid_state[0]), len(grid_state[0][0])
+        num_frames, height, width = len(grid_state), len(
+            grid_state[0]), len(grid_state[0][0])
 
-        fig, axes = plt.subplots(height,width,figsize=(width*3,height*3))
+        fig, axes = plt.subplots(height, width, figsize=(width*3, height*3))
         axes = np.array(axes)
 
-        lines = [[axes[i,j].plot([],[],"o-",lw=2)[0] for j in range(width)] for i in range(height)]
-        traces = [[axes[i,j].plot([],[],"r-",alpha = 0.5,lw=1)[0] for j in range(width)] for i in range(height)]
-        trace_x, trace_y = [[[] for j in range(width)] for i in range(height)], [[[] for j in range(width)] for i in range(height)]
-        printIF(printDeets,f"vars initialized for {width*height} total double pendulums")
-        
+        lines = [[axes[i, j].plot([], [], "o-", lw=2)[0]
+                  for j in range(width)] for i in range(height)]
+        traces = [[axes[i, j].plot([], [], "r-", alpha=0.5, lw=1)[0]
+                   for j in range(width)] for i in range(height)]
+        trace_x, trace_y = [[[] for j in range(width)] for i in range(height)], [
+            [[] for j in range(width)] for i in range(height)]
+        printIF(
+            printDeets, f"vars initialized for {width*height} total double pendulums")
+
         def init():
             for i in range(height):
                 for j in range(width):
-                    axes[i,j].set_xlim(-l1 - l2 - 0.1, l1 + l2 + 0.1)
-                    axes[i,j].set_ylim(-l1 - l2 - 0.1, l1 + l2 + 0.1)
-                    axes[i,j].set_aspect('equal')
-                    axes[i,j].grid()
-                    lines[i][j].set_data([],[])
-                    traces[i][j].set_data([],[])
-            
+                    axes[i, j].set_xlim(-l1 - l2 - 0.1, l1 + l2 + 0.1)
+                    axes[i, j].set_ylim(-l1 - l2 - 0.1, l1 + l2 + 0.1)
+                    axes[i, j].set_aspect('equal')
+                    axes[i, j].grid()
+                    lines[i][j].set_data([], [])
+                    traces[i][j].set_data([], [])
+
             return sum(lines, []) + sum(traces, [])
-        
+
         def update(t):
             for i in range(height):
                 for j in range(width):
@@ -1397,37 +1440,33 @@ def double_pendulum_chaos_grid(theta1_range:tuple,theta2_range:tuple, t_max: flo
                     x1, y1 = l1 * np.sin(theta1), -l1 * np.cos(theta1)
                     x2, y2 = x1 + l2 * np.sin(theta2), y1 - l2 * np.cos(theta2)
 
-                    lines[i][j].set_data([0,x1,x2],[0,y1,y2])
+                    lines[i][j].set_data([0, x1, x2], [0, y1, y2])
 
                     trace_x[i][j].append(x2)
                     trace_y[i][j].append(y2)
                     traces[i][j].set_data(trace_x[i][j], trace_y[i][j])
-                
-            printIF(printDeets,f"frame: {t+1}/{num_frames} animated")
-            
+
+            printIF(printDeets, f"frame: {t+1}/{num_frames} animated")
+
             return sum(lines, []) + sum(traces, [])
-        
-        ani = animation.FuncAnimation(fig, update, frames = num_frames, init_func=init, blit=True)
+
+        ani = animation.FuncAnimation(
+            fig, update, frames=num_frames, init_func=init, blit=True)
 
         if len(video_type) == 1:
-                save_path = os.path.join(output_dir,video_name+".mp4")
+            save_path = os.path.join(output_dir, video_name+".mp4")
         else:
-            save_path = os.path.join(output_dir,video_name+f"_type3"+".mp4")
-        
+            save_path = os.path.join(output_dir, video_name+f"_type3"+".mp4")
+
         ani.save(save_path, fps=1/dt, writer="ffmpeg")
-        printIF(printDeets,f"Double pendulum grid animation saved as {save_path}")
+        printIF(
+            printDeets, f"Double pendulum grid animation saved as {save_path}")
         plt.close(fig)
 
     return grid_state
 
 
-
-
-
-
-
-
-#### mathmatics
+# mathmatics
 def root(base: float, root: float) -> float:
     """takes the root of base"""
     return math.pow(base, 1/root)
@@ -1642,19 +1681,19 @@ def polyExpand(roots: list):
             pass  # TODO
 
 
-def calculateAreaOfTriangle(points:list):
+def calculateAreaOfTriangle(points: list):
     if len(points) != 3:
-        raise ValueError("Input must be a list of three tuples representing the vertices of a triangle.")
-    
-    (x1, y1), (x2, y2), (x3, y3) = points[0],points[1],points[2]
+        raise ValueError(
+            "Input must be a list of three tuples representing the vertices of a triangle.")
+
+    (x1, y1), (x2, y2), (x3, y3) = points[0], points[1], points[2]
 
     # Calculate the area using the determinant method
     area = 0.5 * abs(x1*(y2 - y3) + x2*(y3 - y1) + x3*(y1 - y2))
     return area
 
 
-
-#### generators
+# generators
 def genRandomWord(length: int = 5, pronouncible: bool = True):
     if not pronouncible:
         word = ""
@@ -1664,7 +1703,7 @@ def genRandomWord(length: int = 5, pronouncible: bool = True):
         vowels = 'aeiou'
         consonants = 'bcdfghjklmnpqrstvwxyz'
         word = ''
-        
+
         for i in range(length):
             if i % 2 == 0:
                 # Even positions: prefer consonants, but allow some vowels
@@ -1678,27 +1717,27 @@ def genRandomWord(length: int = 5, pronouncible: bool = True):
                     word += random.choice(vowels)
                 else:
                     word += random.choice(consonants)
-    
+
     return word
 
 
-def print_styled(text, color_code, style_code="0",end="\n"):
-    print(f"\033[{style_code};{color_code}m{text}\033[0m",end=end)
+def print_styled(text, color_code, style_code="0", end="\n"):
+    print(f"\033[{style_code};{color_code}m{text}\033[0m", end=end)
 
 
-def createSimpleXLSX(collumNames:list,collumContent:list,output_folder:str,output_name:str="xls"):
-    workbook = xlsw.Workbook(os.path.join(output_folder,output_name+".xlsx"))
+def createSimpleXLSX(collumNames: list, collumContent: list, output_folder: str, output_name: str = "xls"):
+    workbook = xlsw.Workbook(os.path.join(output_folder, output_name+".xlsx"))
     worksheet = workbook.add_worksheet()
     for i in range(len(collumNames)):
-        worksheet.write(0,i,collumNames[i])
+        worksheet.write(0, i, collumNames[i])
     for i in range(len(collumContent)):
         for j in range(len(collumContent[i])):
-            worksheet.write(j+1,i,collumContent[i][j])
-    
+            worksheet.write(j+1, i, collumContent[i][j])
+
     workbook.close()
 
 
-#### other
+# other
 def startStockGame():
     print("\n\n\nStock Market Minigame")
     print("\nEnter at least 1 player names. leave blank to go to next")
@@ -1773,4 +1812,3 @@ def startStockGame():
 
     printTable([["Companies"]+sharesName, ["Starting price"] +
                sharesPrice, ["aggresiveness"]+sharesStrength])
-
