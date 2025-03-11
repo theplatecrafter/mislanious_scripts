@@ -162,6 +162,7 @@ def grid_sim(theta1_range: tuple,
     t = 0
     render_times = 0
 
+
     while True:
         if (time.perf_counter() - chunk_start_time) >= time_chunk:
             for i in range(sim_height):
@@ -178,6 +179,14 @@ def grid_sim(theta1_range: tuple,
                         color = colorsys.hsv_to_rgb(hue, saturation, brightness)
                         color_8bit = tuple(int(c * 255) for c in color)
                         pixels[t_idx, i, j] = color_8bit
+                
+                pixel_array = pygame.surfarray.pixels3d(screen)
+                for y in range(i+1):
+                    for x in range(sim_width):
+                        color = pixels[0, y, x]
+                        for px in range(pixel_size_x):
+                            for py in range(pixel_size_y):
+                                pixel_array[x * pixel_size_x + px, y * pixel_size_y + py] = color
                 
                 del pixel_array
 
@@ -222,7 +231,7 @@ def grid_sim(theta1_range: tuple,
 
 
 
-start1, end1 = m.radians(99), m.radians(103)
-start2, end2 = m.radians(113), m.radians(117)
+start1, end1 = m.radians(90), m.radians(-90)
+start2, end2 = m.radians(90), m.radians(-90)
 
 grid_sim((start1,end1),(start2,end2),50,50,500,500,printDeets=True)

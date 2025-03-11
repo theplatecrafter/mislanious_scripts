@@ -32,6 +32,8 @@ import numpy as np
 import rawpy as r
 from PIL import Image
 Image.MAX_IMAGE_PIXELS = None
+import time
+
 
 # Initialize Pygame
 pygame.init()
@@ -1464,6 +1466,148 @@ def double_pendulum_chaos_grid(theta1_range: tuple, theta2_range: tuple, t_max: 
         plt.close(fig)
 
     return grid_state
+
+
+def grid_sim(theta1_range: tuple,
+             theta2_range: tuple,
+             sim_height: int = 50,
+             sim_width: int = 50,
+             screen_height: int = 200,
+             screen_width: int = 200,
+             m1: float = 1,
+             m2: float = 1,
+             l1: float = 1,
+             l2: float = 1,
+             g: float = 9.81,
+             p1_0: float = 0,
+             p2_0: float = 0,
+             dt: float = 0.01,
+             chaotic_threshold_omega: float = 5.0,
+             chaotic_threshold_alpha: float = 10.0,
+             printDeets: bool = False):
+
+    pygame.init()
+    pygame.font.init()
+    if sim_height > screen_height:
+        sim_height = screen_height
+    if sim_width > screen_width:
+        sim_width = screen_width
+
+
+    pixel_size_x = math.floor(screen_width / sim_width)
+    pixel_size_y = math.floor(screen_height / sim_height)
+
+    screen_width_scaled = sim_width * pixel_size_x
+    screen_height_scaled = sim_height * pixel_size_y
+
+    font = pygame.font.SysFont(None, math.floor(screen_width_scaled/600*32))
+
+    screen = pygame.display.set_mode((screen_width_scaled, screen_height_scaled))
+
+    time_chunk = 10
+    current_sim_time = 0
+
+    prev_last_DP_state = np.zeros((sim_height, sim_width, 4)) #Initialize with correct dimensions.
+    pixels = np.zeros((int(time_chunk / dt), sim_height, sim_width, 3), dtype=np.uint8)
+
+    for i in range(sim_height):
+        for j in range(sim_width):
+            theta1 = (theta1_range[1] - theta1_range[0]) / (sim_width - 1) * j + theta1_range[0]
+            theta2 = (theta2_range[1] - theta2_range[0]) / (sim_height - 1) * i + theta2_range[0]
+            t_eval, state = simulate_double_pendulum(theta1, theta2, time_chunk, m1, m2, l1, l2, g, p1_0, p2_0, dt)
+            prev_last_DP_state[i, j] = state[-1]
+
+            saturation = 1.0
+            for t_idx in range(int(time_chunk / dt)):
+                theta1, theta2, p1, p2 = state[t_idx]
+                hue = (theta1 % (2 * np.pi)) / (2 * np.pi)
+                brightness = 0.3 + 0.7 * abs(np.sin(theta2))
+                color = colorsys.hsv_to_rgb(hue, saturation, brightness)
+                color_8bit = tuple(int(c * 255) for c in color)
+                pixels[t_idx, i, j] = color_8bit
+
+
+        screen.fill((0, 0, 0))
+
+        text = font.render(f"rendering chunk for t = {round(current_sim_time*10)/10} ~ {round((current_sim_time+time_chunk)*10)/10}: row {i+1}/{sim_height} done", True, (50,50,50))
+        screen.blit(text, (10, 10))
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+
+    chunk_start_time = time.perf_counter()
+    t = 0
+    render_times = 0
+
+
+    while True:
+        if (time.perf_counter() - chunk_start_time) >= time_chunk:
+            for i in range(sim_height):
+                for j in range(sim_width):
+                    theta1, theta2, p1, p2 = prev_last_DP_state[i, j]
+                    t_eval, state = simulate_double_pendulum(theta1, theta2, time_chunk, m1, m2, l1, l2, g, p1, p2, dt)
+                    prev_last_DP_state[i, j] = state[-1]
+
+                    saturation = 1.0
+                    for t_idx in range(int(time_chunk / dt)):
+                        theta1, theta2, p1, p2 = state[t_idx]
+                        hue = (theta1 % (2 * np.pi)) / (2 * np.pi)
+                        brightness = 0.3 + 0.7 * abs(np.sin(theta2))
+                        color = colorsys.hsv_to_rgb(hue, saturation, brightness)
+                        color_8bit = tuple(int(c * 255) for c in color)
+                        pixels[t_idx, i, j] = color_8bit
+                
+                pixel_array = pygame.surfarray.pixels3d(screen)
+                for y in range(i+1):
+                    for x in range(sim_width):
+                        color = pixels[0, y, x]
+                        for px in range(pixel_size_x):
+                            for py in range(pixel_size_y):
+                                pixel_array[x * pixel_size_x + px, y * pixel_size_y + py] = color
+                
+                del pixel_array
+
+                text = font.render(f"rendering chunk for t = {round(current_sim_time*10)/10} ~ {round((current_sim_time+time_chunk)*10)/10}: row {i+1}/{sim_height} done", True, (50,50,50))
+                screen.blit(text, (10, 10))
+                pygame.display.flip()
+
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        quit()
+
+            chunk_start_time = time.perf_counter()
+            t = 0
+            render_times +=1
+        else:
+            pixel_array = pygame.surfarray.pixels3d(screen)
+            for y in range(sim_height):
+                for x in range(sim_width):
+                    color = pixels[t, y, x]
+                    for px in range(pixel_size_x):
+                        for py in range(pixel_size_y):
+                            pixel_array[x * pixel_size_x + px, y * pixel_size_y + py] = color
+
+            current_chunk_time = time.perf_counter()-chunk_start_time
+            t = math.floor(current_chunk_time/dt)
+
+            current_sim_time = current_chunk_time + time_chunk*render_times
+            
+            del pixel_array
+
+            text = font.render(f"t = {round(current_sim_time*10)/10}", True, (50,50,50))
+            screen.blit(text, (10, 10))
+
+            pygame.display.flip()
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    quit()
+
 
 
 # mathmatics
