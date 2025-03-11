@@ -107,16 +107,20 @@ def grid_sim(theta1_range: tuple,
              printDeets: bool = False):
 
     pygame.init()
+    pygame.font.init()
     if sim_height > screen_height:
         sim_height = screen_height
     if sim_width > screen_width:
         sim_width = screen_width
+
 
     pixel_size_x = m.floor(screen_width / sim_width)
     pixel_size_y = m.floor(screen_height / sim_height)
 
     screen_width_scaled = sim_width * pixel_size_x
     screen_height_scaled = sim_height * pixel_size_y
+
+    font = pygame.font.SysFont(None, m.floor(screen_width_scaled/600*32))
 
     screen = pygame.display.set_mode((screen_width_scaled, screen_height_scaled))
 
@@ -142,10 +146,21 @@ def grid_sim(theta1_range: tuple,
                 color_8bit = tuple(int(c * 255) for c in color)
                 pixels[t_idx, i, j] = color_8bit
 
-        printIF(printDeets, f"initial render: row {i + 1}/{sim_height} done")
 
-    last_frame_time = chunk_start_time = time.perf_counter()
+        screen.fill((0, 0, 0))
+
+        text = font.render(f"rendering chunk for t = {round(current_sim_time*10)/10} ~ {round((current_sim_time+time_chunk)*10)/10}: row {i+1}/{sim_height} done", True, (50,50,50))
+        screen.blit(text, (10, 10))
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+
+    chunk_start_time = time.perf_counter()
     t = 0
+    render_times = 0
 
     while True:
         if (time.perf_counter() - chunk_start_time) >= time_chunk:
@@ -163,11 +178,21 @@ def grid_sim(theta1_range: tuple,
                         color = colorsys.hsv_to_rgb(hue, saturation, brightness)
                         color_8bit = tuple(int(c * 255) for c in color)
                         pixels[t_idx, i, j] = color_8bit
+                
+                del pixel_array
 
-                printIF(printDeets, f"render: row {i + 1}/{sim_height} done")
+                text = font.render(f"rendering chunk for t = {round(current_sim_time*10)/10} ~ {round((current_sim_time+time_chunk)*10)/10}: row {i+1}/{sim_height} done", True, (50,50,50))
+                screen.blit(text, (10, 10))
+                pygame.display.flip()
 
-            last_frame_time = chunk_start_time = time.perf_counter()
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        quit()
+
+            chunk_start_time = time.perf_counter()
             t = 0
+            render_times +=1
         else:
             pixel_array = pygame.surfarray.pixels3d(screen)
             for y in range(sim_height):
@@ -177,13 +202,16 @@ def grid_sim(theta1_range: tuple,
                         for py in range(pixel_size_y):
                             pixel_array[x * pixel_size_x + px, y * pixel_size_y + py] = color
 
-            t = m.floor((time.perf_counter()-(current_sim_time + chunk_start_time))/dt)
-            print(t, current_sim_time)
-            last_frame_time = time.perf_counter()
-            current_sim_time += time.perf_counter() - last_frame_time
-            
+            current_chunk_time = time.perf_counter()-chunk_start_time
+            t = m.floor(current_chunk_time/dt)
 
+            current_sim_time = current_chunk_time + time_chunk*render_times
+            
             del pixel_array
+
+            text = font.render(f"t = {round(current_sim_time*10)/10}", True, (50,50,50))
+            screen.blit(text, (10, 10))
+
             pygame.display.flip()
 
             for event in pygame.event.get():
@@ -193,4 +221,8 @@ def grid_sim(theta1_range: tuple,
 
 
 
-grid_sim((-np.pi/2,np.pi/2),(-np.pi/2,np.pi/2),50,50,500,500,printDeets=True)
+
+start1, end1 = m.radians(99), m.radians(103)
+start2, end2 = m.radians(113), m.radians(117)
+
+grid_sim((start1,end1),(start2,end2),50,50,500,500,printDeets=True)
