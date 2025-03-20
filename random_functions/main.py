@@ -2,6 +2,8 @@
 # TODO: finish stock market game
 
 import colorsys
+import sqlite3
+import imagehash
 from collections import defaultdict
 import pygame
 import scipy.integrate
@@ -35,8 +37,7 @@ Image.MAX_IMAGE_PIXELS = None
 import time
 
 
-# Initialize Pygame
-pygame.init()
+
 
 
 # converter
@@ -496,12 +497,16 @@ def get_image_metadata(filepath):
     return {k: (v.decode('utf-8') if isinstance(v, bytes) else v) for k, v in metadata.items()}
 
 
-def remove_repeated_images(image_directory: str, threshold: float = 0.00000000001, downSamplePercentage: float = 0.2, printDeets: bool = False, save_deleted: bool = True):
+def remove_repeated_images_slow(image_directory: str, threshold: float = 0.00000000001, downSamplePercentage: float = 0.2, printDeets: bool = False, save_deleted: bool = True):
+    """removes repeated images. This function isn't efficient for official use. use remove_repeated_images."""
+    
     images = [i for i in get_all_file_paths(
         image_directory) if get_file_type(i) == "image"]
     image_vector = []
     printIF(printDeets, f"Opened all {len(images)} images")
+    i = 0
     for image in images:
+        i+=1
         A = Image.open(image)
         resized_image = A.resize((int(A.width * downSamplePercentage),
                                   int(A.height * downSamplePercentage)))
@@ -509,7 +514,7 @@ def remove_repeated_images(image_directory: str, threshold: float = 0.0000000000
         t -= t.mean()
         image_vector.append(t)
         A.close()
-        printIF(printDeets, f"Generated image vector for {image}")
+        printIF(printDeets, f"{i}/{len(images)}: Generated image vector for {image}")
 
     dl = 0
     deleteThese = []
@@ -540,6 +545,109 @@ def remove_repeated_images(image_directory: str, threshold: float = 0.0000000000
             dl += 1
     printIF(
         printDeets, f"successfully deleted {dl} repeating iamges out of {len(images)}")
+
+
+def remove_repeated_images(image_directory: str, printDeets: bool = False, save_deleted: bool = True, threshold: int = 10):
+    """
+    Removes approximate duplicate images, considering different resolutions and using a pixel difference threshold.
+    """
+
+    printIF(printDeets, "Starting approximate duplicate image removal process...")
+    printIF(printDeets, f"Current working directory: {os.getcwd()}")
+
+    db_path = os.path.abspath("image_hashes.db")
+
+    # Delete the database if it exists
+    if os.path.exists(db_path):
+        try:
+            os.remove(db_path)
+            printIF(printDeets, "Previous database deleted.")
+        except OSError as e:
+            printIF(printDeets, f"Error deleting database: {e}")
+
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute("""CREATE TABLE IF NOT EXISTS image_data
+                       (hash TEXT, file_path TEXT, file_size INTEGER, aspect_ratio REAL)""")
+
+    image_count = 0
+    for img_path in (i for i in get_all_file_paths(image_directory) if get_file_type(i) == "image"):
+        try:
+            img = Image.open(img_path)
+            file_size = os.path.getsize(img_path)
+            width, height = img.size
+            aspect_ratio = width / height
+            p_hash = str(imagehash.phash(img))
+            img.close()
+            cursor.execute("INSERT INTO image_data VALUES (?, ?, ?, ?)", (p_hash, img_path, file_size, aspect_ratio))
+            image_count += 1
+            if image_count % 100 == 0:
+                printIF(printDeets, f"Hashed {image_count} images...")
+
+        except (OSError, ValueError) as e:
+            printIF(printDeets, f"Error hashing {img_path}: {e}")
+    conn.commit()
+    printIF(printDeets, f"Hashed {image_count} images in total.")
+
+    cursor.execute("SELECT hash FROM image_data GROUP BY hash HAVING COUNT(*) > 1")
+    potential_duplicates = [row[0] for row in cursor.fetchall()]
+    printIF(printDeets, f"Found {len(potential_duplicates)} potential duplicate groups.")
+
+    duplicate_count = 0
+    for p_hash in potential_duplicates:
+        cursor.execute("SELECT file_path, file_size, aspect_ratio FROM image_data WHERE hash = ?", (p_hash,))
+        image_paths = cursor.fetchall()
+        printIF(printDeets, f"Checking {len(image_paths)} images with hash: {p_hash}")
+
+        for i in range(len(image_paths)):
+            for j in range(i + 1, len(image_paths)):
+                path1, size1, ratio1 = image_paths[i]
+                path2, size2, ratio2 = image_paths[j]
+                try:
+                    img1 = Image.open(path1)
+                    img2 = Image.open(path2)
+
+                    # Resize to a common size (using the larger image's dimensions as reference)
+                    max_width = max(img1.width, img2.width)
+                    max_height = max(img1.height, img2.height)
+                    img1_resized = img1.resize((max_width, max_height))
+                    img2_resized = img2.resize((max_width, max_height))
+
+                    array1 = np.array(img1_resized).astype(np.int32)
+                    array2 = np.array(img2_resized).astype(np.int32)
+
+                    diff = np.abs(array1 - array2)
+                    mean_diff = np.mean(diff)
+
+                    printIF(printDeets, f"Comparing {path1} and {path2}: Mean pixel difference={mean_diff}")
+
+                    if mean_diff < threshold:
+                        area1 = img1_resized.width * img1_resized.height
+                        area2 = img2_resized.width * img2_resized.height
+
+                        if area1 < area2:
+                            delete_path = path1
+                            keep_path = path2
+                        else:
+                            delete_path = path2
+                            keep_path = path1
+
+                        if save_deleted:
+                            copy_file_path_generative(delete_path, combinePATH([image_directory, "repeated_images", split_path(delete_path)[-1]]))
+                        delete(delete_path)
+                        printIF(printDeets, f"Deleted {delete_path} (approximate duplicate of {keep_path}, lower resolution)")
+                        duplicate_count += 1
+                    img1.close()
+                    img2.close()
+                except (OSError, ValueError) as e:
+                    printIF(printDeets, f"Error comparing {path1} and {path2}: {e}")
+
+    conn.close()
+    printIF(printDeets, f"Deleted {duplicate_count} approximate duplicate images.")
+    printIF(printDeets, "Approximate duplicate image removal process complete.")
+
+
+
 
 
 # video handlers

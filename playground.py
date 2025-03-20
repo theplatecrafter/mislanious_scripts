@@ -6,4 +6,7 @@ import random_functions.main as rf
 import numpy as np
 
 
-rf.double_pendulum_chaos_grid((np.pi/3,np.pi/12*5),(np.pi/3,np.pi/12*5),60,[2],"outputs","DP_grid",printDeets=True,sim_height=50,sim_width=50)
+dir = "/mnt/f/8) 2025/2025-3-17~19 卒業旅行"
+#dir = "/mnt/c/Users/toren/Pictures/test"
+
+rf.remove_repeated_images(dir,printDeets=True)

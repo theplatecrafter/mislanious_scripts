@@ -1,237 +1,125 @@
-import time
-import math as m
-import scipy.integrate
-import numpy as np
 import pygame
-from numba import jit
-import colorsys
-import copy
+import sys
 
+# Initialize Pygame
+pygame.init()
 
-def printIF(boolean: bool, printString: str):
-    """prints printString if boolean == True"""
-    if boolean:
-        print(printString)
+# Constants
+WIDTH, HEIGHT = 600, 600
+CELL_SIZE = WIDTH // 9
+LINE_WIDTH = 5
+CIRCLE_RADIUS = CELL_SIZE // 3
+CIRCLE_WIDTH = 5
+CROSS_WIDTH = 5
+CROSS_PADDING = CELL_SIZE // 4
+BG_COLOR = (255, 255, 255)
+LINE_COLOR = (0, 0, 0)
+CIRCLE_COLOR = (0, 0, 255)
+CROSS_COLOR = (255, 0, 0)
+WIN_COLOR = (0, 255, 0)
 
+# Create the screen
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Ultimate Tic-Tac-Toe")
 
+# Game state
+board = [[['' for _ in range(3)] for _ in range(3)] for _ in range(3)]
+big_board = [['' for _ in range(3)] for _ in range(3)]
+current_player = 'X'
+last_move = None
+game_over = False
+winner = None
 
+# Helper functions
+def draw_board():
+    screen.fill(BG_COLOR)
+    for i in range(1, 3):
+        pygame.draw.line(screen, LINE_COLOR, (i * 3 * CELL_SIZE, 0), (i * 3 * CELL_SIZE, HEIGHT), LINE_WIDTH)
+        pygame.draw.line(screen, LINE_COLOR, (0, i * 3 * CELL_SIZE), (WIDTH, i * 3 * CELL_SIZE), LINE_WIDTH)
+    for i in range(9):
+        if i % 3 != 0:
+            pygame.draw.line(screen, LINE_COLOR, (i * CELL_SIZE, 0), (i * CELL_SIZE, HEIGHT), 2)
+        if i >= 3:
+            pygame.draw.line(screen, LINE_COLOR, (0, i * CELL_SIZE), (WIDTH, i * CELL_SIZE), 2)
 
-@jit(nopython=True)
-def hamiltonian_derivatives(t, state, m1, m2, l1, l2, g):
-    """Computes time derivatives of the Hamiltonian system more efficiently."""
-    θ1, θ2, p1, p2 = state
+def draw_pieces():
+    try:
+        if board[0][0][0][0] == 'O':
+            print("O found")
+        elif board[0][0][0][0] == 'X':
+            print("X found")
+    except IndexError as e:
+        print(f"IndexError in draw_pieces: {e}")
+        print(f"board[0][0][0][0]: {board[0][0][0][0]}")
 
-    c, s = np.cos(θ1 - θ2), np.sin(θ1 - θ2)
-    denom = m1 + m2 * s**2
+def check_win(board_to_check):
+    for i in range(3):
+        if board_to_check[i][0] == board_to_check[i][1] == board_to_check[i][2] != '':
+            return board_to_check[i][0]
+        if board_to_check[0][i] == board_to_check[1][i] == board_to_check[2][i] != '':
+            return board_to_check[0][i]
+    if board_to_check[0][0] == board_to_check[1][1] == board_to_check[2][2] != '':
+        return board_to_check[0][0]
+    if board_to_check[0][2] == board_to_check[1][1] == board_to_check[2][0] != '':
+        return board_to_check[0][2]
+    if all(board_to_check[row][col] != '' for row in range(3) for col in range(3)):
+        return 'Tie'
+    return None
 
-    # Precompute common terms
-    l1_sq, l2_sq = l1**2, l2**2
-    m2_l2_sq = m2 * l2_sq
-    m2_l1_l2_c = m2 * l1 * l2 * c
-
-    # Angular velocities
-    θ1_dot = (p1 * m2_l2_sq - p2 * m2_l1_l2_c) / (l1_sq * l2_sq * denom)
-    θ2_dot = (p2 * (m1 * l1_sq + m2 * l1_sq + m2_l1_l2_c) -
-              p1 * m2_l1_l2_c) / (l1_sq * l2_sq * denom)
-
-    # Moment changes
-    p1_dot = -(m1 + m2) * g * l1 * np.sin(θ1) - \
-        m2 * l1 * l2 * θ1_dot * θ2_dot * s
-    p2_dot = -m2 * g * l2 * np.sin(θ2) + m2 * l1 * l2 * θ1_dot * θ2_dot * s
-
-    return np.array([θ1_dot, θ2_dot, p1_dot, p2_dot])
-
-
-def simulate_double_pendulum(theta1_0,
-                             theta2_0,
-                             t_max,
-                             m1=1,
-                             m2=1,
-                             l1=1,
-                             l2=1,
-                             g=9.81,
-                             p1_0=0,
-                             p2_0=0,
-                             dt=0.01):
-    """
-    Simulates a double pendulum using Hamiltonian mechanics efficiently.
-
-    Parameters:
-        theta1_0, theta2_0 : float - Initial angles (radians)
-        p1_0, p2_0 : float - Initial conjugate momenta
-        t_max  : float - Maximum simulation time
-        dt     : float - Time step between frames
-        m1, m2 : float - Masses of the pendulum arms
-        l1, l2 : float - Lengths of the rods
-        g      : float - Gravitational acceleration
-
-    Returns:
-        t_eval : ndarray - Time steps of the simulation
-        states : ndarray - Frame-by-frame state [theta1, theta2, p1, p2]
-    """
-
-    state0 = np.array([theta1_0, theta2_0, p1_0, p2_0])
-    t_eval = np.arange(0, t_max, dt)  # Time steps
-
-    # Solve ODEs using DOP853 (higher-order Runge-Kutta, better for chaotic systems)
-    solution = scipy.integrate.solve_ivp(
-        lambda t, y: hamiltonian_derivatives(t, y, m1, m2, l1, l2, g),
-        [0, t_max], state0, t_eval=t_eval, method='DOP853'
-    )
-
-    return t_eval, solution.y.T  # Transposed so rows are time steps
-
-
-import pygame
-import time
-import colorsys
-import numpy as np
-import math as m
-
-def grid_sim(theta1_range: tuple,
-             theta2_range: tuple,
-             sim_height: int = 50,
-             sim_width: int = 50,
-             screen_height: int = 200,
-             screen_width: int = 200,
-             m1: float = 1,
-             m2: float = 1,
-             l1: float = 1,
-             l2: float = 1,
-             g: float = 9.81,
-             p1_0: float = 0,
-             p2_0: float = 0,
-             dt: float = 0.01,
-             chaotic_threshold_omega: float = 5.0,
-             chaotic_threshold_alpha: float = 10.0,
-             printDeets: bool = False):
-
-    pygame.init()
-    pygame.font.init()
-    if sim_height > screen_height:
-        sim_height = screen_height
-    if sim_width > screen_width:
-        sim_width = screen_width
-
-
-    pixel_size_x = m.floor(screen_width / sim_width)
-    pixel_size_y = m.floor(screen_height / sim_height)
-
-    screen_width_scaled = sim_width * pixel_size_x
-    screen_height_scaled = sim_height * pixel_size_y
-
-    font = pygame.font.SysFont(None, m.floor(screen_width_scaled/600*32))
-
-    screen = pygame.display.set_mode((screen_width_scaled, screen_height_scaled))
-
-    time_chunk = 10
-    current_sim_time = 0
-
-    prev_last_DP_state = np.zeros((sim_height, sim_width, 4)) #Initialize with correct dimensions.
-    pixels = np.zeros((int(time_chunk / dt), sim_height, sim_width, 3), dtype=np.uint8)
-
-    for i in range(sim_height):
-        for j in range(sim_width):
-            theta1 = (theta1_range[1] - theta1_range[0]) / (sim_width - 1) * j + theta1_range[0]
-            theta2 = (theta2_range[1] - theta2_range[0]) / (sim_height - 1) * i + theta2_range[0]
-            t_eval, state = simulate_double_pendulum(theta1, theta2, time_chunk, m1, m2, l1, l2, g, p1_0, p2_0, dt)
-            prev_last_DP_state[i, j] = state[-1]
-
-            saturation = 1.0
-            for t_idx in range(int(time_chunk / dt)):
-                theta1, theta2, p1, p2 = state[t_idx]
-                hue = (theta1 % (2 * np.pi)) / (2 * np.pi)
-                brightness = 0.3 + 0.7 * abs(np.sin(theta2))
-                color = colorsys.hsv_to_rgb(hue, saturation, brightness)
-                color_8bit = tuple(int(c * 255) for c in color)
-                pixels[t_idx, i, j] = color_8bit
-
-
-        screen.fill((0, 0, 0))
-
-        text = font.render(f"rendering chunk for t = {round(current_sim_time*10)/10} ~ {round((current_sim_time+time_chunk)*10)/10}: row {i+1}/{sim_height} done", True, (50,50,50))
-        screen.blit(text, (10, 10))
-        pygame.display.flip()
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
-
-    chunk_start_time = time.perf_counter()
-    t = 0
-    render_times = 0
-
-
-    while True:
-        if (time.perf_counter() - chunk_start_time) >= time_chunk:
-            for i in range(sim_height):
-                for j in range(sim_width):
-                    theta1, theta2, p1, p2 = prev_last_DP_state[i, j]
-                    t_eval, state = simulate_double_pendulum(theta1, theta2, time_chunk, m1, m2, l1, l2, g, p1, p2, dt)
-                    prev_last_DP_state[i, j] = state[-1]
-
-                    saturation = 1.0
-                    for t_idx in range(int(time_chunk / dt)):
-                        theta1, theta2, p1, p2 = state[t_idx]
-                        hue = (theta1 % (2 * np.pi)) / (2 * np.pi)
-                        brightness = 0.3 + 0.7 * abs(np.sin(theta2))
-                        color = colorsys.hsv_to_rgb(hue, saturation, brightness)
-                        color_8bit = tuple(int(c * 255) for c in color)
-                        pixels[t_idx, i, j] = color_8bit
-                
-                pixel_array = pygame.surfarray.pixels3d(screen)
-                for y in range(i+1):
-                    for x in range(sim_width):
-                        color = pixels[0, y, x]
-                        for px in range(pixel_size_x):
-                            for py in range(pixel_size_y):
-                                pixel_array[x * pixel_size_x + px, y * pixel_size_y + py] = color
-                
-                del pixel_array
-
-                text = font.render(f"rendering chunk for t = {round(current_sim_time*10)/10} ~ {round((current_sim_time+time_chunk)*10)/10}: row {i+1}/{sim_height} done", True, (50,50,50))
-                screen.blit(text, (10, 10))
-                pygame.display.flip()
-
-                for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                        pygame.quit()
-                        quit()
-
-            chunk_start_time = time.perf_counter()
-            t = 0
-            render_times +=1
+def check_big_win():
+    global game_over, winner
+    result = check_win(big_board)
+    if result:
+        game_over = True
+        winner = result
+        if winner == 'Tie':
+            print("It's a tie!")
         else:
-            pixel_array = pygame.surfarray.pixels3d(screen)
-            for y in range(sim_height):
-                for x in range(sim_width):
-                    color = pixels[t, y, x]
-                    for px in range(pixel_size_x):
-                        for py in range(pixel_size_y):
-                            pixel_array[x * pixel_size_x + px, y * pixel_size_y + py] = color
+            print(f"Player {winner} wins!")
 
-            current_chunk_time = time.perf_counter()-chunk_start_time
-            t = m.floor(current_chunk_time/dt)
+def handle_click(pos):
+    global current_player, last_move
+    if game_over:
+        return
 
-            current_sim_time = current_chunk_time + time_chunk*render_times
-            
-            del pixel_array
+    col = pos[0] // CELL_SIZE
+    row = pos[1] // CELL_SIZE
+    big_col = col // 3
+    big_row = row // 3
+    small_col = col % 3
+    small_row = row % 3
 
-            text = font.render(f"t = {round(current_sim_time*10)/10}", True, (50,50,50))
-            screen.blit(text, (10, 10))
+    if last_move:
+        if last_move[0] != big_row or last_move[1] != big_col:
+            if big_board[last_move[0]][last_move[1]] != '':
+                pass
+            elif big_board[big_row][big_col] != '':
+                pass
+            else:
+                return
 
-            pygame.display.flip()
+    if board[big_row][big_col][small_row][small_col] == '':
+        board[big_row][big_col][small_row][small_col] = current_player
+        result = check_win(board[big_row][big_col])
+        if result:
+            big_board[big_row][big_col] = result
+            check_big_win()
+        current_player = 'O' if current_player == 'X' else 'X'
+        last_move = (small_row, small_col)
 
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    quit()
+# Game loop
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1:
+                handle_click(event.pos)
 
+    draw_board()
+    draw_pieces()
+    pygame.display.flip()
 
-
-
-start1, end1 = m.radians(90), m.radians(-90)
-start2, end2 = m.radians(90), m.radians(-90)
-
-grid_sim((start1,end1),(start2,end2),50,50,500,500,printDeets=True)
+pygame.quit()
+sys.exit()
