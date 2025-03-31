@@ -1,40 +1,7 @@
 # TODO: make everything complex number input supported
 # TODO: finish stock market game
 
-import colorsys
-import sqlite3
-import imagehash
-from collections import defaultdict
-import pygame
-import scipy.integrate
-import matplotlib.animation as animation
-import matplotlib.pyplot as plt
-import platform
-import tempfile
-from pymediainfo import MediaInfo
-import ffmpeg
-import piexif
-import exifread
-import webbrowser
-import xlsxwriter as xlsw
-import shutil
-from moviepy.editor import ImageSequenceClip
-from numba import jit
-import copy
-import json
-import subprocess
-from mutagen.mp3 import MP3
-from mutagen.id3 import ID3NoHeaderError
-import math
-import random
-import os
-import glob
-import pandas as pd
-import numpy as np
-import rawpy as r
-from PIL import Image
-Image.MAX_IMAGE_PIXELS = None
-import time
+from tools import *
 
 
 
@@ -338,6 +305,7 @@ def list_to_file(lst: list, destination_path: str, file_name: str = "text.txt"):
     with open(os.path.join(destination_path, file_name), 'w') as file:
         for item in lst:
             file.write(f"{item}\n")
+
 
 
 # image handlers
@@ -648,8 +616,6 @@ def remove_repeated_images(image_directory: str, printDeets: bool = False, save_
 
 
 
-
-
 # video handlers
 def get_video_metadata(filepath):
     metadata = {}
@@ -789,6 +755,17 @@ def convert_video_format(input_file: str, video_codec="libx264", audio_codec="aa
     except Exception as ex:
         print(f"An unexpected error occurred: {str(ex)}")
         return False
+
+
+# other file handlers
+def write_csv(filename, data):
+    """Writes data to a CSV file."""
+    try:
+        with open(filename, 'w', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)  # Create a CSV writer object
+            writer.writerows(data)  # Write all rows at once
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 
 # os handlers

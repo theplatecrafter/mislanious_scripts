@@ -1,10 +1,5 @@
 import random_functions.main as rf
-import os
-from datetime import datetime
-import colorsys
-import folium
-import webbrowser
-
+from tools import *
 
 
 TimeCapsulePWDLinux = {
@@ -18,6 +13,7 @@ TimeCapsulePWDLinux = {
     "2022":"/media/hans/Torens_Time_Capsle/5) 2022",
     "2023":"/media/hans/Torens_Time_Capsle/6) 2023",
     "2024":"/media/hans/Torens_Time_Capsle/7) 2024",
+    "2025":"/media/hans/Torens_Time_Capsle/8) 2025"
 }
 
 
@@ -579,3 +575,24 @@ def add_media(list,root):
                 rf.copy_file_path_generative(file,os.path.join(out_dir,os.path.split(file)[1]))
                 print(f"copied {file} to {os.path.join(out_dir,os.path.split(file)[1])} y: {year} m: {month} d: {day} group: {group}")
 
+
+def update_tag_list(root):
+    tag_path = rf.combinePATH(root,".tags/tags.csv")
+    tag_list = rf.combinePATH(root,".tags/tag_types.csv")
+    if not rf.check_file_existence(".tags/tags.csv"):
+        print(f"initiating tagging system in {root}")
+        os.mkdir(rf.combinePATH(root,".tags"))
+        open(tag_path,"w")
+        open(tag_list,"w")
+
+    
+    new_file_paths = set(rf.get_all_file_paths(root))
+    
+    file =  open(".tags/tags.csv","r")
+    reader = csv.reader(file)
+    old_file_paths = {row for row in reader}
+    
+    removed_or_updated = list(old_file_paths - new_file_paths)
+    new = list(new_file_paths - old_file_paths)
+    
+    
