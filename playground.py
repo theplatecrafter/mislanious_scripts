@@ -6,7 +6,7 @@ import random_functions.main as rf
 import numpy as np
 
 
-tch.create_Geo_Map([tch.TimeCapsulePWDLinux["general"]])
+tch.create_Geo_Map(["/mnt/f/8) 2025"])
 exit()
 
 dir = "/mnt/f/8) 2025/2025-3-17~19 卒業旅行"
