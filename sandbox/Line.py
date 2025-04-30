@@ -44,7 +44,7 @@ def create_interactive_chat_report_html(filename: str, output_filename: str = 'i
                     sender = "Unknown"
 
             messages.append({
-                'date': current_Date,
+                'date': current_date,
                 'time': time,
                 'sender': sender,
                 'message': message,
@@ -314,5 +314,5 @@ def create_interactive_chat_report_html(filename: str, output_filename: str = 'i
 
 
 filename = '/media/hans/Torens_Time_Capsle/0) Other/6) Other Shortcuts/高校生活/東工大付属（２C～３C）ラインメッセージ.txt'  # テキストファイルのパスを指定
-filename = "test.txt"
+filename = "/mnt/f/0) Other/6) Other Shortcuts/高校生活/東工大付属（２C～３C）ラインメッセージ.txt"
 create_interactive_chat_report_html(filename)
