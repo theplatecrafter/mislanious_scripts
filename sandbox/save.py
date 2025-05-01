@@ -4,7 +4,7 @@ slider_data = {
         "Carbon Emissions": {"init": 80, "connections": {"Global Temperature": 0.9, "Ocean Acidification": 0.7, "Air Quality": -0.8}},
         "Air Quality": {"init": 60, "connections": {"Healthcare Access": -0.3, "Fossil Fuel Consumption": 0.5, "Carbon Emissions": -0.8}},
         "Global Temperature": {"init": 90, "connections": {"Sea Level Rise": 0.95, "Species Biodiversity": -0.6, "Sustainable Agriculture": -0.2}},
-        "Sea Level Rise": {"init": 70, "connections": {"Coastal Populations": 0.8, "Economic Growth": -0.1}},
+        "Sea Level Rise": {"init": 70, "connections": {"Economic Growth": -0.1}},
         "Investment in Renewable Energy": {"init": 40, "connections": {"Fossil Fuel Consumption": -0.7, "Renewable Energy Production": 0.9, "Economic Growth": 0.2}},
         "Deforestation Rate": {"init": 60, "connections": {"Species Biodiversity": -0.8, "Carbon Emissions": 0.4, "Agricultural Land Use": 0.6}},
         "Species Biodiversity": {"init": 30, "connections": {"Food Security": -0.4, "Deforestation Rate": -0.8, "Ocean Acidification": -0.5}},
@@ -31,7 +31,7 @@ slider_data = {
     },
     "Society": {
         "Population Growth": {"init": 60, "connections": {"Urbanization Rate": 0.5, "Resource Scarcity": 0.3, "Healthcare Access": -0.2}},
-        "Urbanization Rate": {"init": 55, "connections": {"Infrastructure Development": 0.7, "Air Quality": -0.4, "Social Stability": -0.2}},
+        "Urbanization Rate": {"init": 55, "connections": {"Air Quality": -0.4, "Social Stability": -0.2}},
         "Healthcare Access": {"init": 40, "connections": {"Life Expectancy": 0.8, "Social Stability": 0.3, "Public Trust in Institutions": 0.2}},
         "Education Access": {"init": 50, "connections": {"Digital Literacy": 0.6, "Economic Growth": 0.4, "Civic Participation": 0.3}},
         "Social Stability": {"init": 50, "connections": {"Crime Rate": -0.6, "Public Trust in Institutions": 0.7, "Economic Growth": 0.2}},
