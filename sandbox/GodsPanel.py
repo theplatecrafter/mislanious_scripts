@@ -2,12 +2,14 @@ import pygame
 import time
 import colorsys
 import copy
+import json
+import os
 
 # Initialize Pygame
 pygame.init()
 
 # Constants
-FPS = 30  # Reduced FPS for Pygame
+FPS = 30
 WHITE = (255, 255, 255)
 GRAY = (200, 200, 200)
 DARK_GRAY = (100, 100, 100)
@@ -15,112 +17,43 @@ BLACK = (0, 0, 0)
 FONT_SIZE = 20
 CHANGE_CALC_THRESHOLD = 0.0001
 SLIDER_BORDER_RADIUS = 10
-SCROLL_SPEED = 20  # Added scroll speed
+SCROLL_SPEED = 20
 DAMPING_FACTOR = 0.5
+BUTTON_WIDTH = 100
+BUTTON_HEIGHT = 30
+BUTTON_SPACING = 10
+BUTTON_COLOR = GRAY
+BUTTON_TEXT_COLOR = BLACK
+BUTTON_FONT_SIZE = 16
+INFO_TEXT_COLOR = WHITE  # Added color for info text
+INFO_FONT_SIZE = 14
+INFO_DISPLAY_TIME = 5  # Time to display info text in seconds
 
 # Set up the display
-screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)  # Fullscreen
-SCREEN_WIDTH, SCREEN_HEIGHT = pygame.display.get_surface().get_size()  # Get screen size
+screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+SCREEN_WIDTH, SCREEN_HEIGHT = pygame.display.get_surface().get_size()
 pygame.display.set_caption("Slider Simulation")
 font = pygame.font.Font(None, FONT_SIZE)
+button_font = pygame.font.Font(None, BUTTON_FONT_SIZE)
+info_font = pygame.font.Font(None, INFO_FONT_SIZE)  # Font for info text
 
 
 # --- Data and State ---
 slider_data = {
-    "Environment & Energy": {
-        "Fossil Fuel Consumption": {"init": 70, "connections": {"Carbon Emissions": 0.8, "Air Quality": -0.5, "Global Energy Prices": 0.6}},
-        "Carbon Emissions": {"init": 80, "connections": {"Global Temperature": 0.9, "Ocean Acidification": 0.7, "Air Quality": -0.8}},
-        "Air Quality": {"init": 60, "connections": {"Healthcare Access": -0.3, "Fossil Fuel Consumption": 0.5, "Carbon Emissions": -0.8}},
-        "Global Temperature": {"init": 90, "connections": {"Sea Level Rise": 0.95, "Species Biodiversity": -0.6, "Sustainable Agriculture": -0.2}},
-        "Sea Level Rise": {"init": 70, "connections": {"Economic Growth": -0.1}},
-        "Investment in Renewable Energy": {"init": 40, "connections": {"Fossil Fuel Consumption": -0.7, "Renewable Energy Production": 0.9, "Economic Growth": 0.2}},
-        "Deforestation Rate": {"init": 60, "connections": {"Species Biodiversity": -0.8, "Carbon Emissions": 0.4, "Agricultural Land Use": 0.6}},
-        "Species Biodiversity": {"init": 30, "connections": {"Food Security": -0.4, "Deforestation Rate": -0.8, "Ocean Acidification": -0.5}},
-        "Ocean Acidification": {"init": 75, "connections": {"Species Biodiversity": -0.5, "Food Security": -0.3}},
-        "Methane Emissions": {"init": 65, "connections": {"Global Temperature": 0.3, "Air Quality": -0.2}},
-        "Plastic Pollution": {"init": 85, "connections": {"Ocean Acidification": 0.6, "Species Biodiversity": -0.4}},
-        "Water Usage": {"init": 55, "connections": {"Agricultural Land Use": 0.7, "Food Security": -0.2}},
-        "Renewable Energy Production": {"init": 35, "connections": {"Fossil Fuel Consumption": -0.6, "Energy Efficiency": 0.5}},
-        "Energy Efficiency": {"init": 45, "connections": {"Fossil Fuel Consumption": -0.4, "Industrial Output": 0.3}},
-        "Sustainable Agriculture": {"init": 40, "connections": {"Food Security": 0.7, "Deforestation Rate": -0.3, "Water Usage": -0.2}},
+    "A": {
+        "A1": {"init": 70, "connections": {"B2": 0.5, "A2": -0.2}},
+        "A2": {"init": 60, "connections": {"A3": -0.1}},
+        "A3": {"init": 50, "connections": {"B1": 0.2}}
     },
-    "Economy": {
-        "Economic Growth": {"init": 60, "connections": {"Unemployment Rate": -0.5, "Industrial Output": 0.7, "Inflation Rate": 0.3}},
-        "Unemployment Rate": {"init": 40, "connections": {"Economic Growth": -0.6, "Social Stability": -0.2, "Income Inequality": 0.4}},
-        "Global Energy Prices": {"init": 70, "connections": {"Inflation Rate": 0.6, "Industrial Output": -0.4, "Fossil Fuel Consumption": 0.8}},
-        "Income Inequality": {"init": 65, "connections": {"Social Stability": -0.7, "Economic Growth": -0.2, "Crime Rate": 0.5}},
-        "Industrial Output": {"init": 55, "connections": {"Economic Growth": 0.7, "Energy Efficiency": 0.3, "Resource Scarcity": -0.2}},
-        "Resource Scarcity": {"init": 80, "connections": {"Global Energy Prices": 0.4, "Industrial Output": -0.3, "Food Security": -0.1}},
-        "Trade Openness": {"init": 50, "connections": {"Economic Growth": 0.3, "Global Energy Prices": 0.2}},
-        "Inflation Rate": {"init": 50, "connections": {"Interest Rates": 0.7, "Economic Growth": -0.2, "Unemployment Rate": 0.3}},
-        "Interest Rates": {"init": 40, "connections": {"Inflation Rate": 0.6, "Stock Market Volatility": 0.5, "Foreign Direct Investment": -0.3}},
-        "Stock Market Volatility": {"init": 60, "connections": {"Foreign Direct Investment": -0.7, "Interest Rates": 0.5}},
-        "Foreign Direct Investment": {"init": 50, "connections": {"Economic Growth": 0.4, "Tech Innovation Rate": 0.3}},
-    },
-    "Society": {
-        "Population Growth": {"init": 60, "connections": {"Urbanization Rate": 0.5, "Resource Scarcity": 0.3, "Healthcare Access": -0.2}},
-        "Urbanization Rate": {"init": 55, "connections": {"Air Quality": -0.4, "Social Stability": -0.2}},
-        "Healthcare Access": {"init": 40, "connections": {"Life Expectancy": 0.8, "Social Stability": 0.3, "Public Trust in Institutions": 0.2}},
-        "Education Access": {"init": 50, "connections": {"Digital Literacy": 0.6, "Economic Growth": 0.4, "Civic Participation": 0.3}},
-        "Social Stability": {"init": 50, "connections": {"Crime Rate": -0.6, "Public Trust in Institutions": 0.7, "Economic Growth": 0.2}},
-        "Migration Rate": {"init": 45, "connections": {"Cultural Diversity": 0.8, "Social Stability": -0.3, "Economic Growth": 0.1}},
-        "Crime Rate": {"init": 30, "connections": {"Social Stability": -0.6, "Income Inequality": 0.5}},
-        "Civic Participation": {"init": 40, "connections": {"Social Stability": 0.4, "Government Transparency": 0.5, "Public Trust in Institutions": 0.6}},
-        "Life Expectancy": {"init": 75, "connections": {"Healthcare Access": 0.8, "Air Quality": 0.4, "Obesity Rate": -0.3}},
-        "Public Trust in Institutions": {"init": 35, "connections": {"Government Transparency": 0.7, "Social Stability": 0.5, "Civic Participation": 0.4}},
-        "Cultural Diversity": {"init": 60, "connections": {"Social Connectedness": 0.4, "Social Stability": 0.2}},
-    },
-    "Politics & Governance": {
-        "Military Spending": {"init": 60, "connections": {"International Cooperation": -0.4, "Economic Growth": -0.2, "Social Stability": -0.3}},
-        "Government Transparency": {"init": 40, "connections": {"Corruption Perception": -0.9, "Public Trust in Institutions": 0.7, "International Cooperation": 0.2}},
-        "Democratic Index": {"init": 50, "connections": {"Freedom of Press": 0.8, "Political Stability": 0.6, "Civic Participation": 0.5}},
-        "Corruption Perception": {"init": 70, "connections": {"Government Transparency": -0.9, "Foreign Direct Investment": -0.5, "Public Trust in Institutions": -0.8}},
-        "International Cooperation": {"init": 50, "connections": {"Global Temperature": -0.2, "Economic Growth": 0.3, "Political Stability": 0.4}},
-        "Freedom of Press": {"init": 60, "connections": {"Democratic Index": 0.8, "Public Trust in Institutions": 0.3}},
-        "Political Stability": {"init": 65, "connections": {"Foreign Direct Investment": 0.2, "Social Stability": 0.7, "Economic Growth": 0.1}},
-        "Rule of Law": {"init": 55, "connections": {"Foreign Direct Investment": 0.4, "Economic Growth": 0.3, "Social Stability": 0.2}},
-        "Regulatory Quality": {"init": 50, "connections": {"Industrial Output": 0.4, "Economic Growth": 0.2, "Innovation Rate": 0.3}},
-        "Voice and Accountability": {"init": 45, "connections": {"Civic Participation": 0.6, "Social Stability": 0.4, "Government Transparency": 0.5}},
-    },
-    "Technology & Innovation": {
-        "Tech Innovation Rate": {"init": 50, "connections": {"Economic Growth": 0.5, "Automation Penetration": 0.6, "Renewable Energy Tech": 0.4}},
-        "AI Development": {"init": 40, "connections": {"Automation Penetration": 0.7, "Economic Growth": 0.3, "Cybersecurity Investment": 0.5}},
-        "Cybersecurity Investment": {"init": 60, "connections": {"Digital Literacy": 0.4, "AI Development": 0.5, "Public Trust in Institutions": 0.3}},
-        "Automation Penetration": {"init": 55, "connections": {"Unemployment Rate": 0.6, "Economic Growth": 0.4, "Tech Innovation Rate": 0.6}},
-        "Space Exploration Funding": {"init": 20, "connections": {"Tech Innovation Rate": 0.2}},
-        "Digital Literacy": {"init": 50, "connections": {"Education Access": 0.6, "Internet Access": 0.8, "Tech Innovation Rate": 0.3}},
-        "Internet Access": {"init": 70, "connections": {"Digital Literacy": 0.8, "Economic Growth": 0.2, "Social Connectedness": 0.4}},
-        "Renewable Energy Tech": {"init": 45, "connections": {"Investment in Renewable Energy": 0.9, "Fossil Fuel Consumption": -0.5, "Energy Efficiency": 0.7}},
-        "Biotechnology Development": {"init": 30, "connections": {"Healthcare Access": 0.6, "Agricultural Productivity": 0.5, "Ethical Considerations": -0.2}},
-    },
-    "Health & Epidemics": {
-        "Global Pandemic Risk": {"init": 70, "connections": {"International Cooperation": -0.5, "Healthcare Access": -0.2, "Global Travel": 0.6}},
-        "Vaccination Rate": {"init": 60, "connections": {"Global Pandemic Risk": -0.8, "Life Expectancy": 0.5, "Public Health Spending": 0.7}},
-        "Antibiotic Resistance": {"init": 65, "connections": {"Healthcare Access": -0.4, "Global Pandemic Risk": 0.3, "Public Health Spending": 0.2}},
-        "Obesity Rate": {"init": 50, "connections": {"Healthcare Access": -0.3, "Life Expectancy": -0.4, "Food Security": -0.2}},
-        "Mental Health Index": {"init": 40, "connections": {"Healthcare Access": 0.4, "Social Stability": 0.3, "Work-Life Balance": 0.6}},
-        "Access to Clean Water": {"init": 60, "connections": {"Healthcare Access": 0.7, "Food Security": 0.4, "Public Health Spending": 0.3}},
-    },
-    "Agriculture & Food": {
-        "Food Security": {"init": 50, "connections": {"Population Growth": -0.3, "Sustainable Agriculture": 0.6, "Economic Growth": 0.2}},
-        "Crop Yield": {"init": 60, "connections": {"Sustainable Farming Practices": 0.7, "Agricultural Land Use": -0.2, "Food Security": 0.5}},
-        "Agricultural Land Use": {"init": 40, "connections": {"Deforestation Rate": 0.5, "Water Usage": 0.7, "Species Biodiversity": -0.3}},
-        "Meat Consumption": {"init": 70, "connections": {"Carbon Emissions": 0.4, "Agricultural Land Use": 0.3, "Healthcare Access": -0.2}},
-        "Sustainable Farming Practices": {"init": 30, "connections": {"Crop Yield": 0.7, "Agricultural Land Use": -0.4, "Food Security": 0.6}},
-        "Food Waste": {"init": 40, "connections": {"Food Security": -0.2, "Agricultural Land Use": 0.1, "Economic Growth": -0.1}},
-    },
-    "Culture & Wellbeing": {
-        "Mental Health Index": {"init": 40, "connections": {"Social Connectedness": 0.7, "Work-Life Balance": 0.6, "Healthcare Access": 0.4}},
-        "Work-Life Balance": {"init": 50, "connections": {"Economic Growth": -0.3, "Mental Health Index": 0.6, "Leisure Time": 0.8}},
-        "Cultural Diversity": {"init": 60, "connections": {"Social Connectedness": 0.5, "Social Stability": 0.2, "Civic Participation": 0.3}},
-        "Social Connectedness": {"init": 55, "connections": {"Mental Health Index": 0.7, "Cultural Diversity": 0.5, "Civic Participation": 0.4}},
-        "Leisure Time": {"init": 50, "connections": {"Work-Life Balance": 0.8, "Mental Health Index": 0.3, "Economic Growth": 0.1}},
-        "Arts and Culture Funding": {"init": 30, "connections": {"Cultural Diversity": 0.4, "Social Connectedness": 0.2, "Civic Participation": 0.3}},
-    },
+    "B": {
+        "B1": {"init": 40, "connections": {"B2": 0.2, "A3": 0.6}},
+        "B2": {"init": 30, "connections": {"A1": -0.3}},
+    }
 }
 
-
 slider_state = {}
+info_text = ""
+info_start_time = 0
 
 
 def init():
@@ -143,7 +76,7 @@ def tick():
 
     for slider in slider_state:
         if slider_state[slider]["change"] != 0:
-            change = slider_state[slider]["change"]*DAMPING_FACTOR
+            change = slider_state[slider]["change"] * DAMPING_FACTOR
             for connection, weight in slider_state[slider]["connections"].items():
                 if connection in next_slider_state:
                     next_slider_state[connection]["value"] += change * weight
@@ -182,11 +115,8 @@ def draw_slider(screen, x, y, width, height, value, slider_name, change, scroll_
 
     # Calculate the fill based on the value
     fill_width = (value / 100) * width if width > 0 else 0
-
-    # Ensure fill_width is within the bounds
     fill_width = max(0, min(fill_width, width))
-
-    fill_color = tuple([i * 255 for i in colorsys.hsv_to_rgb(((x+scroll_offset[0]) / SCREEN_WIDTH) % 1, 1, 1)])
+    fill_color = tuple([i * 255 for i in colorsys.hsv_to_rgb(((x + scroll_offset[0]) / SCREEN_WIDTH) % 1, 1, 1)])
     pygame.draw.rect(screen, fill_color, (x, y, fill_width, height), border_radius=SLIDER_BORDER_RADIUS)
 
     # Slider name label
@@ -224,7 +154,7 @@ def create_slider_rects(slider_data, slider_width, slider_height, x_spacing, y_s
             slider_rects[slider_name] = pygame.Rect(x, y, slider_width, slider_height)
             y += slider_height + y_spacing
         x += slider_width + x_spacing
-        y = y_start  # Reset y for the next column
+        y = y_start
     return slider_rects
 
 
@@ -250,7 +180,6 @@ def handle_slider_drag(slider_rects, mouse_pos, slider_state, is_dragging, dragg
     """
     if not is_dragging:
         for slider_name, rect in slider_rects.items():
-            # Adjust the rect position for scrolling
             adjusted_rect = rect.move(-scroll_offset[0], -scroll_offset[1])
             if adjusted_rect.collidepoint(mouse_pos):
                 is_dragging = True
@@ -259,7 +188,6 @@ def handle_slider_drag(slider_rects, mouse_pos, slider_state, is_dragging, dragg
                 break
     elif is_dragging and dragged_slider:
         rect = slider_rects[dragged_slider]
-        # Adjust mouse position for scrolling
         adjusted_mouse_pos = (mouse_pos[0] + scroll_offset[0], mouse_pos[1] + scroll_offset[1])
         new_value = ((adjusted_mouse_pos[0] - rect.x) / rect.width) * 100
         new_value = max(0, min(new_value, 100))
@@ -268,14 +196,110 @@ def handle_slider_drag(slider_rects, mouse_pos, slider_state, is_dragging, dragg
 
 
 
+def draw_button(screen, rect, text):
+    """Draws a button on the screen."""
+    pygame.draw.rect(screen, BUTTON_COLOR, rect, border_radius=SLIDER_BORDER_RADIUS)
+    text_surface = button_font.render(text, True, BUTTON_TEXT_COLOR)
+    text_rect = text_surface.get_rect(center=rect.center)
+    screen.blit(text_surface, text_rect)
+
+
+
+def display_info_text(screen, text):
+    """Displays info text at the bottom of the screen."""
+    text_surface = info_font.render(text, True, INFO_TEXT_COLOR)
+    text_rect = text_surface.get_rect(center=(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 20))
+    screen.blit(text_surface, text_rect)
+
+
+
+def handle_button_click(button_rects, mouse_pos):
+    """Handles button clicks."""
+    for button_name, rect in button_rects.items():
+        if rect.collidepoint(mouse_pos):
+            return button_name
+    return None
+
+
+
+def export_slider_data(filename="slider_data.json"):
+    """Exports the current slider data to a JSON file."""
+    global slider_data, info_text, info_start_time
+    try:
+        with open(filename, "w") as f:
+            json.dump(slider_data, f, indent=4)
+        info_text = f"Exported data to {filename}"
+        info_start_time = time.time()
+        print(info_text)  # Keep the print for debugging
+    except Exception as e:
+        info_text = f"Error exporting data: {e}"
+        info_start_time = time.time()
+        print(info_text)
+
+
+
+def import_slider_data(filename="slider_data.json"):
+    """Imports slider data from a JSON file."""
+    global slider_data, slider_state, info_text, info_start_time
+
+    try:
+        if not os.path.exists(filename):
+            info_text = f"File not found: {filename}.  Using default data."
+            info_start_time = time.time()
+            print(info_text)
+            return
+
+        with open(filename, "r") as f:
+            slider_data = json.load(f)
+
+        # Re-initialize the slider state and UI based on the imported data
+        init()
+        # These variables are used in run_simulation, so they need to be defined here.
+        global slider_width, slider_height, x_start, y_start, x_spacing, y_spacing, slider_rects, category_x_positions
+        slider_width = 200
+        slider_height = 20
+        x_start = 50
+        y_start = 50
+        x_spacing = 250
+        y_spacing = 50
+        slider_rects = create_slider_rects(slider_data, slider_width, slider_height, x_spacing, y_spacing, x_start, y_start)
+
+        # Calculate the x positions for the category labels
+        category_x_positions = {}
+        x_pos = x_start
+        for category_name in slider_data:
+            category_x_positions[category_name] = x_pos
+            x_pos += slider_width + x_spacing
+
+        info_text = f"Imported data from {filename}"
+        info_start_time = time.time()
+        print(info_text)
+    except Exception as e:
+        info_text = f"Error importing data: {e}"
+        info_start_time = time.time()
+        print(info_text)
+
+
+
+def reset_slider_data():
+    """Resets the slider values to their initial values."""
+    global slider_state, info_text, info_start_time
+    init()  # Re-initialize slider_state to reset to initial values.
+    info_text = "Reset slider data to initial values"
+    info_start_time = time.time()
+    print(info_text)
+
+
+
 def run_simulation():
     """
     Runs the main Pygame simulation loop.
     """
-    global slider_state
+    global slider_state, info_text, info_start_time
     init()
     running = True
     clock = pygame.time.Clock()
+    global slider_width, slider_height, x_start, y_start, x_spacing, y_spacing, slider_rects, category_x_positions
     slider_width = 200
     slider_height = 20
     x_start = 50
@@ -287,7 +311,7 @@ def run_simulation():
     is_dragging = False
     dragged_slider = None
     initial_values = {}
-    scroll_offset = [0, 0]  # [x, y] offset
+    scroll_offset = [0, -40]
     keys_down = {
         pygame.K_w: False,
         pygame.K_a: False,
@@ -297,6 +321,18 @@ def run_simulation():
         pygame.K_LEFT: False,
         pygame.K_DOWN: False,
         pygame.K_RIGHT: False,
+    }
+
+    # Calculate button positions
+    button_x = SCREEN_WIDTH / 2 - (3 * BUTTON_WIDTH + 2 * BUTTON_SPACING) / 2
+    button_y = 20
+    export_button_rect = pygame.Rect(button_x, button_y, BUTTON_WIDTH, BUTTON_HEIGHT)
+    import_button_rect = pygame.Rect(button_x + BUTTON_WIDTH + BUTTON_SPACING, button_y, BUTTON_WIDTH, BUTTON_HEIGHT)
+    reset_button_rect = pygame.Rect(button_x + 2 * (BUTTON_WIDTH + BUTTON_SPACING), button_y, BUTTON_WIDTH, BUTTON_HEIGHT)
+    button_rects = {
+        "export": export_button_rect,
+        "import": import_button_rect,
+        "reset": reset_button_rect,
     }
 
     # Calculate the x positions for the category labels
@@ -310,28 +346,36 @@ def run_simulation():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            elif event.type == pygame.KEYDOWN:  # Check for key press
-                if event.key == pygame.K_ESCAPE:  # If it's the ESC key
-                    running = False  # set running to false, which will break the loop and quit
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    running = False
                 if event.key in keys_down:
                     keys_down[event.key] = True
             elif event.type == pygame.KEYUP:
                 if event.key in keys_down:
                     keys_down[event.key] = False
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                is_dragging, dragged_slider, initial_values = handle_slider_drag(slider_rects, event.pos, slider_state,
+                clicked_button = handle_button_click(button_rects, event.pos)
+                if clicked_button == "export":
+                    export_slider_data()
+                elif clicked_button == "import":
+                    import_slider_data()
+                elif clicked_button == "reset":
+                    reset_slider_data()
+                else:  # Only handle slider dragging if no button was clicked
+                    is_dragging, dragged_slider, initial_values = handle_slider_drag(slider_rects, event.pos, slider_state,
                                                                                 is_dragging, dragged_slider, initial_values, scroll_offset)
             elif event.type == pygame.MOUSEBUTTONUP:
                 if is_dragging and dragged_slider:
                     slider_state[dragged_slider]["change"] = slider_state[dragged_slider]["value"] - \
-                                                                            initial_values[dragged_slider]
+                                                                                initial_values[dragged_slider]
                 is_dragging = False
                 dragged_slider = None
             elif event.type == pygame.MOUSEMOTION:
                 if is_dragging and dragged_slider:
                     is_dragging, dragged_slider, initial_values = handle_slider_drag(slider_rects, event.pos, slider_state,
-                                                                                    is_dragging, dragged_slider,
-                                                                                    initial_values, scroll_offset)
+                                                                                is_dragging, dragged_slider,
+                                                                                initial_values, scroll_offset)
 
         # Handle scrolling with WASD and arrow keys
         if keys_down[pygame.K_w] or keys_down[pygame.K_UP]:
@@ -348,18 +392,25 @@ def run_simulation():
 
         screen.fill(BLACK)
 
+        # Draw buttons
+        for button_name, rect in button_rects.items():
+            draw_button(screen, rect, button_name.capitalize())
+
         # Draw category labels
         for category_name, x_pos in category_x_positions.items():
             category_label_surface = font.render(category_name, True, WHITE)
-            #  category label, adjusted for scroll
             screen.blit(category_label_surface, (x_pos - scroll_offset[0], y_start - 40 - scroll_offset[1]))
 
+        # Draw sliders
         for slider_name, rect in slider_rects.items():
-            category = slider_name[0]
-            # Adjust slider position for scroll offset.
             adjusted_rect = rect.move(-scroll_offset[0], -scroll_offset[1])
             draw_slider(screen, adjusted_rect.x, adjusted_rect.y, adjusted_rect.width, adjusted_rect.height,
                         slider_state[slider_name]["value"], slider_name, slider_state[slider_name]["change"], scroll_offset)
+
+        # Display info text
+        if info_text and time.time() - info_start_time < INFO_DISPLAY_TIME:
+            display_info_text(screen, info_text)
+
         pygame.display.flip()
         clock.tick(FPS)
 
