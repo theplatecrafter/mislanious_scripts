@@ -1,0 +1,199 @@
+{
+    "0_DAMPING_FACTOR_0": 0.95,
+    "Cosmic Web": {
+        "Gravity": {
+            "init": 100,
+            "connections": {
+                "Space-Time Curvature": 0.9,
+                "Dark Matter Distribution": 0.8,
+                "Galactic Distribution": 0.7,
+                "Universal Expansion Rate": -0.6
+            }
+        },
+        "Space-Time Curvature": {
+            "init": 50,
+            "connections": {
+                "Gravity": 0.8,
+                "Universal Expansion Rate": 0.6,
+                "Energy Density": 0.7
+            }
+        },
+        "Dark Matter Distribution": {
+            "init": 70,
+            "connections": {
+                "Gravity": 0.7,
+                "Galactic Distribution": 0.8,
+                "Large-Scale Structure": 0.8
+            }
+        },
+        "Galactic Distribution": {
+            "init": 60,
+            "connections": {
+                "Gravity": 0.6,
+                "Dark Matter Distribution": 0.8,
+                "Stellar Formation Rate": 0.5,
+                "Large-Scale Structure": 0.9
+            }
+        },
+        "Large-Scale Structure": {
+            "init": 55,
+            "connections": {
+                "Galactic Distribution": 0.9,
+                "Dark Matter Distribution": 0.8,
+                "Universal Expansion Rate": 0.4
+            }
+        }
+    },
+    "Energy and Matter": {
+        "Energy Density": {
+            "init": 70,
+            "connections": {
+                "Space-Time Curvature": 0.7,
+                "Universal Expansion Rate": 0.9,
+                "Radiation Levels": 0.6,
+                "Matter Concentration": 0.5
+            }
+        },
+        "Radiation Levels": {
+            "init": 80,
+            "connections": {
+                "Energy Density": 0.6,
+                "Stellar Formation Rate": 0.4,
+                "Chemical Element Abundance": 0.7
+            }
+        },
+        "Matter Concentration": {
+            "init": 65,
+            "connections": {
+                "Energy Density": 0.5,
+                "Stellar Formation Rate": 0.8,
+                "Chemical Element Abundance": 0.9,
+                "Celestial Body Evolution": 0.7
+            }
+        },
+        "Chemical Element Abundance": {
+            "init": 40,
+            "connections": {
+                "Radiation Levels": 0.7,
+                "Matter Concentration": 0.9,
+                "Stellar Evolution": 0.6,
+                "Life Precursors": 0.3
+            }
+        }
+    },
+    "Stellar and Galactic Activity": {
+        "Stellar Formation Rate": {
+            "init": 60,
+            "connections": {
+                "Galactic Distribution": 0.5,
+                "Radiation Levels": 0.4,
+                "Matter Concentration": 0.8,
+                "Stellar Evolution": 0.9
+            }
+        },
+        "Stellar Evolution": {
+            "init": 70,
+            "connections": {
+                "Stellar Formation Rate": 0.9,
+                "Chemical Element Abundance": 0.6,
+                "Celestial Body Evolution": 0.8,
+                "Supernova Rate": 0.7
+            }
+        },
+        "Celestial Body Evolution": {
+            "init": 65,
+            "connections": {
+                "Matter Concentration": 0.7,
+                "Stellar Evolution": 0.8,
+                "Galactic Evolution": 0.9
+            }
+        },
+        "Supernova Rate": {
+            "init": 40,
+            "connections": {
+                "Stellar Evolution": 0.7,
+                "Chemical Element Abundance": 0.8,
+                "Galactic Evolution": 0.6,
+                "Radiation Levels": 0.5
+            }
+        },
+        "Galactic Evolution": {
+            "init": 75,
+            "connections": {
+                "Celestial Body Evolution": 0.9,
+                "Galactic Distribution": 0.7,
+                "Supernova Rate": 0.6,
+                "Universal Expansion Rate": -0.2
+            }
+        }
+    },
+    "Universal Dynamics": {
+        "Universal Expansion Rate": {
+            "init": 60,
+            "connections": {
+                "Space-Time Curvature": 0.6,
+                "Energy Density": 0.9,
+                "Large-Scale Structure": 0.4,
+                "Gravity": -0.6,
+                "Galactic Evolution": -0.2
+            }
+        }
+    },
+    "Emergence of Life": {
+        "Life Precursors": {
+            "init": 20,
+            "connections": {
+                "Chemical Element Abundance": 0.3,
+                "Early Earth Conditions": 0.8,
+                "Evolutionary Processes": 0.6
+            }
+        },
+        "Early Earth Conditions": {
+            "init": 30,
+            "connections": {
+                "Life Precursors": 0.8,
+                "Planetary Habitability": 0.9,
+                "Evolutionary Processes": 0.4
+            }
+        },
+        "Evolutionary Processes": {
+            "init": 40,
+            "connections": {
+                "Life Precursors": 0.6,
+                "Early Earth Conditions": 0.4,
+                "Adaptation": 0.9,
+                "Biodiversity": 0.8
+            }
+        },
+        "Planetary Habitability": {
+            "init": 50,
+            "connections": {
+                "Early Earth Conditions": 0.9,
+                "Stellar Evolution": 0.5,
+                "Galactic Habitable Zone": 0.7
+            }
+        },
+        "Galactic Habitable Zone": {
+            "init": 60,
+            "connections": {
+                "Galactic Evolution": 0.4,
+                "Galactic Distribution": 0.6,
+                "Planetary Habitability": 0.7
+            }
+        },
+        "Adaptation": {
+            "init": 50,
+            "connections": {
+                "Evolutionary Processes": 0.9,
+                "Biodiversity": 0.8
+            }
+        },
+        "Biodiversity": {
+            "init": 30,
+            "connections": {
+                "Evolutionary Processes": 0.8,
+                "Adaptation": 0.8
+            }
+        }
+    }
+}

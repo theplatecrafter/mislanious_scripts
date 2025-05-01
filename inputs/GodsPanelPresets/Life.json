@@ -1,0 +1,148 @@
+{
+    "0_DAMPING_FACTOR_0": 0.9,
+    "Core Activities": {
+        "Sleep": {
+            "init": 30,
+            "connections": {
+                "Energy Levels": 0.8,
+                "Productivity": 0.6,
+                "Health": 0.9,
+                "Mood": 0.7
+            }
+        },
+        "Work/Study": {
+            "init": 40,
+            "connections": {
+                "Income": 0.9,
+                "Stress": 0.7,
+                "Skill Development": 0.8,
+                "Free Time": -0.5
+            }
+        },
+        "Basic Needs": {
+            "init": 15,
+            "connections": {
+                "Health": 0.7,
+                "Energy Levels": 0.6,
+                "Stress": -0.4,
+                "Free Time": -0.2
+            }
+        }
+    },
+    "Personal Development": {
+        "Learning": {
+            "init": 10,
+            "connections": {
+                "Skill Development": 0.7,
+                "Knowledge": 0.9,
+                "Career Growth": 0.6,
+                "Free Time": -0.3
+            }
+        },
+        "Exercise": {
+            "init": 10,
+            "connections": {
+                "Health": 0.8,
+                "Energy Levels": 0.7,
+                "Mood": 0.6,
+                "Stress": -0.5,
+                "Free Time": -0.2
+            }
+        },
+        "Hobbies": {
+            "init": 15,
+            "connections": {
+                "Mood": 0.8,
+                "Stress": -0.7,
+                "Social Interaction": 0.5,
+                "Free Time": 0.6
+            }
+        }
+    },
+    "Social Life": {
+        "Family Time": {
+            "init": 20,
+            "connections": {
+                "Relationships": 0.9,
+                "Mood": 0.7,
+                "Social Support": 0.8,
+                "Free Time": -0.3
+            }
+        },
+        "Friends Time": {
+            "init": 15,
+            "connections": {
+                "Social Interaction": 0.9,
+                "Mood": 0.7,
+                "Stress": -0.6,
+                "Free Time": 0.5
+            }
+        },
+        "Community": {
+            "init": 5,
+            "connections":{
+                "Social Support": 0.6,
+                "Sense of Belonging": 0.7,
+                "Free Time": -0.1
+            }
+        }
+    },
+    "Outcomes": {
+        "Health": {
+            "init": 70,
+            "connections": {}
+        },
+        "Energy Levels": {
+            "init": 60,
+            "connections": {}
+        },
+        "Mood": {
+            "init": 65,
+            "connections": {}
+        },
+        "Productivity": {
+            "init": 50,
+            "connections": {}
+        },
+        "Stress": {
+            "init": 40,
+            "connections": {}
+        },
+        "Relationships": {
+            "init": 75,
+            "connections": {}
+        },
+        "Social Interaction":{
+            "init": 70,
+            "connections": {}
+        },
+        "Social Support": {
+            "init": 70,
+            "connections": {}
+        },
+        "Skill Development": {
+            "init": 55,
+            "connections": {}
+        },
+        "Knowledge": {
+            "init": 60,
+            "connections": {}
+        },
+        "Career Growth": {
+            "init": 50,
+            "connections": {}
+        },
+        "Income": {
+            "init": 60,
+            "connections": {}
+        },
+        "Free Time": {
+            "init": 30,
+            "connections": {}
+        },
+        "Sense of Belonging": {
+            "init": 65,
+            "connections": {}
+        }
+    }
+}

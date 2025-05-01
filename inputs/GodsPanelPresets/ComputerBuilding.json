@@ -1,0 +1,117 @@
+{
+    "0_DAMPING_FACTOR_0": 0.85,
+    "Component Selection": {
+        "CPU": {
+            "init": 70,
+            "connections": {
+                "Processing Speed": 0.8,
+                "Power Consumption": 0.6,
+                "System Stability": 0.5,
+                "Cost": 0.7
+            }
+        },
+        "GPU": {
+            "init": 80,
+            "connections": {
+                "Graphics Performance": 0.9,
+                "Power Consumption": 0.8,
+                "System Stability": 0.6,
+                "Cost": 0.9
+            }
+        },
+        "RAM": {
+            "init": 60,
+            "connections": {
+                "Processing Speed": 0.5,
+                "System Stability": 0.7,
+                "Multitasking Ability": 0.8,
+                "Cost": 0.4
+            }
+        },
+        "Storage": {
+            "init": 50,
+            "connections": {
+                "Loading Speed": 0.7,
+                "Storage Capacity": 0.9,
+                "Cost": 0.5
+            }
+        },
+        "Motherboard": {
+            "init": 65,
+            "connections": {
+                "System Stability": 0.9,
+                "Compatibility": 1.0,
+                "Expandability": 0.7,
+                "Cost": 0.6
+            }
+        },
+        "Power Supply": {
+            "init": 75,
+            "connections": {
+                "System Stability": 1.0,
+                "Power Consumption": -0.2,
+                "Reliability": 0.9,
+                "Cost": 0.4
+            }
+        },
+        "Cooling": {
+            "init": 60,
+            "connections": {
+                "System Stability": 0.8,
+                "Processing Speed": 0.3,
+                "Noise Level": -0.6,
+                "Cost": 0.3
+            }
+        }
+    },
+    "Build Results": {
+        "Processing Speed": {
+            "init": 60,
+            "connections": {}
+        },
+        "Graphics Performance": {
+            "init": 70,
+            "connections": {}
+        },
+        "Loading Speed": {
+            "init": 55,
+            "connections": {}
+        },
+        "Storage Capacity": {
+            "init": 80,
+            "connections": {}
+        },
+        "Multitasking Ability": {
+            "init": 65,
+            "connections": {}
+        },
+        "System Stability": {
+            "init": 75,
+            "connections": {}
+        },
+        "Power Consumption": {
+            "init": 60,
+            "connections": {}
+        },
+        "Reliability": {
+            "init": 85,
+            "connections": {}
+        },
+        "Compatibility":{
+            "init": 100,
+            "connections": {}
+        },
+        "Expandability": {
+            "init": 70,
+            "connections": {}
+        },
+        "Noise Level":{
+            "init": 40,
+            "connections": {}
+        },
+        "Cost": {
+            "init": 60,
+            "connections": {}
+        }
+    }
+}

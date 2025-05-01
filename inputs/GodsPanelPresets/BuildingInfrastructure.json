@@ -1,0 +1,306 @@
+{
+    "0_DAMPING_FACTOR_0": 0.85,
+    "Project Dynamics": {
+        "Budget Allocation": {
+            "init": 60,
+            "connections": {
+                "Material Costs": 0.7,
+                "Labor Costs": 0.6,
+                "Project Timeline": -0.5,
+                "Funding Sources": 0.9,
+                "Construction Quality": 0.4,
+                "Economic Conditions": 0.5
+            }
+        },
+        "Material Costs": {
+            "init": 50,
+            "connections": {
+                "Budget Allocation": -0.7,
+                "Construction Quality": 0.6,
+                "Project Timeline": 0.4,
+                "Economic Conditions": 0.8,
+                "Labor Costs": 0.3,
+                "Long-Term Durability": 0.2
+            }
+        },
+        "Labor Costs": {
+            "init": 60,
+            "connections": {
+                "Budget Allocation": -0.6,
+                "Labor Productivity": 0.8,
+                "Project Timeline": 0.5,
+                "Safety Standards": 0.7,
+                "Material Costs": 0.3,
+                "Community Impact": 0.2
+            }
+        },
+        "Labor Productivity": {
+            "init": 70,
+            "connections": {
+                "Project Timeline": -0.6,
+                "Construction Quality": 0.7,
+                "Technology Adoption": 0.5,
+                "Labor Costs": 0.4
+            }
+        },
+        "Construction Quality": {
+            "init": 80,
+            "connections": {
+                "Safety Standards": 0.9,
+                "Long-Term Durability": 0.8,
+                "Maintenance Costs": -0.6,
+                "Budget Allocation": -0.4,
+                "Material Costs": -0.6,
+                "Labor Productivity": 0.7
+            }
+        },
+        "Safety Standards": {
+            "init": 90,
+            "connections": {
+                "Labor Costs": -0.2,
+                "Construction Quality": 0.9,
+                "Regulatory Approvals": 1.0,
+                "Project Timeline": -0.3,
+                "Community Impact": -0.2
+            }
+        },
+        "Technology Adoption": {
+            "init": 40,
+            "connections": {
+                "Labor Productivity": 0.5,
+                "Construction Quality": 0.4,
+                "Project Timeline": -0.2,
+                "Cost Efficiency": 0.6,
+                "Funding Sources": 0.3
+            }
+        },
+        "Project Timeline": {
+            "init": 60,
+            "connections": {
+                "Budget Allocation": -0.5,
+                "Resource Management": -0.4,
+                "Regulatory Approvals": -0.7,
+                "Material Costs": 0.4,
+                "Labor Costs": 0.5,
+                "Labor Productivity": -0.6,
+                "Safety Standards": -0.3,
+                "Economic Conditions": 0.2,
+                "Project Demand": 0.3
+            }
+        },
+        "Funding Sources": {
+            "init": 75,
+            "connections": {
+                "Budget Allocation": 0.9,
+                "Project Scope": 0.6,
+                "Financial Risk": -0.5,
+                "Economic Conditions": 0.4,
+                "Technology Adoption": 0.3,
+                "Project Demand": 0.5
+            }
+        },
+        "Project Scope": {
+            "init": 70,
+            "connections": {
+                "Funding Sources": 0.6,
+                "Resource Management": 0.5,
+                "Project Timeline": 0.3,
+                "Community Impact": 0.4,
+                "Project Demand": 0.6
+            }
+        },
+        "Resource Management": {
+            "init": 70,
+            "connections": {
+                "Material Availability": 0.8,
+                "Labor Availability": 0.7,
+                "Equipment Availability": 0.9,
+                "Project Timeline": -0.4,
+                "Project Scope": 0.5
+            }
+        },
+        "Material Availability": {
+            "init": 65,
+            "connections": {
+                "Material Costs": 0.6,
+                "Project Timeline": 0.3,
+                "Economic Conditions": 0.5,
+                "Resource Management": 0.8
+            }
+        },
+        "Labor Availability": {
+            "init": 70,
+            "connections": {
+                "Labor Costs": 0.5,
+                "Labor Productivity": 0.4,
+                "Project Timeline": 0.2,
+                "Resource Management": 0.7
+            }
+        },
+        "Equipment Availability": {
+            "init": 75,
+            "connections": {
+                "Labor Productivity": 0.3,
+                "Project Timeline": 0.1,
+                "Resource Management": 0.9
+            }
+        },
+        "Land Acquisition Costs": {
+            "init": 55,
+            "connections": {
+                "Site Selection": 0.8,
+                "Budget Allocation": -0.4,
+                "Regulatory Approvals": -0.3,
+                "Community Impact": -0.2
+            }
+        },
+        "Site Selection": {
+            "init": 80,
+            "connections": {
+                "Environmental Impact": -0.6,
+                "Land Acquisition Costs": 0.8,
+                "Regulatory Approvals": -0.5,
+                "Community Impact": -0.4
+            }
+        },
+        "Environmental Impact": {
+            "init": 65,
+            "connections": {
+                "Site Selection": -0.6,
+                "Regulatory Approvals": -0.5,
+                "Community Impact": 0.8,
+                "Long-Term Durability": 0.4
+            }
+        },
+        "Community Impact": {
+            "init": 75,
+            "connections": {
+                "Site Selection": -0.3,
+                "Regulatory Approvals": -0.3,
+                "Project Approval": 0.9,
+                "Social Disruption": -0.7,
+                "Labor Costs": 0.2,
+                "Safety Standards": -0.2,
+                "Project Scope": 0.4
+            }
+        },
+        "Regulatory Approvals": {
+            "init": 50,
+            "connections": {
+                "Project Timeline": -0.7,
+                "Legal Compliance": 1.0,
+                "Community Impact": -0.3,
+                "Site Selection": -0.5,
+                "Environmental Impact": -0.5
+            }
+        },
+        "Legal Compliance": {
+            "init": 95,
+            "connections": {
+                "Regulatory Approvals": 1.0,
+                "Safety Standards": 0.8,
+                "Ethical Considerations": 0.9
+            }
+        },
+        "Ethical Considerations": {
+            "init": 85,
+            "connections": {
+                "Legal Compliance": 0.9,
+                "Community Impact": 0.6,
+                "Long-Term Durability": 0.5,
+                "Social Disruption": -0.4
+            }
+        },
+        "Financial Risk": {
+            "init": 45,
+            "connections": {
+                "Funding Sources": -0.5,
+                "Budget Allocation": -0.4,
+                "Economic Conditions": 0.7,
+                "Project Timeline": 0.3,
+                "Contingency Planning": -0.8
+            }
+        },
+        "Contingency Planning": {
+            "init": 60,
+            "connections": {
+                "Financial Risk": -0.8,
+                "Project Timeline": -0.2,
+                "Budget Allocation": 0.3,
+                "Resource Management": 0.4
+            }
+        },
+        "Economic Conditions": {
+            "init": 55,
+            "connections": {
+                "Material Costs": 0.8,
+                "Funding Availability": 0.6,
+                "Project Demand": 0.7,
+                "Budget Allocation": 0.5,
+                "Project Timeline": 0.2,
+                "Financial Risk": 0.7
+            }
+        },
+        "Funding Availability": {
+            "init": 70,
+            "connections": {
+                "Economic Conditions": 0.6,
+                "Funding Sources": 0.8,
+                "Project Demand": 0.5,
+                "Budget Allocation": 0.7
+            }
+        },
+        "Project Demand": {
+            "init": 80,
+            "connections": {
+                "Economic Conditions": 0.7,
+                "Funding Availability": 0.5,
+                "Project Scope": 0.6,
+                "Long-Term Durability": 0.4,
+                "Project Timeline": 0.3
+            }
+        },
+        "Long-Term Durability": {
+            "init": 85,
+            "connections": {
+                "Construction Quality": 0.8,
+                "Environmental Impact": 0.4,
+                "Maintenance Costs": -0.7,
+                "Project Demand": 0.4,
+                "Ethical Considerations": 0.5
+            }
+        },
+        "Maintenance Costs": {
+            "init": 40,
+            "connections": {
+                "Construction Quality": -0.6,
+                "Long-Term Durability": -0.7,
+                "Cost Efficiency": -0.9
+            }
+        },
+        "Cost Efficiency": {
+            "init": 65,
+            "connections": {
+                "Technology Adoption": 0.6,
+                "Budget Allocation": 0.5,
+                "Maintenance Costs": -0.9
+            }
+        },
+        "Social Disruption": {
+            "init": 30,
+            "connections": {
+                "Community Impact": -0.7,
+                "Project Timeline": 0.2,
+                "Ethical Considerations": -0.4
+            }
+        },
+        "Project Approval": {
+            "init": 80,
+            "connections": {
+                "Community Impact": 0.9,
+                "Regulatory Approvals": 0.7,
+                "Project Scope": 0.5
+            }
+        }
+    }
+}

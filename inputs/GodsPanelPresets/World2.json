@@ -1,0 +1,33 @@
+{
+    "0_DAMPING_FACTOR_0": 0.75,
+    "Ecosystem Dynamics": {
+        "Population Size": {
+            "init": 50,
+            "connections": {
+                "Food Availability": 0.6,
+                "Predator Population": -0.4,
+                "Environmental Conditions": 0.2
+            }
+        },
+        "Food Availability": {
+            "init": 60,
+            "connections": {
+                "Population Size": 0.5,
+                "Environmental Conditions": -0.3
+            }
+        },
+        "Predator Population": {
+            "init": 40,
+            "connections": {
+                "Population Size": -0.7
+            }
+        },
+        "Environmental Conditions": {
+            "init": 80,
+            "connections": {
+                "Population Size": 0.3,
+                "Food Availability": 0.4
+            }
+        }
+    }
+}

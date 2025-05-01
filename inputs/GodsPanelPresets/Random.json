@@ -1,0 +1,572 @@
+{
+    "0_DAMPING_FACTOR_0": 0.42,
+    "Existential Angst & Absurdity": {
+        "Existential Dread": {
+            "init": 66.6,
+            "connections": {
+                "Rubber Chicken Population": 0.8,
+                "Cosmic Misalignment": 0.9,
+                "Bad Haircuts": 0.7,
+                "Sarcasm Levels": 0.6,
+                "The Meaning of Life (42)": -0.2,
+                "Invisible String Theory": 0.4,
+                "Synchronized Dancing with Pigeons": -0.3,
+                "The Existential Crisis of Mannequins": 0.5,
+                "The Collective Consciousness of Cats": -0.4,
+                "Artificial Intelligence Development (But Goofy)": 0.7,
+                "The Ethics of Tickling Robots": -0.6
+            }
+        },
+        "The Meaning of Life (42)": {
+            "init": 42,
+            "connections": {
+                "Existential Dread": -0.2,
+                "Rubber Chicken Population": 0.1,
+                "Cosmic Misalignment": -0.1,
+                "Global Warming (Slightly Warmer)": 0.2,
+                "Lost Socks Phenomenon": -0.7,
+                "Invisible String Theory": -0.1,
+                "Synchronized Dancing with Pigeons": 0.2,
+                "Ethical Dilemmas": 0.5,
+                "Conversations with Plants": 0.3,
+                "The Mysterious Disappearance of Pens": -0.4
+            }
+        },
+        "Invisible String Theory": {
+            "init": 25,
+            "connections": {
+                "Existential Dread": 0.4,
+                "The Meaning of Life (42)": -0.1,
+                "Synchronized Dancing with Pigeons": 0.7,
+                "Cosmic Misalignment": 0.2,
+                "Black Hole Influence on Fashion Trends": 0.3,
+                "Lost Socks Phenomenon": -0.5,
+                "The Sudden Urge to Speak in Pirate": 0.4,
+                "The Bermuda Triangle's Appetite for Socks": 0.6,
+                "Quantum Superposition of Cookie Crumbs": 0.5
+            }
+        },
+        "The Existential Crisis of Mannequins": {
+            "init": 78,
+            "connections": {
+                "Bad Haircuts": 0.3,
+                "Lost Socks Phenomenon": -0.4,
+                "The Unexplained Popularity of Crocs": 0.5,
+                "Conversations with Plants": 0.7,
+                "Existential Dread": 0.2,
+                "Selfie Obsession": -0.6,
+                "Black Hole Influence on Fashion Trends": 0.8,
+                "The Price of Avocados": -0.1,
+                "The Ethics of Tickling Robots": 0.9,
+                "Philosophical Zombies at the DMV": -0.8
+            }
+        },
+        "Philosophical Zombies at the DMV": {
+            "init": 45,
+            "connections": {
+                "Existential Dread": 0.8,
+                "The Annoyance of Telemarketers": 0.7,
+                "The Meaning of Life (42)": -0.3,
+                "Bad Haircuts": -0.4,
+                "Sarcasm Levels": 0.9,
+                "The Existential Crisis of Mannequins": -0.8,
+                "Monday Morning Alarm Clock Conspiracy": 0.9,
+                "The Ethics of Tickling Robots": -0.6
+            }
+        },
+        "The Question of Whether Hot Dogs Are Sandwiches": {
+            "init": 37,
+            "connections": {
+                "Existential Dread": 0.6,
+                "Ethical Dilemmas": -0.7,
+                "Pineapple on Pizza Diplomatic Relations": 0.9,
+                "The Meaning of Life (42)": -0.4,
+                "Philosophical Zombies at the DMV": 0.5,
+                "Sarcasm Levels": -0.8
+            }
+        }
+    },
+    "Bizarre Phenomena & Unexplained Mysteries": {
+        "Cosmic Misalignment": {
+            "init": 42,
+            "connections": {
+                "Existential Dread": 0.9,
+                "Black Hole Influence on Fashion Trends": 0.8,
+                "The Annoyance of Telemarketers": -0.6,
+                "Sarcasm Levels": 0.4,
+                "Lost Socks Phenomenon": 0.7,
+                "The Mandela Effect's Grip on Reality": 0.5,
+                "Conversations with Plants": -0.3,
+                "The Mysterious Disappearance of Pens": 0.6,
+                "Philosophical Zombies at the DMV": 0.4,
+                "Unexpected Bicycle Migration Patterns": -0.5,
+                "Quantum Superposition of Cookie Crumbs": -0.7
+            }
+        },
+        "Black Hole Influence on Fashion Trends": {
+            "init": 20,
+            "connections": {
+                "Cosmic Misalignment": 0.8,
+                "Bad Haircuts": 0.6,
+                "The Price of Avocados": -0.5,
+                "Interdimensional Travel Attempts": 0.7,
+                "Sarcasm Levels": -0.2,
+                "The Sudden Urge to Speak in Pirate": 0.9,
+                "The Mysterious Disappearance of Pens": -0.4,
+                "The Existential Crisis of Mannequins": 0.8,
+                "Quantum Mechanics of Pizza Delivery": 0.7,
+                "The Unexplained Popularity of Crocs": -0.9
+            }
+        },
+        "Lost Socks Phenomenon": {
+            "init": 99,
+            "connections": {
+                "Cosmic Misalignment": 0.7,
+                "The Meaning of Life (42)": -0.7,
+                "Interdimensional Travel Attempts": 0.8,
+                "The Price of Avocados": -0.3,
+                "Selfie Obsession": 0.2,
+                "The Bermuda Triangle's Appetite for Socks": 0.9,
+                "The Existential Crisis of Mannequins": -0.4,
+                "Invisible String Theory": -0.5,
+                "The Sudden Urge to Speak in Pirate": 0.3
+            }
+        },
+        "Interdimensional Travel Attempts": {
+            "init": 30,
+            "connections": {
+                "Rubber Chicken Population": 0.9,
+                "Black Hole Influence on Fashion Trends": 0.7,
+                "Lost Socks Phenomenon": 0.8,
+                "Cosmic Misalignment": -0.5,
+                "Global Warming (Slightly Warmer)": 0.4,
+                "The Bermuda Triangle's Appetite for Socks": 0.6,
+                "The Sudden Urge to Speak in Pirate": -0.5,
+                "Misinformation Spread (But Funnier)": 0.3,
+                "Unexpected Bicycle Migration Patterns": 0.7,
+                "Quantum Superposition of Cookie Crumbs": 0.9
+            }
+        },
+        "The Bermuda Triangle's Appetite for Socks": {
+            "init": 95,
+            "connections": {
+                "Rubber Chicken Population": -0.8,
+                "Interdimensional Travel Attempts": 0.6,
+                "Lost Socks Phenomenon": 0.9,
+                "Cosmic Misalignment": -0.4,
+                "The Mysterious Disappearance of Pens": 0.7,
+                "Invisible String Theory": 0.5,
+                "Quantum Mechanics of Pizza Delivery": -0.3
+            }
+        },
+        "The Mandela Effect's Grip on Reality": {
+            "init": 48,
+            "connections": {
+                "Cosmic Misalignment": 0.5,
+                "Sarcasm Levels": -0.4,
+                "Misinformation Spread (But Funnier)": 0.4,
+                "Existential Dread": -0.2,
+                "Conversations with Plants": 0.6,
+                "Interdimensional Travel Attempts": 0.7,
+                "Philosophical Zombies at the DMV": -0.3,
+                "The Collective Consciousness of Cats": 0.8
+            }
+        },
+        "Unexpected Bicycle Migration Patterns": {
+            "init": 37,
+            "connections": {
+                "Cosmic Misalignment": -0.6,
+                "Interdimensional Travel Attempts": 0.7,
+                "Global Warming (Slightly Warmer)": 0.5,
+                "The Collective Consciousness of Cats": -0.4,
+                "Synchronized Dancing with Pigeons": 0.8
+            }
+        },
+        "Mysterious Disappearance of Left Gloves": {
+            "init": 68,
+            "connections": {
+                "Lost Socks Phenomenon": 0.9,
+                "The Bermuda Triangle's Appetite for Socks": 0.8,
+                "The Mysterious Disappearance of Pens": 0.7,
+                "Invisible String Theory": -0.5
+            }
+        }
+    },
+    "Questionable Trends & Social Constructs": {
+        "Bad Haircuts": {
+            "init": 70,
+            "connections": {
+                "Existential Dread": 0.6,
+                "Black Hole Influence on Fashion Trends": 0.6,
+                "Sarcasm Levels": -0.8,
+                "The Annoyance of Telemarketers": 0.5,
+                "Selfie Obsession": 0.4,
+                "The Unexplained Popularity of Crocs": -0.7,
+                "The Existential Crisis of Mannequins": 0.3,
+                "Philosophical Zombies at the DMV": -0.4,
+                "Quantum Mechanics of Pizza Delivery": 0.2
+            }
+        },
+        "Sarcasm Levels": {
+            "init": 75,
+            "connections": {
+                "Existential Dread": 0.6,
+                "Rubber Chicken Population": -0.5,
+                "Cosmic Misalignment": 0.4,
+                "Bad Haircuts": -0.8,
+                "The Annoyance of Telemarketers": 0.9,
+                "Selfie Obsession": -0.7,
+                "Misinformation Spread (But Funnier)": 0.6,
+                "The Mandela Effect's Grip on Reality": -0.4,
+                "Conversations with Plants": 0.2,
+                "Philosophical Zombies at the DMV": 0.9,
+                "The Sudden Urge to Speak in Pirate": -0.7,
+                "The Question of Whether Hot Dogs Are Sandwiches": -0.8
+            }
+        },
+        "Selfie Obsession": {
+            "init": 60,
+            "connections": {
+                "Bad Haircuts": 0.4,
+                "Sarcasm Levels": -0.7,
+                "The Price of Avocados": 0.4,
+                "Lost Socks Phenomenon": -0.2,
+                "Misinformation Spread (But Funnier)": 0.5,
+                "The Unexplained Popularity of Crocs": -0.6,
+                "Conversations with Plants": 0.3,
+                "The Existential Crisis of Mannequins": -0.6,
+                "Artificial Intelligence Development (But Goofy)": 0.4
+            }
+        },
+        "The Unexplained Popularity of Crocs": {
+            "init": 65,
+            "connections": {
+                "Bad Haircuts": -0.7,
+                "Global Warming (Slightly Warmer)": 0.4,
+                "Selfie Obsession": -0.6,
+                "Collective Noun for Pandas": 0.8,
+                "The Existential Crisis of Mannequins": 0.5,
+                "Black Hole Influence on Fashion Trends": -0.9,
+                "The Price of Avocados": 0.3,
+                "The Question of Whether Hot Dogs Are Sandwiches": -0.6
+            }
+        },
+        "Quantum Mechanics of Pizza Delivery": {
+            "init": 40,
+            "connections": {
+                "Black Hole Influence on Fashion Trends": 0.7,
+                "Interdimensional Travel Attempts": 0.8,
+                "The Bermuda Triangle's Appetite for Socks": -0.3,
+                "Bad Haircuts": 0.2,
+                "The Mysterious Disappearance of Pens": -0.6,
+                "Pineapple on Pizza Diplomatic Relations": 0.9,
+                "Artificial Intelligence Development (But Goofy)": 0.4,
+                "Quantum Superposition of Cookie Crumbs": 1.0
+            }
+        },
+        "Aggressive Plant Parenthood": {
+            "init": 54,
+            "connections": {
+                "Conversations with Plants": 0.9,
+                "Global Warming (Slightly Warmer)": -0.6,
+                "The Collective Consciousness of Cats": -0.5,
+                "Selfie Obsession": 0.6
+            }
+        }
+    },
+    "Annoying Inconveniences & Mundane Mysteries": {
+        "The Annoyance of Telemarketers": {
+            "init": 90,
+            "connections": {
+                "Cosmic Misalignment": -0.6,
+                "Bad Haircuts": 0.5,
+                "Sarcasm Levels": 0.9,
+                "The Price of Avocados": -0.7,
+                "Existential Dread": 0.3,
+                "The Collective Consciousness of Cats": -0.8,
+                "The Origin of Background Music in Elevators": 0.5,
+                "Philosophical Zombies at the DMV": 0.7,
+                "The Sudden Urge to Speak in Pirate": -0.2,
+                "Monday Morning Alarm Clock Conspiracy": 0.9
+            }
+        },
+        "The Price of Avocados": {
+            "init": 85,
+            "connections": {
+                "Black Hole Influence on Fashion Trends": -0.5,
+                "The Annoyance of Telemarketers": -0.7,
+                "Global Warming (Slightly Warmer)": 0.6,
+                "Selfie Obsession": 0.4,
+                "Lost Socks Phenomenon": -0.3,
+                "The Mysterious Disappearance of Pens": 0.5,
+                "The Origin of Background Music in Elevators": -0.2,
+                "The Unexplained Popularity of Crocs": 0.3,
+                "The Existential Crisis of Mannequins": -0.1,
+                "The Tragedy of Spilled Milk": 0.8,
+                "Banana Ripening Conspiracy": 0.9
+            }
+        },
+        "The Mysterious Disappearance of Pens": {
+            "init": 92,
+            "connections": {
+                "Black Hole Influence on Fashion Trends": -0.4,
+                "The Price of Avocados": 0.5,
+                "Lost Socks Phenomenon": 0.7,
+                "Bad Haircuts": -0.3,
+                "The Bermuda Triangle's Appetite for Socks": 0.7,
+                "The Meaning of Life (42)": -0.4,
+                "Cosmic Misalignment": 0.6,
+                "Quantum Mechanics of Pizza Delivery": -0.6,
+                "Mysterious Disappearance of Left Gloves": 0.8
+            }
+        },
+        "The Origin of Background Music in Elevators": {
+            "init": 52,
+            "connections": {
+                "The Annoyance of Telemarketers": 0.5,
+                "The Price of Avocados": -0.2,
+                "The Collective Consciousness of Cats": 0.4,
+                "Existential Dread": -0.1,
+                "Synchronized Dancing with Pigeons": 0.3,
+                "Artificial Intelligence Development (But Goofy)": -0.2,
+                "The Unexplained Popularity of Crocs": -0.1
+            }
+        },
+        "Monday Morning Alarm Clock Conspiracy": {
+            "init": 89,
+            "connections": {
+                "Existential Dread": 0.9,
+                "The Annoyance of Telemarketers": 0.6,
+                "Sarcasm Levels": -0.7,
+                "The Collective Consciousness of Cats": -0.5,
+                "Philosophical Zombies at the DMV": 0.8,
+                "Banana Ripening Conspiracy": 0.6
+            }
+        },
+        "That Thing You Came Into This Room For": {
+            "init": 97,
+            "connections": {
+                "Existential Dread": 0.8,
+                "The Mysterious Disappearance of Pens": 0.9,
+                "Lost Socks Phenomenon": 0.7,
+                "The Bermuda Triangle's Appetite for Socks": 0.6,
+                "The Mandela Effect's Grip on Reality": 0.8,
+                "Cosmic Misalignment": -0.7,
+                "Monday Morning Alarm Clock Conspiracy": 0.5
+            }
+        }
+    },
+    "Weird World & Wacky Scenarios": {
+        "Rubber Chicken Population": {
+            "init": 80,
+            "connections": {
+                "Existential Dread": 0.7,
+                "Interdimensional Travel Attempts": 0.9,
+                "Sarcasm Levels": -0.5,
+                "Global Warming (Slightly Warmer)": 0.3,
+                "The Meaning of Life (42)": 0.1,
+                "Collective Noun for Pandas": -0.6,
+                "The Bermuda Triangle's Appetite for Socks": -0.8,
+                "Monday Morning Alarm Clock Conspiracy": 0.4,
+                "Quantum Mechanics of Pizza Delivery": 0.5,
+                "The Sudden Urge to Speak in Pirate": 0.6
+            }
+        },
+        "Global Warming (Slightly Warmer)": {
+            "init": 72,
+            "connections": {
+                "Rubber Chicken Population": 0.3,
+                "The Meaning of Life (42)": 0.2,
+                "Interdimensional Travel Attempts": 0.4,
+                "The Price of Avocados": 0.6,
+                "Existential Dread": -0.1,
+                "The Unexplained Popularity of Crocs": 0.4,
+                "The Collective Consciousness of Cats": -0.3,
+                "Unexpected Bicycle Migration Patterns": 0.5,
+                "Monday Morning Alarm Clock Conspiracy": -0.2,
+                "Banana Ripening Conspiracy": 0.6,
+                "Aggressive Plant Parenthood": -0.6
+            }
+        },
+        "Synchronized Dancing with Pigeons": {
+            "init": 15,
+            "connections": {
+                "Existential Dread": -0.3,
+                "The Meaning of Life (42)": 0.2,
+                "Invisible String Theory": 0.7,
+                "Rubber Chicken Population": 0.4,
+                "The Annoyance of Telemarketers": -0.1,
+                "Unexpected Bicycle Migration Patterns": 0.8,
+                "The Origin of Background Music in Elevators": 0.6
+            }
+        },
+        "Collective Noun for Pandas": {
+            "init": 55,
+            "connections": {
+                "Rubber Chicken Population": -0.6,
+                "Global Warming (Slightly Warmer)": 0.5,
+                "The Unexplained Popularity of Crocs": 0.8,
+                "Selfie Obsession": -0.3,
+                "The Collective Consciousness of Cats": 0.6,
+                "Synchronized Dancing with Pigeons": 0.4,
+                "Conversations with Plants": -0.5,
+                "Misinformation Spread (But Funnier)": 0.7
+            }
+        },
+        "The Collective Consciousness of Cats": {
+            "init": 88,
+            "connections": {
+                "The Annoyance of Telemarketers": -0.8,
+                "Global Warming (Slightly Warmer)": -0.3,
+                "Misinformation Spread (But Funnier)": 0.7,
+                "Collective Noun for Pandas": 0.6,
+                "The Origin of Background Music in Elevators": 0.4,
+                "Existential Dread": -0.4,
+                "The Mandela Effect's Grip on Reality": 0.8,
+                "Monday Morning Alarm Clock Conspiracy": -0.5,
+                "Unexpected Bicycle Migration Patterns": -0.4,
+                "Aggressive Plant Parenthood": -0.5
+            }
+        },
+        "Spontaneous Human Tap Dancing": {
+            "init": 31,
+            "connections": {
+                "The Origin of Background Music in Elevators": 0.8,
+                "Synchronized Dancing with Pigeons": 0.9,
+                "Existential Dread": -0.7
+            }
+        }
+    },
+    "Meta & Miscellaneous": {
+        "Misinformation Spread (But Funnier)": {
+            "init": 50,
+            "connections": {
+                "Sarcasm Levels": 0.6,
+                "Ethical Dilemmas": -0.8,
+                "Selfie Obsession": 0.5,
+                "Existential Dread": 0.2,
+                "Interdimensional Travel Attempts": -0.3,
+                "The Collective Consciousness of Cats": 0.7,
+                "The Mandela Effect's Grip on Reality": 0.4,
+                "Artificial Intelligence Development (But Goofy)": -0.8,
+                "Monday Morning Alarm Clock Conspiracy": -0.3,
+                "Collective Noun for Pandas": 0.7
+            }
+        },
+        "Ethical Dilemmas": {
+            "init": 62,
+            "connections": {
+                "Misinformation Spread (But Funnier)": -0.8,
+                "Artificial Intelligence Development (But Goofy)": 0.9,
+                "Sarcasm Levels": 0.7,
+                "The Meaning of Life (42)": 0.4,
+                "Conversations with Plants": -0.5,
+                "Existential Dread": 0.6,
+                "Philosophical Zombies at the DMV": -0.5,
+                "The Ethics of Tickling Robots": 0.8,
+                "The Question of Whether Hot Dogs Are Sandwiches": -0.7,
+                "Pineapple on Pizza Diplomatic Relations": 0.8
+            }
+        },
+        "The Sudden Urge to Speak in Pirate": {
+            "init": 28,
+            "connections": {
+                "Black Hole Influence on Fashion Trends": 0.9,
+                "Interdimensional Travel Attempts": -0.5,
+                "Sarcasm Levels": -0.3,
+                "The Annoyance of Telemarketers": -0.2,
+                "Lost Socks Phenomenon": 0.4,
+                "Invisible String Theory": 0.4,
+                "Rubber Chicken Population": 0.6
+            }
+        },
+        "Artificial Intelligence Development (But Goofy)": {
+            "init": 58,
+            "connections": {
+                "Misinformation Spread (But Funnier)": -0.6,
+                "Ethical Dilemmas": 0.9,
+                "Selfie Obsession": 0.3,
+                "The Collective Consciousness of Cats": 0.7,
+                "The Origin of Background Music in Elevators": -0.2,
+                "Existential Dread": 0.7,
+                "The Meaning of Life (42)": 0.5,
+                "Quantum Mechanics of Pizza Delivery": 0.4,
+                "The Ethics of Tickling Robots": 0.9
+            }
+        },
+        "Conversations with Plants": {
+            "init": 22,
+            "connections": {
+                "Cosmic Misalignment": -0.3,
+                "Sarcasm Levels": 0.2,
+                "Selfie Obsession": 0.3,
+                "The Mandela Effect's Grip on Reality": 0.6,
+                "The Existential Crisis of Mannequins": 0.7,
+                "The Meaning of Life (42)": 0.3,
+                "Collective Noun for Pandas": -0.5,
+                "Ethical Dilemmas": -0.5,
+                "Aggressive Plant Parenthood": 0.9
+            }
+        }
+    },
+    "Culinary Conundrums & Food Paradoxes": {
+        "The Tragedy of Spilled Milk": {
+            "init": 63,
+            "connections": {
+                "Existential Dread": 0.5,
+                "The Price of Avocados": 0.7,
+                "Sarcasm Levels": -0.4,
+                "Global Warming (Slightly Warmer)": 0.3,
+                "Conversations with Plants": -0.2,
+                "Banana Ripening Conspiracy": 0.8,
+                "That Thing You Came Into This Room For": -0.6
+            }
+        },
+        "Pineapple on Pizza Diplomatic Relations": {
+            "init": 81,
+            "connections": {
+                "Ethical Dilemmas": 0.8,
+                "Misinformation Spread (But Funnier)": -0.7,
+                "Sarcasm Levels": 0.9,
+                "The Tragedy of Spilled Milk": -0.4,
+                "Quantum Mechanics of Pizza Delivery": 0.9,
+                "The Question of Whether Hot Dogs Are Sandwiches": 0.9,
+                "Banana Ripening Conspiracy": -0.5
+            }
+        },
+        "Quantum Superposition of Cookie Crumbs": {
+            "init": 47,
+            "connections": {
+                "Quantum Mechanics of Pizza Delivery": 1.0,
+                "Interdimensional Travel Attempts": 0.6,
+                "The Mysterious Disappearance of Pens": 0.7,
+                "Invisible String Theory": 0.5,
+                "The Bermuda Triangle's Appetite for Socks": -0.4,
+                "Cosmic Misalignment": -0.7,
+                "That Thing You Came Into This Room For": 0.8
+            }
+        },
+        "Banana Ripening Conspiracy": {
+            "init": 74,
+            "connections": {
+                "The Price of Avocados": 0.9,
+                "Global Warming (Slightly Warmer)": 0.6,
+                "The Collective Consciousness of Cats": -0.5,
+                "The Tragedy of Spilled Milk": 0.8,
+                "Monday Morning Alarm Clock Conspiracy": 0.6,
+                "Pineapple on Pizza Diplomatic Relations": -0.2
+            }
+        },
+        "The Ethics of Tickling Robots": {
+            "init": 29,
+            "connections": {
+                "Existential Dread": -0.6,
+                "Ethical Dilemmas": 0.9,
+                "Artificial Intelligence Development (But Goofy)": 0.8,
+                "The Meaning of Life (42)": -0.5,
+                "Philosophical Zombies at the DMV": 0.7,
+                "The Question of Whether Hot Dogs Are Sandwiches": 0.6
+            }
+        }
+    }
+}
