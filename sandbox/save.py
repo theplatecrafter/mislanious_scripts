@@ -1,209 +1,92 @@
 slider_data = {
-        "Environment & Energy": {
-            "color": (50, 200, 50),  # Green
-            "sub_categories": {
-                "Fossil Fuel Consumption": 70,
-                "Carbon Emissions": 75,
-                "Air Quality": 60,
-                "Global Temperature": 80,
-                "Sea Level Rise": 65,
-                "Investment in Renewable Energy": 40,
-                "Deforestation Rate": 55,
-                "Species Biodiversity": 50,
-                "Ocean Acidification": 70,
-                "Methane Emissions": 65,
-                "Plastic Pollution": 80,
-                "Water Usage": 75,
-                "Renewable Energy Production": 30,
-                "Energy Efficiency": 50,
-                "Sustainable Agriculture": 40,
-            },
-        },
-        "Economy": {
-            "color": (255, 200, 50),  # Yellow
-            "sub_categories": {
-                "Economic Growth": 60,
-                "Unemployment Rate": 40,
-                "Global Energy Prices": 70,
-                "Income Inequality": 70,
-                "Industrial Output": 65,
-                "Resource Scarcity": 55,
-                "Trade Openness": 75,
-                "Inflation Rate": 50,
-                "Interest Rates": 45,
-                "Stock Market Volatility": 55,
-                "Foreign Direct Investment": 60,
-            },
-        },
-        "Society": {
-            "color": (50, 100, 255),  # Blue
-            "sub_categories": {
-                "Population Growth": 60,
-                "Urbanization Rate": 55,
-                "Healthcare Access": 65,
-                "Education Access": 70,
-                "Social Stability": 60,
-                "Migration Rate": 50,
-                "Crime Rate": 40,
-                "Civic Participation": 55,
-                "Life Expectancy": 75,
-                "Public Trust in Institutions": 40,
-                "Cultural Diversity": 70,
-            },
-        },
-        "Politics & Governance": {
-            "color": (200, 50, 255),  # Magenta
-            "sub_categories": {
-                "Military Spending": 50,
-                "Government Transparency": 45,
-                "Democratic Index": 60,
-                "Corruption Perception": 65,
-                "International Cooperation": 50,
-                "Freedom of Press": 60,
-                "Political Stability": 65,
-                "Rule of Law": 70,
-                "Regulatory Quality": 60,
-                "Voice and Accountability": 55,
-            },
-        },
-        "Technology & Innovation": {
-            "color": (255, 50, 200),  # Pink
-            "sub_categories": {
-                "Tech Innovation Rate": 70,
-                "AI Development": 50,
-                "Cybersecurity Investment": 60,
-                "Automation Penetration": 55,
-                "Space Exploration Funding": 40,
-                "Digital Literacy": 65,
-                "Internet Access": 75,
-                "Renewable Energy Tech": 45,
-                "Biotechnology Development": 60,
-            },
-        },
-        "Health & Epidemics": {
-            "color": (255, 50, 50),  # Red
-            "sub_categories": {
-                "Global Pandemic Risk": 80,
-                "Vaccination Rate": 70,
-                "Antibiotic Resistance": 60,
-                "Obesity Rate": 65,
-                "Mental Health Index": 50,
-                "Access to Clean Water": 75,
-            },
-        },
-        "Agriculture & Food": {
-            "color": (100, 255, 100),  # Light Green
-            "sub_categories": {
-                "Food Security": 60,
-                "Crop Yield": 70,
-                "Agricultural Land Use": 65,
-                "Meat Consumption": 55,
-                "Sustainable Farming Practices": 40,
-                "Food Waste": 70,
-            },
-        },
-        "Culture & Wellbeing": {
-            "color": (200, 200, 200),  # Gray
-            "sub_categories": {
-                "Mental Health Index": 55,
-                "Work-Life Balance": 60,
-                "Cultural Diversity": 75,
-                "Social Connectedness": 65,
-                "Leisure Time": 50,
-                "Arts and Culture Funding": 45,
-            },
-        },
-    }
-
-
-
-
-engine.connect_sliders("Fossil Fuel Consumption", "Carbon Emissions", 0.8)
-    engine.connect_sliders("Carbon Emissions", "Global Temperature", 0.7)
-    engine.connect_sliders("Global Temperature", "Sea Level Rise", 0.6)
-    engine.connect_sliders("Investment in Renewable Energy", "Fossil Fuel Consumption", -0.5)
-    engine.connect_sliders("Economic Growth", "Unemployment Rate", -0.6)
-    engine.connect_sliders("Economic Growth", "Inflation Rate", 0.5)
-    engine.connect_sliders("Inflation Rate", "Interest Rates", 0.9)
-    engine.connect_sliders("Population Growth", "Urbanization Rate", 0.8)
-    engine.connect_sliders("Healthcare Access", "Life Expectancy", 0.7)
-    engine.connect_sliders("Education Access", "Digital Literacy", 0.6)
-    engine.connect_sliders("Tech Innovation Rate", "Economic Growth", 0.4)
-    engine.connect_sliders("AI Development", "Automation Penetration", 0.7)
-    engine.connect_sliders("Global Pandemic Risk", "Vaccination Rate", -0.9)
-    engine.connect_sliders("Food Security", "Sustainable Farming Practices", 0.6)
-    engine.connect_sliders("Mental Health Index", "Social Connectedness", 0.5)
-    engine.connect_sliders("Fossil Fuel Consumption", "Global Energy Prices", 0.7)
-    engine.connect_sliders("Carbon Emissions", "Air Quality", -0.8)
-    engine.connect_sliders("Air Quality", "Healthcare Access", -0.6)
-    engine.connect_sliders("Global Temperature", "Agricultural Land Use", -0.5)
-    engine.connect_sliders("Sea Level Rise", "Migration Rate", 0.4)
-    engine.connect_sliders("Investment in Renewable Energy", "Economic Growth", 0.6)
-    engine.connect_sliders("Deforestation Rate", "Species Biodiversity", -0.9)
-    engine.connect_sliders("Species Biodiversity", "Food Security", 0.5)
-    engine.connect_sliders("Ocean Acidification", "Food Security", -0.4)
-    engine.connect_sliders("Methane Emissions", "Global Temperature", 0.6)
-    engine.connect_sliders("Plastic Pollution", "Ocean Acidification", 0.7)
-    engine.connect_sliders("Water Usage", "Agricultural Land Use", 0.8)
-    engine.connect_sliders("Renewable Energy Production", "Global Energy Prices", -0.6)
-    engine.connect_sliders("Energy Efficiency", "Fossil Fuel Consumption", -0.4)
-    engine.connect_sliders("Sustainable Agriculture", "Food Security", 0.7)
-    engine.connect_sliders("Economic Growth", "Industrial Output", 0.8)
-    engine.connect_sliders("Unemployment Rate", "Social Stability", -0.7)
-    engine.connect_sliders("Global Energy Prices", "Inflation Rate", 0.6)
-    engine.connect_sliders("Income Inequality", "Social Stability", -0.9)
-    engine.connect_sliders("Industrial Output", "Resource Scarcity", 0.5)
-    engine.connect_sliders("Resource Scarcity", "Global Energy Prices", 0.4)
-    engine.connect_sliders("Trade Openness", "Economic Growth", 0.6)
-    engine.connect_sliders("Inflation Rate", "Income Inequality", -0.5)
-    engine.connect_sliders("Interest Rates", "Stock Market Volatility", 0.7)
-    engine.connect_sliders("Stock Market Volatility", "Foreign Direct Investment", -0.6)
-    engine.connect_sliders("Foreign Direct Investment", "Economic Growth", 0.9)
-    engine.connect_sliders("Population Growth", "Food Security", -0.4)
-    engine.connect_sliders("Urbanization Rate", "Air Quality", -0.5)
-    engine.connect_sliders("Healthcare Access", "Economic Growth", 0.4)
-    engine.connect_sliders("Education Access", "Income Inequality", -0.6)
-    engine.connect_sliders("Social Stability", "Migration Rate", -0.5)
-    engine.connect_sliders("Migration Rate", "Social Stability", -0.4)
-    engine.connect_sliders("Crime Rate", "Social Stability", -0.8)
-    engine.connect_sliders("Civic Participation", "Government Transparency", 0.7)
-    engine.connect_sliders("Life Expectancy", "Healthcare Access", 0.8)
-    engine.connect_sliders("Public Trust in Institutions", "Government Transparency", 0.9)
-    engine.connect_sliders("Cultural Diversity", "Social Stability", 0.6)
-    engine.connect_sliders("Military Spending", "Economic Growth", -0.5)
-    engine.connect_sliders("Government Transparency", "Corruption Perception", -0.9)
-    engine.connect_sliders("Democratic Index", "Social Stability", 0.7)
-    engine.connect_sliders("Corruption Perception", "Foreign Direct Investment", -0.6)
-    engine.connect_sliders("International Cooperation", "Global Temperature", -0.4)
-    engine.connect_sliders("Freedom of Press", "Government Transparency", 0.8)
-    engine.connect_sliders("Political Stability", "Economic Growth", 0.6)
-    engine.connect_sliders("Rule of Law", "Foreign Direct Investment", 0.7)
-    engine.connect_sliders("Regulatory Quality", "Industrial Output", 0.5)
-    engine.connect_sliders("Voice and Accountability", "Social Stability", 0.4)
-    engine.connect_sliders("Tech Innovation Rate", "Industrial Output", 0.7)
-    engine.connect_sliders("AI Development", "Unemployment Rate", 0.6)
-    engine.connect_sliders("Cybersecurity Investment", "Tech Innovation Rate", 0.5)
-    engine.connect_sliders("Automation Penetration", "Unemployment Rate", 0.8)
-    engine.connect_sliders("Space Exploration Funding", "Tech Innovation Rate", 0.4)
-    engine.connect_sliders("Digital Literacy", "Education Access", 0.9)
-    engine.connect_sliders("Internet Access", "Digital Literacy", 0.7)
-    engine.connect_sliders("Renewable Energy Tech", "Investment in Renewable Energy", 0.6)
-    engine.connect_sliders("Biotechnology Development", "Life Expectancy", 0.5)
-    engine.connect_sliders("Global Pandemic Risk", "Economic Growth", -0.7)
-    engine.connect_sliders("Vaccination Rate", "Life Expectancy", 0.9)
-    engine.connect_sliders("Antibiotic Resistance", "Healthcare Access", -0.6)
-    engine.connect_sliders("Obesity Rate", "Life Expectancy", -0.5)
-    engine.connect_sliders("Mental Health Index", "Social Stability", 0.7)
-    engine.connect_sliders("Access to Clean Water", "Healthcare Access", 0.8)
-    engine.connect_sliders("Food Security", "Social Stability", 0.6)
-    engine.connect_sliders("Crop Yield", "Food Security", 0.8)
-    engine.connect_sliders("Agricultural Land Use", "Deforestation Rate", 0.7)
-    engine.connect_sliders("Meat Consumption", "Agricultural Land Use", 0.5)
-    engine.connect_sliders("Sustainable Farming Practices", "Crop Yield", 0.9)
-    engine.connect_sliders("Food Waste", "Food Security", -0.4)
-    engine.connect_sliders("Work-Life Balance", "Mental Health Index", 0.7)
-    engine.connect_sliders("Social Connectedness", "Mental Health Index", 0.8)
-    engine.connect_sliders("Leisure Time", "Work-Life Balance", 0.6)
-    engine.connect_sliders("Arts and Culture Funding", "Social Connectedness", 0.5)
-    engine.connect_sliders("Air Quality", "Global Temperature", 0.4)
-    engine.connect_sliders("Migration Rate", "Population Growth", 0.3)
+    "Environment & Energy": {
+        "Fossil Fuel Consumption": {"init": 70, "connections": {"Carbon Emissions": 0.8, "Air Quality": -0.5, "Global Energy Prices": 0.6}},
+        "Carbon Emissions": {"init": 80, "connections": {"Global Temperature": 0.9, "Ocean Acidification": 0.7, "Air Quality": -0.8}},
+        "Air Quality": {"init": 60, "connections": {"Healthcare Access": -0.3, "Fossil Fuel Consumption": 0.5, "Carbon Emissions": -0.8}},
+        "Global Temperature": {"init": 90, "connections": {"Sea Level Rise": 0.95, "Species Biodiversity": -0.6, "Sustainable Agriculture": -0.2}},
+        "Sea Level Rise": {"init": 70, "connections": {"Coastal Populations": 0.8, "Economic Growth": -0.1}},
+        "Investment in Renewable Energy": {"init": 40, "connections": {"Fossil Fuel Consumption": -0.7, "Renewable Energy Production": 0.9, "Economic Growth": 0.2}},
+        "Deforestation Rate": {"init": 60, "connections": {"Species Biodiversity": -0.8, "Carbon Emissions": 0.4, "Agricultural Land Use": 0.6}},
+        "Species Biodiversity": {"init": 30, "connections": {"Food Security": -0.4, "Deforestation Rate": -0.8, "Ocean Acidification": -0.5}},
+        "Ocean Acidification": {"init": 75, "connections": {"Species Biodiversity": -0.5, "Food Security": -0.3}},
+        "Methane Emissions": {"init": 65, "connections": {"Global Temperature": 0.3, "Air Quality": -0.2}},
+        "Plastic Pollution": {"init": 85, "connections": {"Ocean Acidification": 0.6, "Species Biodiversity": -0.4}},
+        "Water Usage": {"init": 55, "connections": {"Agricultural Land Use": 0.7, "Food Security": -0.2}},
+        "Renewable Energy Production": {"init": 35, "connections": {"Fossil Fuel Consumption": -0.6, "Energy Efficiency": 0.5}},
+        "Energy Efficiency": {"init": 45, "connections": {"Fossil Fuel Consumption": -0.4, "Industrial Output": 0.3}},
+        "Sustainable Agriculture": {"init": 40, "connections": {"Food Security": 0.7, "Deforestation Rate": -0.3, "Water Usage": -0.2}},
+    },
+    "Economy": {
+        "Economic Growth": {"init": 60, "connections": {"Unemployment Rate": -0.5, "Industrial Output": 0.7, "Inflation Rate": 0.3}},
+        "Unemployment Rate": {"init": 40, "connections": {"Economic Growth": -0.6, "Social Stability": -0.2, "Income Inequality": 0.4}},
+        "Global Energy Prices": {"init": 70, "connections": {"Inflation Rate": 0.6, "Industrial Output": -0.4, "Fossil Fuel Consumption": 0.8}},
+        "Income Inequality": {"init": 65, "connections": {"Social Stability": -0.7, "Economic Growth": -0.2, "Crime Rate": 0.5}},
+        "Industrial Output": {"init": 55, "connections": {"Economic Growth": 0.7, "Energy Efficiency": 0.3, "Resource Scarcity": -0.2}},
+        "Resource Scarcity": {"init": 80, "connections": {"Global Energy Prices": 0.4, "Industrial Output": -0.3, "Food Security": -0.1}},
+        "Trade Openness": {"init": 50, "connections": {"Economic Growth": 0.3, "Global Energy Prices": 0.2}},
+        "Inflation Rate": {"init": 50, "connections": {"Interest Rates": 0.7, "Economic Growth": -0.2, "Unemployment Rate": 0.3}},
+        "Interest Rates": {"init": 40, "connections": {"Inflation Rate": 0.6, "Stock Market Volatility": 0.5, "Foreign Direct Investment": -0.3}},
+        "Stock Market Volatility": {"init": 60, "connections": {"Foreign Direct Investment": -0.7, "Interest Rates": 0.5}},
+        "Foreign Direct Investment": {"init": 50, "connections": {"Economic Growth": 0.4, "Tech Innovation Rate": 0.3}},
+    },
+    "Society": {
+        "Population Growth": {"init": 60, "connections": {"Urbanization Rate": 0.5, "Resource Scarcity": 0.3, "Healthcare Access": -0.2}},
+        "Urbanization Rate": {"init": 55, "connections": {"Infrastructure Development": 0.7, "Air Quality": -0.4, "Social Stability": -0.2}},
+        "Healthcare Access": {"init": 40, "connections": {"Life Expectancy": 0.8, "Social Stability": 0.3, "Public Trust in Institutions": 0.2}},
+        "Education Access": {"init": 50, "connections": {"Digital Literacy": 0.6, "Economic Growth": 0.4, "Civic Participation": 0.3}},
+        "Social Stability": {"init": 50, "connections": {"Crime Rate": -0.6, "Public Trust in Institutions": 0.7, "Economic Growth": 0.2}},
+        "Migration Rate": {"init": 45, "connections": {"Cultural Diversity": 0.8, "Social Stability": -0.3, "Economic Growth": 0.1}},
+        "Crime Rate": {"init": 30, "connections": {"Social Stability": -0.6, "Income Inequality": 0.5}},
+        "Civic Participation": {"init": 40, "connections": {"Social Stability": 0.4, "Government Transparency": 0.5, "Public Trust in Institutions": 0.6}},
+        "Life Expectancy": {"init": 75, "connections": {"Healthcare Access": 0.8, "Air Quality": 0.4, "Obesity Rate": -0.3}},
+        "Public Trust in Institutions": {"init": 35, "connections": {"Government Transparency": 0.7, "Social Stability": 0.5, "Civic Participation": 0.4}},
+        "Cultural Diversity": {"init": 60, "connections": {"Social Connectedness": 0.4, "Social Stability": 0.2}},
+    },
+    "Politics & Governance": {
+        "Military Spending": {"init": 60, "connections": {"International Cooperation": -0.4, "Economic Growth": -0.2, "Social Stability": -0.3}},
+        "Government Transparency": {"init": 40, "connections": {"Corruption Perception": -0.9, "Public Trust in Institutions": 0.7, "International Cooperation": 0.2}},
+        "Democratic Index": {"init": 50, "connections": {"Freedom of Press": 0.8, "Political Stability": 0.6, "Civic Participation": 0.5}},
+        "Corruption Perception": {"init": 70, "connections": {"Government Transparency": -0.9, "Foreign Direct Investment": -0.5, "Public Trust in Institutions": -0.8}},
+        "International Cooperation": {"init": 50, "connections": {"Global Temperature": -0.2, "Economic Growth": 0.3, "Political Stability": 0.4}},
+        "Freedom of Press": {"init": 60, "connections": {"Democratic Index": 0.8, "Public Trust in Institutions": 0.3}},
+        "Political Stability": {"init": 65, "connections": {"Foreign Direct Investment": 0.2, "Social Stability": 0.7, "Economic Growth": 0.1}},
+        "Rule of Law": {"init": 55, "connections": {"Foreign Direct Investment": 0.4, "Economic Growth": 0.3, "Social Stability": 0.2}},
+        "Regulatory Quality": {"init": 50, "connections": {"Industrial Output": 0.4, "Economic Growth": 0.2, "Innovation Rate": 0.3}},
+        "Voice and Accountability": {"init": 45, "connections": {"Civic Participation": 0.6, "Social Stability": 0.4, "Government Transparency": 0.5}},
+    },
+    "Technology & Innovation": {
+        "Tech Innovation Rate": {"init": 50, "connections": {"Economic Growth": 0.5, "Automation Penetration": 0.6, "Renewable Energy Tech": 0.4}},
+        "AI Development": {"init": 40, "connections": {"Automation Penetration": 0.7, "Economic Growth": 0.3, "Cybersecurity Investment": 0.5}},
+        "Cybersecurity Investment": {"init": 60, "connections": {"Digital Literacy": 0.4, "AI Development": 0.5, "Public Trust in Institutions": 0.3}},
+        "Automation Penetration": {"init": 55, "connections": {"Unemployment Rate": 0.6, "Economic Growth": 0.4, "Tech Innovation Rate": 0.6}},
+        "Space Exploration Funding": {"init": 20, "connections": {"Tech Innovation Rate": 0.2, "Scientific Research": 0.9}},
+        "Digital Literacy": {"init": 50, "connections": {"Education Access": 0.6, "Internet Access": 0.8, "Tech Innovation Rate": 0.3}},
+        "Internet Access": {"init": 70, "connections": {"Digital Literacy": 0.8, "Economic Growth": 0.2, "Social Connectedness": 0.4}},
+        "Renewable Energy Tech": {"init": 45, "connections": {"Investment in Renewable Energy": 0.9, "Fossil Fuel Consumption": -0.5, "Energy Efficiency": 0.7}},
+        "Biotechnology Development": {"init": 30, "connections": {"Healthcare Access": 0.6, "Agricultural Productivity": 0.5, "Ethical Considerations": -0.2}},
+    },
+    "Health & Epidemics": {
+        "Global Pandemic Risk": {"init": 70, "connections": {"International Cooperation": -0.5, "Healthcare Access": -0.2, "Global Travel": 0.6}},
+        "Vaccination Rate": {"init": 60, "connections": {"Global Pandemic Risk": -0.8, "Life Expectancy": 0.5, "Public Health Spending": 0.7}},
+        "Antibiotic Resistance": {"init": 65, "connections": {"Healthcare Access": -0.4, "Global Pandemic Risk": 0.3, "Public Health Spending": 0.2}},
+        "Obesity Rate": {"init": 50, "connections": {"Healthcare Access": -0.3, "Life Expectancy": -0.4, "Food Security": -0.2}},
+        "Mental Health Index": {"init": 40, "connections": {"Healthcare Access": 0.4, "Social Stability": 0.3, "Work-Life Balance": 0.6}},
+        "Access to Clean Water": {"init": 60, "connections": {"Healthcare Access": 0.7, "Food Security": 0.4, "Public Health Spending": 0.3}},
+    },
+    "Agriculture & Food": {
+        "Food Security": {"init": 50, "connections": {"Population Growth": -0.3, "Sustainable Agriculture": 0.6, "Economic Growth": 0.2}},
+        "Crop Yield": {"init": 60, "connections": {"Sustainable Farming Practices": 0.7, "Agricultural Land Use": -0.2, "Food Security": 0.5}},
+        "Agricultural Land Use": {"init": 40, "connections": {"Deforestation Rate": 0.5, "Water Usage": 0.7, "Species Biodiversity": -0.3}},
+        "Meat Consumption": {"init": 70, "connections": {"Carbon Emissions": 0.4, "Agricultural Land Use": 0.3, "Healthcare Access": -0.2}},
+        "Sustainable Farming Practices": {"init": 30, "connections": {"Crop Yield": 0.7, "Agricultural Land Use": -0.4, "Food Security": 0.6}},
+        "Food Waste": {"init": 40, "connections": {"Food Security": -0.2, "Agricultural Land Use": 0.1, "Economic Growth": -0.1}},
+    },
+    "Culture & Wellbeing": {
+        "Mental Health Index": {"init": 40, "connections": {"Social Connectedness": 0.7, "Work-Life Balance": 0.6, "Healthcare Access": 0.4}},
+        "Work-Life Balance": {"init": 50, "connections": {"Economic Growth": -0.3, "Mental Health Index": 0.6, "Leisure Time": 0.8}},
+        "Cultural Diversity": {"init": 60, "connections": {"Social Connectedness": 0.5, "Social Stability": 0.2, "Civic Participation": 0.3}},
+        "Social Connectedness": {"init": 55, "connections": {"Mental Health Index": 0.7, "Cultural Diversity": 0.5, "Civic Participation": 0.4}},
+        "Leisure Time": {"init": 50, "connections": {"Work-Life Balance": 0.8, "Mental Health Index": 0.3, "Economic Growth": 0.1}},
+        "Arts and Culture Funding": {"init": 30, "connections": {"Cultural Diversity": 0.4, "Social Connectedness": 0.2, "Civic Participation": 0.3}},
+    },
+}
