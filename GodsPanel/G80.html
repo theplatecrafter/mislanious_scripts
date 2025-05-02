@@ -1,0 +1,1468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slider Simulation</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            background-color: #000;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        #controls {
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #canvas-container {
+            flex-grow: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        canvas {
+            position: absolute;
+        }
+        .button {
+            background-color: rgb(200, 200, 200);
+            border: none;
+            border-radius: 10px;
+            color: #000;
+            padding: 8px 12px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100px;
+            height: 30px;
+            text-align: center;
+            margin-right: 10px;
+        }
+        .info-text {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            color: #fff;
+            font-size: 14px;
+        }
+        #editor-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        #editor-panel {
+            background-color: #222;
+            border-radius: 10px;
+            width: 80%;
+            height: 80%;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        #editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        #editor-title {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        #editor-close {
+            background-color: #444;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        #editor-content {
+            display: flex;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+        #editor-categories {
+            width: 200px;
+            border-right: 1px solid #444;
+            padding-right: 10px;
+            overflow-y: auto;
+            max-height: 100%;
+        }
+        #editor-details {
+            flex-grow: 1;
+            padding-left: 20px;
+            overflow-y: auto;
+            max-height: 100%;
+        }
+        .category-item, .slider-item {
+            padding: 8px;
+            margin: 5px 0;
+            background-color: #333;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .category-item:hover, .slider-item:hover {
+            background-color: #444;
+        }
+        .category-item.selected, .slider-item.selected {
+            background-color: #555;
+        }
+        .editor-section {
+            margin-bottom: 20px;
+        }
+        .editor-section-title {
+            font-size: 18px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 5px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #444;
+            background-color: #333;
+            color: #fff;
+        }
+        .form-group input[type="number"] {
+            width: calc(100% - 18px);
+        }
+        .connections-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        .connection-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 8px;
+            background-color: #333;
+            border-radius: 5px;
+        }
+        .connection-target {
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+        .connection-weight {
+            width: 80px;
+            margin-right: 10px;
+        }
+        .button-small {
+            background-color: #444;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 5px;
+        }
+        .button-danger {
+            background-color: #900;
+        }
+        .button-success {
+            background-color: #090;
+        }
+        #editor-footer {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 1px solid #444;
+        }
+        #add-category, #add-slider {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        #add-category input, #add-slider input {
+            flex-grow: 1;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #444;
+            background-color: #333;
+            color: #fff;
+            margin-right: 10px;
+        }
+        .damping-container {
+            margin-top: 20px;
+        }
+        .empty-message {
+            color: #888;
+            font-style: italic;
+            margin: 20px 0;
+        }
+        .has-error {
+            border-color: #c00 !important;
+        }
+        .error-message {
+            color: #f55;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <button id="edit-btn" class="button">Edit</button>
+        <button id="export-btn" class="button">Export</button>
+        <button id="import-btn" class="button">Import</button>
+        <button id="reset-btn" class="button">Reset</button>
+        <div style="margin-left: 10px; display: flex; align-items: center;">
+            <span>Damping Factor: </span>
+            <div id="damping-slider-container" style="margin-left: 10px; position: relative; cursor: pointer;">
+                <div id="damping-slider-background" style="width: 200px; height: 20px; background-color: transparent; border: 2px solid white; border-radius: 10px;"></div>
+                <div id="damping-slider-fill" style="position: absolute; top: 0; left: 0; height: 20px; background-color: rgb(0, 200, 100); border-radius: 10px;"></div>
+                <div id="damping-value" style="position: absolute; top: 22px; left: 0; width: 200px; text-align: center;"></div>
+            </div>
+        </div>
+        <input type="file" id="file-input" style="display: none;" accept=".json">
+        <select id="language-selector" class="button">
+            <option value="en">English</option>
+            <option value="jp">日本語</option>
+        </select>
+    </div>
+    <div id="canvas-container">
+        <canvas id="simulation-canvas"></canvas>
+    </div>
+    <div id="info-text" class="info-text"></div>
+    
+    <!-- Editor UI -->
+    <div id="editor-container">
+        <div id="editor-panel">
+            <div id="editor-header">
+                <div id="editor-title">Edit Slider Configuration</div>
+                <button id="editor-close">Close</button>
+            </div>
+            <div id="editor-content">
+                <div id="editor-categories">
+                    <div class="editor-section">
+                        <div class="editor-section-title">Damping Factor</div>
+                        <div class="damping-container">
+                            <div class="form-group">
+                                <label for="damping-factor-input">Damping Factor (0-1):</label>
+                                <input type="number" id="damping-factor-input" min="0" max="1" step="0.01" value="1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="editor-section">
+                        <div class="editor-section-title">Categories</div>
+                        <div id="categories-list"></div>
+                        <div id="add-category">
+                            <input type="text" id="new-category-name" placeholder="New category name">
+                            <button class="button-small button-success" id="add-category-btn">Add</button>
+                        </div>
+                    </div>
+                </div>
+                <div id="editor-details">
+                    <div id="category-details"></div>
+                </div>
+            </div>
+            <div id="editor-footer">
+                <button id="save-changes" class="button button-success">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Constants
+        const CONSTANTS = {"WHITE": [255, 255, 255], "GRAY": [200, 200, 200], "DARK_GRAY": [100, 100, 100], "BLACK": [0, 0, 0], "FONT_SIZE": 15, "CHANGE_CALC_THRESHOLD": 0.0001, "SLIDER_BORDER_RADIUS": 10, "SCROLL_SPEED": 20, "BUTTON_WIDTH": 100, "BUTTON_HEIGHT": 30, "BUTTON_SPACING": 10, "BUTTON_COLOR": [200, 200, 200], "BUTTON_TEXT_COLOR": [0, 0, 0], "BUTTON_FONT_SIZE": 16, "INFO_TEXT_COLOR": [255, 255, 255], "INFO_FONT_SIZE": 14, "INFO_DISPLAY_TIME": 5, "DAMPING_FACTOR": 1, "DAMPING_SLIDER_WIDTH": 200, "DAMPING_SLIDER_HEIGHT": 20, "SLIDER_WIDTH": 200, "SLIDER_HEIGHT": 20, "X_START": 50, "Y_START": 50, "X_SPACING": 250, "Y_SPACING": 50};
+        
+        const translations = {
+        en: {
+            edit: "Edit",
+            export: "Export",
+            import: "Import",
+            reset: "Reset",
+            dampingFactor: "Damping Factor",
+            newCategoryPlaceholder: "New category name",
+            addCategory: "Add",
+            selectCategoryMessage: "Select a category to view/edit sliders",
+            slidersInCategory: "Sliders in",
+            newSliderPlaceholder: "New slider name",
+            addSlider: "Add",
+            noSlidersMessage: "No sliders in this category",
+            initialValue: "Initial Value (0-100):",
+            connections: "Connections",
+            addConnection: "Add Connection",
+            close: "Close",
+            saveChanges: "Save Changes",
+            cancelChanges: "Cancel Changes",
+            deleteCategoryConfirmation: "Are you sure you want to delete the category",
+            deleteSliderConfirmation: "Are you sure you want to delete the slider",
+            selectTargetSlider: "Select a slider...",
+            weightPlaceholder: "Weight",
+            noConnectionsMessage: "No connections for this slider",
+        },
+        jp: {
+            edit: "編集",
+            export: "エクスポート",
+            import: "インポート",
+            reset: "リセット",
+            dampingFactor: "減衰係数",
+            newCategoryPlaceholder: "新しいカテゴリ名",
+            addCategory: "追加",
+            selectCategoryMessage: "カテゴリを選択してスライダーを表示/編集",
+            slidersInCategory: "カテゴリ内のスライダー",
+            newSliderPlaceholder: "新しいスライダー名",
+            addSlider: "追加",
+            noSlidersMessage: "このカテゴリにはスライダーがありません",
+            initialValue: "初期値 (0-100):",
+            connections: "接続",
+            addConnection: "接続を追加",
+            close: "閉じる",
+            saveChanges: "保存する",
+            cancelChanges: "変更をキャンセル",
+            deleteCategoryConfirmation: "カテゴリを削除してもよろしいですか",
+            deleteSliderConfirmation: "スライダーを削除してもよろしいですか",
+            selectTargetSlider: "スライダーを選択...",
+            weightPlaceholder: "重み",
+            noConnectionsMessage: "このスライダーには接続がありません",
+        }
+    };
+
+        // Initial slider data
+        let sliderData = {"0_DAMPING_FACTOR_0": 1, "A": {"A1": {"init": 70, "connections": {"B2": 0.5, "A2": -0.2}}, "A2": {"init": 60, "connections": {"A3": -0.1}}, "A3": {"init": 50, "connections": {"B1": 0.2}}}, "B": {"B1": {"init": 40, "connections": {"B2": 0.2, "A3": 0.6}}, "B2": {"init": 30, "connections": {"A1": -0.3}}}};
+        
+        // Global variables
+        let sliderState = {};
+        let sliderRects = {};
+        let categoryXPositions = {};
+        let isDragging = false;
+        let draggedSlider = null;
+        let initialValues = {};
+        let scrollOffset = [0, -60];
+        let keysDown = {
+            'w': false,
+            'a': false,
+            's': false,
+            'd': false,
+            'ArrowUp': false,
+            'ArrowLeft': false,
+            'ArrowDown': false,
+            'ArrowRight': false
+        };
+        let infoText = "";
+        let infoStartTime = 0;
+        let isDraggingDamping = false;
+        let dampingFactor = CONSTANTS.DAMPING_FACTOR;
+        let animationFrameId;
+        let editorOpen = false;
+        let selectedCategory = null;
+        let selectedSlider = null;
+        let originalSliderData = null;
+        
+        // Canvas setup
+        const canvas = document.getElementById('simulation-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Resize canvas to full screen
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        
+        // Initialize slider state
+        function init() {
+            sliderState = {};
+            for (const category in sliderData) {
+                if (category !== "0_DAMPING_FACTOR_0") {
+                    for (const slider in sliderData[category]) {
+                        sliderState[slider] = {
+                            value: sliderData[category][slider].init,
+                            change: 0,
+                            connections: sliderData[category][slider].connections
+                        };
+                    }
+                }
+            }
+            dampingFactor = sliderData["0_DAMPING_FACTOR_0"];
+            return sliderState;
+        }
+        
+        // Calculate next state
+        function tick() {
+            const nextSliderState = JSON.parse(JSON.stringify(sliderState));
+            
+            for (const slider in sliderState) {
+                if (sliderState[slider].change !== 0) {
+                    const change = sliderState[slider].change * dampingFactor;
+                    const connections = sliderState[slider].connections;
+                    
+                    for (const connection in connections) {
+                        const weight = connections[connection];
+                        if (nextSliderState[connection]) {
+                            nextSliderState[connection].value += change * weight;
+                            nextSliderState[connection].change += change * weight;
+                        } else {
+                            console.warn(`Warning: Connection '${connection}' not found for slider '${slider}'`);
+                        }
+                    }
+                    nextSliderState[slider].change = 0;
+                }
+                
+                if (Math.abs(nextSliderState[slider].change) < CONSTANTS.CHANGE_CALC_THRESHOLD) {
+                    nextSliderState[slider].change = 0;
+                }
+                if (nextSliderState[slider].value < 0) {
+                    nextSliderState[slider].value = 0;
+                }
+                if (nextSliderState[slider].value > 100) {
+                    nextSliderState[slider].value = 100;
+                }
+            }
+            
+            sliderState = nextSliderState;
+        }
+        
+        
+        function updateLanguage(language) {
+        // Update button text
+        document.getElementById('edit-btn').textContent = translations[language].edit;
+        document.getElementById('export-btn').textContent = translations[language].export;
+        document.getElementById('import-btn').textContent = translations[language].import;
+        document.getElementById('reset-btn').textContent = translations[language].reset;
+
+        // Update damping factor label
+        document.querySelector('#controls span').textContent = translations[language].dampingFactor + ":";
+
+        // Update placeholders
+        document.getElementById('new-category-name').placeholder = translations[language].newCategoryPlaceholder;
+        document.getElementById('new-slider-name').placeholder = translations[language].newSliderPlaceholder;
+
+        // Update category and slider details dynamically
+        updateCategoriesList();
+        updateDetailsPanel();
+
+        // Update editor buttons
+        document.getElementById('editor-close').textContent = translations[language].close;
+        document.getElementById('save-changes').textContent = translations[language].saveChanges;
+    }
+
+        // Create slider rectangles
+        function createSliderRects(data, width, height, xSpacing, ySpacing, xStart, yStart) {
+            const rects = {};
+            let x = xStart;
+            let y = yStart;
+            
+            for (const categoryName in data) {
+                if (categoryName !== "0_DAMPING_FACTOR_0") {
+                    for (const sliderName in data[categoryName]) {
+                        rects[sliderName] = {
+                            x: x,
+                            y: y,
+                            width: width,
+                            height: height
+                        };
+                        y += height + ySpacing;
+                    }
+                    x += width + xSpacing;
+                    y = yStart;
+                }
+            }
+            
+            return rects;
+        }
+        
+        // Create category positions
+        function createCategoryPositions(data, width, spacing, startX) {
+            const positions = {};
+            let x = startX;
+            
+            for (const categoryName in data) {
+                if (categoryName !== "0_DAMPING_FACTOR_0") {
+                    positions[categoryName] = x;
+                    x += width + spacing;
+                }
+            }
+            
+            return positions;
+        }
+        
+        // Draw slider
+        function drawSlider(ctx, x, y, width, height, value, sliderName, change, scrollOffset) {
+            // Background of the slider
+            ctx.strokeStyle = `rgb(${CONSTANTS.WHITE[0]}, ${CONSTANTS.WHITE[1]}, ${CONSTANTS.WHITE[2]})`;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.roundRect(x, y, width, height, CONSTANTS.SLIDER_BORDER_RADIUS);
+            ctx.stroke();
+            
+            // Calculate the fill based on the value
+            const fillWidth = (value / 100) * width;
+            const hue = ((x + scrollOffset[0]) / canvas.width) % 1;
+            const [r, g, b] = hsvToRgb(hue, 1, 1);
+            
+            ctx.fillStyle = `rgb(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(b * 255)})`;
+            ctx.beginPath();
+            ctx.roundRect(x, y, fillWidth, height, CONSTANTS.SLIDER_BORDER_RADIUS);
+            ctx.fill();
+            
+            // Slider name label
+            ctx.fillStyle = `rgb(${CONSTANTS.WHITE[0]}, ${CONSTANTS.WHITE[1]}, ${CONSTANTS.WHITE[2]})`;
+            ctx.font = `${CONSTANTS.FONT_SIZE}px Arial`;
+            ctx.fillText(`${sliderName}: ${value.toFixed(2)}`, x, y + height + 15);
+            
+            // Display the change value
+            ctx.fillStyle = `rgb(${CONSTANTS.DARK_GRAY[0]}, ${CONSTANTS.DARK_GRAY[1]}, ${CONSTANTS.DARK_GRAY[2]})`;
+            ctx.fillText(`Change: ${change.toFixed(2)}`, x, y - 5);
+        }
+        
+        // Draw damping slider
+        function drawDampingSlider() {
+            const sliderContainer = document.getElementById('damping-slider-fill');
+            const dampingValue = document.getElementById('damping-value');
+            
+            const width = CONSTANTS.DAMPING_SLIDER_WIDTH * dampingFactor;
+            sliderContainer.style.width = `${width}px`;
+            dampingValue.textContent = dampingFactor.toFixed(2);
+        }
+        
+        // HSV to RGB conversion
+        function hsvToRgb(h, s, v) {
+            let r, g, b;
+            const i = Math.floor(h * 6);
+            const f = h * 6 - i;
+            const p = v * (1 - s);
+            const q = v * (1 - f * s);
+            const t = v * (1 - (1 - f) * s);
+            
+            switch (i % 6) {
+                case 0: r = v; g = t; b = p; break;
+                case 1: r = q; g = v; b = p; break;
+                case 2: r = p; g = v; b = t; break;
+                case 3: r = p; g = q; b = v; break;
+                case 4: r = t; g = p; b = v; break;
+                case 5: r = v; g = p; b = q; break;
+            }
+            
+            return [r, g, b];
+        }
+        
+        // Handle slider drag
+        function handleSliderDrag(event) {
+            const mouseX = event.clientX - canvas.getBoundingClientRect().left;
+            const mouseY = event.clientY - canvas.getBoundingClientRect().top;
+            
+            if (!isDragging) {
+                for (const sliderName in sliderRects) {
+                    const rect = sliderRects[sliderName];
+                    const adjustedRect = {
+                        x: rect.x - scrollOffset[0],
+                        y: rect.y - scrollOffset[1],
+                        width: rect.width,
+                        height: rect.height
+                    };
+                    
+                    if (mouseX >= adjustedRect.x && mouseX <= adjustedRect.x + adjustedRect.width &&
+                        mouseY >= adjustedRect.y && mouseY <= adjustedRect.y + adjustedRect.height) {
+                        isDragging = true;
+                        draggedSlider = sliderName;
+                        initialValues[draggedSlider] = sliderState[draggedSlider].value;
+                        break;
+                    }
+                }
+            } else if (isDragging && draggedSlider) {
+                const rect = sliderRects[draggedSlider];
+                const adjustedMouseX = mouseX + scrollOffset[0];
+                const newValue = ((adjustedMouseX - rect.x) / rect.width) * 100;
+                sliderState[draggedSlider].value = Math.max(0, Math.min(newValue, 100));
+            }
+        }
+        
+        // Handle damping slider drag
+        function handleDampingSliderDrag(event) {
+            const dampingSlider = document.getElementById('damping-slider-background');
+            const rect = dampingSlider.getBoundingClientRect();
+            const mouseX = event.clientX - rect.left;
+            
+            if (mouseX >= 0 && mouseX <= rect.width) {
+                dampingFactor = Math.max(0, Math.min(mouseX / rect.width, 1));
+                sliderData["0_DAMPING_FACTOR_0"] = dampingFactor; // Update in sliderData too
+                drawDampingSlider();
+            }
+        }
+        
+        // Display info text
+        function displayInfoText(text) {
+            infoText = text;
+            infoStartTime = Date.now() / 1000;
+            document.getElementById('info-text').textContent = text;
+        }
+        
+        // Export slider data
+        function exportSliderData() {
+            const dataStr = JSON.stringify(sliderData, null, 4);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = 'slider_data.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            displayInfoText(`Exported data to ${exportFileDefaultName}`);
+        }
+        
+        // Import slider data
+        function importSliderData() {
+            const fileInput = document.getElementById('file-input');
+            fileInput.click();
+        }
+        
+        // Handle file import
+        document.getElementById('file-input').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const importedData = JSON.parse(e.target.result);
+                        sliderData = importedData;
+                        
+                        // Re-initialize
+                        init();
+                        
+                        // Update damping slider to match imported data
+                        drawDampingSlider();
+                        
+                        // Recreate UI
+                        sliderRects = createSliderRects(
+                            sliderData, 
+                            CONSTANTS.SLIDER_WIDTH, 
+                            CONSTANTS.SLIDER_HEIGHT, 
+                            CONSTANTS.X_SPACING, 
+                            CONSTANTS.Y_SPACING, 
+                            CONSTANTS.X_START, 
+                            CONSTANTS.Y_START
+                        );
+                        
+                        categoryXPositions = createCategoryPositions(
+                            sliderData, 
+                            CONSTANTS.SLIDER_WIDTH, 
+                            CONSTANTS.X_SPACING, 
+                            CONSTANTS.X_START
+                        );
+                        
+                        displayInfoText(`Imported data from ${file.name}`);
+                    } catch (e) {
+                        displayInfoText(`Error importing data: ${e.message}`);
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+        
+        // Reset slider data
+        function resetSliderData() {
+            init();
+            drawDampingSlider(); // Update the damping slider UI after reset
+            displayInfoText("Reset slider data to initial values");
+        }
+        
+        // Open editor
+        function openEditor() {
+            // Store original slider data for cancel operation
+            originalSliderData = JSON.parse(JSON.stringify(sliderData));
+            
+            // Show editor
+            document.getElementById('editor-container').style.display = 'flex';
+            editorOpen = true;
+            
+            // Pause animation
+            cancelAnimationFrame(animationFrameId);
+            
+            // Initialize editor UI
+            initEditorUI();
+        }
+        
+        // Close editor
+        function closeEditor() {
+            document.getElementById('editor-container').style.display = 'none';
+            editorOpen = false;
+            
+            // Resume animation
+            draw();
+        }
+        
+        // Cancel editor changes
+        function cancelEditorChanges() {
+            sliderData = JSON.parse(JSON.stringify(originalSliderData));
+            closeEditor();
+        }
+        
+        // Save editor changes
+        function saveEditorChanges() {
+            // Update damping factor from editor input
+            const dampingFactorInput = document.getElementById('damping-factor-input');
+            sliderData["0_DAMPING_FACTOR_0"] = parseFloat(dampingFactorInput.value);
+            dampingFactor = sliderData["0_DAMPING_FACTOR_0"];
+            
+            // Re-initialize sliders
+            init();
+            
+            // Update UI
+            drawDampingSlider();
+            
+            // Recreate slider positions
+            sliderRects = createSliderRects(
+                sliderData, 
+                CONSTANTS.SLIDER_WIDTH, 
+                CONSTANTS.SLIDER_HEIGHT, 
+                CONSTANTS.X_SPACING, 
+                CONSTANTS.Y_SPACING, 
+                CONSTANTS.X_START, 
+                CONSTANTS.Y_START
+            );
+            
+            categoryXPositions = createCategoryPositions(
+                sliderData, 
+                CONSTANTS.SLIDER_WIDTH, 
+                CONSTANTS.X_SPACING, 
+                CONSTANTS.X_START
+            );
+            
+            closeEditor();
+            displayInfoText("Changes saved successfully");
+        }
+        
+        // Initialize editor UI
+        function initEditorUI() {
+            // Set damping factor input
+            const dampingFactorInput = document.getElementById('damping-factor-input');
+            dampingFactorInput.value = sliderData["0_DAMPING_FACTOR_0"];
+            
+            // Reset selections
+            selectedCategory = null;
+            selectedSlider = null;
+            
+            // Update categories and details
+            updateCategoriesList();
+            updateDetailsPanel();
+        }
+        
+        // Update categories list in editor
+        function updateCategoriesList() {
+            const categoriesList = document.getElementById('categories-list');
+            categoriesList.innerHTML = '';
+            
+            // Add all categories
+            for (const category in sliderData) {
+                if (category !== "0_DAMPING_FACTOR_0") {
+                    const categoryItem = document.createElement('div');
+                    categoryItem.className = 'category-item' + (category === selectedCategory ? ' selected' : '');
+                    categoryItem.innerHTML = `
+                        <span>${category}</span>
+                        <button class="button-small button-danger category-delete" data-category="${category}">Delete</button>
+                    `;
+                    categoryItem.dataset.category = category;
+                    categoryItem.addEventListener('click', function(e) {
+                        if (!e.target.classList.contains('category-delete')) {
+                            selectCategory(category);
+                        }
+                    });
+                    categoriesList.appendChild(categoryItem);
+                }
+            }
+            
+            // Add event listeners for delete buttons
+            const deleteButtons = document.querySelectorAll('.category-delete');
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const category = this.dataset.category;
+                    deleteCategory(category);
+                });
+            });
+        }
+        
+        // Update details panel based on selection
+        function updateDetailsPanel() {
+            const detailsPanel = document.getElementById('category-details');
+            
+            if (!selectedCategory) {
+                detailsPanel.innerHTML = '<div class="empty-message">Select a category to view/edit sliders</div>';
+                return;
+            }
+            
+            // Build category details
+            let html = `
+                <div class="editor-section">
+                    <div class="editor-section-title">Sliders in "${selectedCategory}"</div>
+                    <div id="sliders-list">
+            `;
+            
+            if (Object.keys(sliderData[selectedCategory]).length === 0) {
+                html += '<div class="empty-message">No sliders in this category</div>';
+            } else {
+                for (const sliderName in sliderData[selectedCategory]) {
+                    html += `
+                        <div class="slider-item${sliderName === selectedSlider ? ' selected' : ''}" data-slider="${sliderName}">
+                            <span>${sliderName}</span>
+                            <button class="button-small button-danger slider-delete" data-slider="${sliderName}">Delete</button>
+                        </div>
+                    `;
+                }
+            }
+            
+            html += `
+                </div>
+                <div id="add-slider">
+                    <input type="text" id="new-slider-name" placeholder="New slider name">
+                    <button class="button-small button-success" id="add-slider-btn">Add</button>
+                </div>
+            </div>
+            `;
+            
+            // If a slider is selected, show its details
+            if (selectedSlider && sliderData[selectedCategory][selectedSlider]) {
+                const sliderData = this.sliderData[selectedCategory][selectedSlider];
+                
+                html += `
+                <div class="editor-section">
+                    <div class="editor-section-title">Edit Slider "${selectedSlider}"</div>
+                    <div class="form-group">
+                        <label for="slider-init-value">Initial Value (0-100):</label>
+                        <input type="number" id="slider-init-value" min="0" max="100" step="1" value="${sliderData.init}">
+                    </div>
+                    
+                    <div class="editor-section-title">Connections</div>
+                    <div class="connections-list" id="connections-list">
+                `;
+                
+                // Add all connections
+                const connections = sliderData.connections || {};
+                if (Object.keys(connections).length === 0) {
+                    html += '<div class="empty-message">No connections for this slider</div>';
+                } else {
+                    for (const targetSlider in connections) {
+                        const weight = connections[targetSlider];
+                        html += `
+                            <div class="connection-item" data-target="${targetSlider}">
+                                <div class="connection-target">${targetSlider}</div>
+                                <input type="number" class="connection-weight" min="-1" max="1" step="0.1" value="${weight}" data-target="${targetSlider}">
+                                <button class="button-small button-danger remove-connection" data-target="${targetSlider}">Remove</button>
+                            </div>
+                        `;
+                    }
+                }
+                
+                html += `
+                    </div>
+                    <div class="form-group" style="margin-top: 15px;">
+                        <label for="new-connection-target">Add Connection:</label>
+                        <div style="display: flex; margin-top: 5px;">
+                            <select id="new-connection-target" style="flex-grow: 1; margin-right: 10px;">
+                                <option value="">Select a slider...</option>
+                `;
+                
+                // Add all possible connection targets
+                for (const category in this.sliderData) {
+                    if (category !== "0_DAMPING_FACTOR_0") {
+                        for (const slider in this.sliderData[category]) {
+                            // Don't show already connected sliders or the current slider
+                            if (slider !== selectedSlider && !connections[slider]) {
+                                html += `<option value="${slider}">${slider}</option>`;
+                            }
+                        }
+                    }
+                }
+                
+                html += `
+                            </select>
+                            <input type="number" id="new-connection-weight" min="-1" max="1" step="0.1" value="0" style="width: 80px; margin-right: 10px;" placeholder="Weight">
+                            <button class="button-small button-success" id="add-connection-btn">Add</button>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }
+            
+            detailsPanel.innerHTML = html;
+            
+            // Add event listeners for slider items
+            const sliderItems = document.querySelectorAll('.slider-item');
+            sliderItems.forEach(item => {
+                item.addEventListener('click', function (e) {
+                    if (!e.target.classList.contains('slider-delete')) {
+                        openConnectionEditor(this.dataset.slider);
+                    }
+                });
+            });
+            
+            // Add event listener for delete slider buttons
+            const deleteSliderButtons = document.querySelectorAll('.slider-delete');
+            deleteSliderButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const sliderName = this.dataset.slider;
+                    deleteSlider(selectedCategory, sliderName);
+                });
+            });
+            
+            // Add event listener for add slider button
+            const addSliderBtn = document.getElementById('add-slider-btn');
+            if (addSliderBtn) {
+                addSliderBtn.addEventListener('click', function() {
+                    addNewSlider();
+                });
+                
+                const newSliderInput = document.getElementById('new-slider-name');
+                if (newSliderInput) {
+                    newSliderInput.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            addNewSlider();
+                        }
+                    });
+                }
+            }
+            
+            // Add event listener for connection weight changes
+            const connectionWeights = document.querySelectorAll('.connection-weight');
+            connectionWeights.forEach(input => {
+                input.addEventListener('change', function() {
+                    updateConnectionWeight(selectedSlider, this.dataset.target, parseFloat(this.value));
+                });
+            });
+            
+            // Add event listener for remove connection buttons
+            const removeConnectionButtons = document.querySelectorAll('.remove-connection');
+            removeConnectionButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    removeConnection(selectedSlider, this.dataset.target);
+                });
+            });
+            
+            // Add event listener for add connection button
+            const addConnectionBtn = document.getElementById('add-connection-btn');
+            if (addConnectionBtn) {
+                addConnectionBtn.addEventListener('click', function() {
+                    addNewConnection();
+                });
+            }
+            
+            // Add event listener for slider init value
+            const sliderInitValue = document.getElementById('slider-init-value');
+            if (sliderInitValue) {
+                sliderInitValue.addEventListener('change', function() {
+                    updateSliderInitValue(selectedSlider, parseFloat(this.value));
+                });
+            }
+        }
+        
+        // Select a category
+        function selectCategory(category) {
+            selectedCategory = category;
+            selectedSlider = null;
+            updateCategoriesList();
+            updateDetailsPanel();
+        }
+        
+        // Select a slider
+        function selectSlider(sliderName) {
+            selectedSlider = sliderName;
+            updateDetailsPanel();
+        }
+        
+        // Delete a category
+        function deleteCategory(category) {
+            if (!confirm(translations[document.getElementById('language-selector').value].deleteCategoryConfirmation + ` "${category}"?`)) {
+                return;
+            }
+
+            // Remove all connections to sliders in this category
+            for (const cat in sliderData) {
+                if (cat !== "0_DAMPING_FACTOR_0") {
+                    for (const slider in sliderData[cat]) {
+                        const connections = sliderData[cat][slider].connections;
+                        for (const target in connections) {
+                            if (sliderData[category][target]) {
+                                delete connections[target];
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Delete the category
+            delete sliderData[category];
+
+            // Update selection
+            if (selectedCategory === category) {
+                selectedCategory = null;
+                selectedSlider = null;
+            }
+
+            // Update UI
+            updateCategoriesList();
+            updateDetailsPanel();
+
+            // Display info text
+            displayInfoText(translations[document.getElementById('language-selector').value].deleteCategoryConfirmation + ` "${category}"`);
+        }
+
+        // Delete a slider
+        function deleteSlider(category, sliderName) {
+            if (!confirm(translations[document.getElementById('language-selector').value].deleteSliderConfirmation + ` "${sliderName}"?`)) {
+                return;
+            }
+
+            // Remove all connections to this slider
+            for (const cat in sliderData) {
+                if (cat !== "0_DAMPING_FACTOR_0") {
+                    for (const slider in sliderData[cat]) {
+                        const connections = sliderData[cat][slider].connections;
+                        if (connections && connections[sliderName]) {
+                            delete connections[sliderName];
+                        }
+                    }
+                }
+            }
+
+            // Delete the slider
+            delete sliderData[category][sliderName];
+
+            // Update selection
+            if (selectedSlider === sliderName) {
+                selectedSlider = null;
+            }
+
+            // Update UI
+            updateDetailsPanel();
+
+            // Display info text
+            displayInfoText(translations[document.getElementById('language-selector').value].deleteSliderConfirmation + ` "${sliderName}"`);
+        }
+
+        // Add a new category
+        function addNewCategory() {
+            const newCategoryName = document.getElementById('new-category-name').value.trim();
+            
+            // Validate input
+            if (!newCategoryName) {
+                alert(translations[document.getElementById('language-selector').value].newCategoryPlaceholder);
+                return;
+            }
+            
+            // Check if already exists
+            if (sliderData[newCategoryName]) {
+                alert(`Category "${newCategoryName}" already exists`);
+                return;
+            }
+            
+            // Add new category
+            sliderData[newCategoryName] = {};
+            
+            // Select the new category
+            selectedCategory = newCategoryName;
+            selectedSlider = null;
+            
+            // Clear input
+            document.getElementById('new-category-name').value = '';
+            
+            // Update UI
+            updateCategoriesList();
+            updateDetailsPanel();
+
+            // Display info text
+            displayInfoText(translations[document.getElementById('language-selector').value].addCategory + ` "${newCategoryName}"`);
+        }
+        
+        // Open connection editor for a slider
+        function openConnectionEditor(sliderName) {
+            const connectionEditor = document.createElement('div');
+            connectionEditor.id = 'connection-editor';
+            connectionEditor.style.position = 'fixed';
+            connectionEditor.style.top = '0';
+            connectionEditor.style.left = '0';
+            connectionEditor.style.width = '100%';
+            connectionEditor.style.height = '100%';
+            connectionEditor.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+            connectionEditor.style.zIndex = '2000';
+            connectionEditor.style.display = 'flex';
+            connectionEditor.style.flexDirection = 'column';
+            connectionEditor.style.padding = '20px';
+            connectionEditor.style.color = '#fff';
+
+            let html = `
+                <h2>Edit Connections for Slider "${sliderName}"</h2>
+                <div id="connections-list">
+            `;
+
+            const connections = sliderData[selectedCategory][sliderName].connections || {};
+            for (const targetSlider in connections) {
+                const weight = connections[targetSlider];
+                html += `
+                    <div class="connection-item">
+                        <span>${targetSlider}</span>
+                        <input type="number" min="-1" max="1" step="0.1" value="${weight}" data-target="${targetSlider}">
+                        <button class="button-small button-danger remove-connection" data-target="${targetSlider}">Remove</button>
+                    </div>
+                `;
+            }
+
+            html += `
+                </div>
+                <div>
+                    <h3>Add New Connection</h3>
+                    <select id="new-connection-target">
+                        <option value="">Select a slider...</option>
+            `;
+
+            // Add all possible connection targets
+            for (const category in sliderData) {
+                if (category !== "0_DAMPING_FACTOR_0") {
+                    for (const slider in sliderData[category]) {
+                        if (slider !== sliderName && !connections[slider]) {
+                            html += `<option value="${slider}">${slider}</option>`;
+                        }
+                    }
+                }
+            }
+
+            html += `
+                    </select>
+                    <input type="number" id="new-connection-weight" min="-1" max="1" step="0.1" value="0">
+                    <button id="add-connection-btn">Add Connection</button>
+                </div>
+                <button id="close-connection-editor">Close</button>
+            `;
+
+            connectionEditor.innerHTML = html;
+            document.body.appendChild(connectionEditor);
+
+            // Add event listeners
+            document.getElementById('add-connection-btn').addEventListener('click', function () {
+                const targetSlider = document.getElementById('new-connection-target').value;
+                const weight = parseFloat(document.getElementById('new-connection-weight').value);
+
+                if (!targetSlider) {
+                    alert(translations[document.getElementById('language-selector').value].selectTargetSlider);
+                    return;
+                }
+
+                sliderData[selectedCategory][sliderName].connections[targetSlider] = Math.max(-1, Math.min(1, weight));
+                openConnectionEditor(sliderName); // Refresh the editor
+            });
+
+            document.querySelectorAll('.remove-connection').forEach(button => {
+                button.addEventListener('click', function () {
+                    const targetSlider = this.dataset.target;
+                    delete sliderData[selectedCategory][sliderName].connections[targetSlider];
+                    openConnectionEditor(sliderName); // Refresh the editor
+                });
+            });
+
+            document.getElementById('close-connection-editor').addEventListener('click', function () {
+                if (document.body.contains(connectionEditor)) {
+                    document.body.removeChild(connectionEditor);
+                }
+            });
+        }
+
+        // Add a new slider
+        function addNewSlider() {
+            if (!selectedCategory) {
+                alert(translations[document.getElementById('language-selector').value].selectCategoryMessage);
+                return;
+            }
+
+            const newSliderName = document.getElementById('new-slider-name').value.trim();
+
+            // Validate input
+            if (!newSliderName) {
+                alert(translations[document.getElementById('language-selector').value].newSliderPlaceholder);
+                return;
+            }
+
+            // Check if the slider name already exists across all categories
+            for (const category in sliderData) {
+                if (category !== "0_DAMPING_FACTOR_0" && sliderData[category][newSliderName]) {
+                    alert(`Slider with name "${newSliderName}" already exists`);
+                    return;
+                }
+            }
+
+            // Add new slider with default values
+            sliderData[selectedCategory][newSliderName] = {
+                init: 50,
+                connections: {}
+            };
+
+            // Select the new slider
+            selectedSlider = newSliderName;
+
+            // Clear input
+            document.getElementById('new-slider-name').value = '';
+
+            // Update UI
+            updateDetailsPanel();
+
+            // Display info text
+            displayInfoText(translations[document.getElementById('language-selector').value].addSlider + ` "${newSliderName}"`);
+        }
+
+        // Update slider's initial value
+        function updateSliderInitValue(sliderName, value) {
+            if (!selectedCategory || !sliderName) return;
+
+            // Validate and constrain value
+            value = Math.max(0, Math.min(100, value));
+
+            // Update the value
+            sliderData[selectedCategory][sliderName].init = value;
+
+            // Display info text
+            displayInfoText(translations[document.getElementById('language-selector').value].initialValue + ` updated for ${sliderName}`);
+        }
+        
+        // Update connection weight
+        function updateConnectionWeight(sourceSlider, targetSlider, weight) {
+            if (!selectedCategory || !sourceSlider || !targetSlider) return;
+
+            // Validate and constrain weight
+            weight = Math.max(-1, Math.min(1, weight));
+
+            // Update the weight
+            sliderData[selectedCategory][sourceSlider].connections[targetSlider] = weight;
+
+            // Display info text
+            displayInfoText(translations[document.getElementById('language-selector').value].connections + ` updated between ${sourceSlider} and ${targetSlider}`);
+        }
+        
+        // Remove a connection
+        function removeConnection(sourceSlider, targetSlider) {
+            if (!selectedCategory || !sourceSlider || !targetSlider) return;
+
+            // Remove the connection
+            delete sliderData[selectedCategory][sourceSlider].connections[targetSlider];
+
+            // Update UI
+            updateDetailsPanel();
+
+            // Display info text
+            displayInfoText(translations[document.getElementById('language-selector').value].connections + ` removed between ${sourceSlider} and ${targetSlider}`);
+        }
+        
+        // Add a new connection
+        function addNewConnection() {
+            if (!selectedCategory || !selectedSlider) return;
+
+            const targetSlider = document.getElementById('new-connection-target').value;
+            const weight = parseFloat(document.getElementById('new-connection-weight').value);
+
+            // Validate input
+            if (!targetSlider) {
+                alert(translations[document.getElementById('language-selector').value].selectTargetSlider);
+                return;
+            }
+
+            // Validate and constrain weight
+            const constrainedWeight = Math.max(-1, Math.min(1, weight));
+
+            // Add the connection
+            sliderData[selectedCategory][selectedSlider].connections[targetSlider] = constrainedWeight;
+
+            // Update UI
+            updateDetailsPanel();
+
+            // Display info text
+            displayInfoText(translations[document.getElementById('language-selector').value].connections + ` added between ${selectedSlider} and ${targetSlider}`);
+        }
+        
+        // Main draw function
+        function draw() {
+            // Clear canvas
+            ctx.fillStyle = `rgb(${CONSTANTS.BLACK[0]}, ${CONSTANTS.BLACK[1]}, ${CONSTANTS.BLACK[2]})`;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Handle scrolling with WASD and arrow keys
+            if (keysDown['w'] || keysDown['ArrowUp']) {
+                scrollOffset[1] -= CONSTANTS.SCROLL_SPEED;
+            }
+            if (keysDown['a'] || keysDown['ArrowLeft']) {
+                scrollOffset[0] -= CONSTANTS.SCROLL_SPEED;
+            }
+            if (keysDown['s'] || keysDown['ArrowDown']) {
+                scrollOffset[1] += CONSTANTS.SCROLL_SPEED;
+            }
+            if (keysDown['d'] || keysDown['ArrowRight']) {
+                scrollOffset[0] += CONSTANTS.SCROLL_SPEED;
+            }
+            
+            // Draw category labels
+            ctx.fillStyle = `rgb(${CONSTANTS.WHITE[0]}, ${CONSTANTS.WHITE[1]}, ${CONSTANTS.WHITE[2]})`;
+            ctx.font = `${CONSTANTS.FONT_SIZE*1.5}px Arial`;
+            
+            for (const categoryName in categoryXPositions) {
+                const xPos = categoryXPositions[categoryName];
+                ctx.fillText(
+                    categoryName, 
+                    xPos - scrollOffset[0], 
+                    CONSTANTS.Y_START - 50 - scrollOffset[1]
+                );
+            }
+            
+            // Draw sliders
+            for (const sliderName in sliderRects) {
+                const rect = sliderRects[sliderName];
+                const adjustedRect = {
+                    x: rect.x - scrollOffset[0],
+                    y: rect.y - scrollOffset[1],
+                    width: rect.width,
+                    height: rect.height
+                };
+                
+                drawSlider(
+                    ctx,
+                    adjustedRect.x,
+                    adjustedRect.y,
+                    adjustedRect.width,
+                    adjustedRect.height,
+                    sliderState[sliderName].value,
+                    sliderName,
+                    sliderState[sliderName].change,
+                    scrollOffset
+                );
+            }
+            
+            // Hide info text after timeout
+            if (infoText && Date.now() / 1000 - infoStartTime > CONSTANTS.INFO_DISPLAY_TIME) {
+                document.getElementById('info-text').textContent = '';
+                infoText = '';
+            }
+            
+            if (!isDragging) {
+                tick();
+            }
+            
+            animationFrameId = requestAnimationFrame(draw);
+        }
+        
+        // Event listeners
+        document.getElementById('language-selector').addEventListener('change', function () {
+            const selectedLanguage = this.value;
+            updateLanguage(selectedLanguage);
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const defaultLanguage = 'en';
+            document.getElementById('language-selector').value = defaultLanguage;
+            updateLanguage(defaultLanguage);
+        });
+
+        document.addEventListener('keydown', function(event) {
+            if (keysDown.hasOwnProperty(event.key)) {
+                keysDown[event.key] = true;
+            }
+        });
+        
+        document.addEventListener('keyup', function(event) {
+            if (keysDown.hasOwnProperty(event.key)) {
+                keysDown[event.key] = false;
+            }
+        });
+        
+        canvas.addEventListener('mousedown', handleSliderDrag);
+        
+        canvas.addEventListener('mousemove', function(event) {
+            if (isDragging) {
+                handleSliderDrag(event);
+            }
+        });
+        
+        canvas.addEventListener('mouseup', function() {
+            if (isDragging && draggedSlider) {
+                sliderState[draggedSlider].change = sliderState[draggedSlider].value - initialValues[draggedSlider];
+            }
+            isDragging = false;
+            draggedSlider = null;
+        });
+        
+        // Editor button event listeners
+        document.getElementById('edit-btn').addEventListener('click', openEditor);
+        document.getElementById('editor-close').addEventListener('click', cancelEditorChanges);
+        document.getElementById('save-changes').addEventListener('click', saveEditorChanges);
+        
+        // Add category event listener
+        document.getElementById('add-category-btn').addEventListener('click', addNewCategory);
+        document.getElementById('new-category-name').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addNewCategory();
+            }
+        });
+        
+        // Other button event listeners
+        document.getElementById('export-btn').addEventListener('click', exportSliderData);
+        document.getElementById('import-btn').addEventListener('click', importSliderData);
+        document.getElementById('reset-btn').addEventListener('click', resetSliderData);
+        
+        const dampingSliderContainer = document.getElementById('damping-slider-container');
+        
+        dampingSliderContainer.addEventListener('mousedown', function(event) {
+            isDraggingDamping = true;
+            handleDampingSliderDrag(event);
+        });
+        
+        document.addEventListener('mousemove', function(event) {
+            if (isDraggingDamping) {
+                handleDampingSliderDrag(event);
+            }
+        });
+        
+        document.addEventListener('mouseup', function() {
+            isDraggingDamping = false;
+        });
+        
+        // Initialize and start drawing
+        init();
+        sliderRects = createSliderRects(
+            sliderData, 
+            CONSTANTS.SLIDER_WIDTH, 
+            CONSTANTS.SLIDER_HEIGHT, 
+            CONSTANTS.X_SPACING, 
+            CONSTANTS.Y_SPACING, 
+            CONSTANTS.X_START, 
+            CONSTANTS.Y_START
+        );
+        categoryXPositions = createCategoryPositions(
+            sliderData, 
+            CONSTANTS.SLIDER_WIDTH, 
+            CONSTANTS.X_SPACING, 
+            CONSTANTS.X_START
+        );
+        drawDampingSlider();
+        draw();
+    </script>
+</body>
+</html>
