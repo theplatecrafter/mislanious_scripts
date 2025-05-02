@@ -1,0 +1,64 @@
+{
+    "0_DAMPING_FACTOR_0": 1,
+    "Input": {
+        "InputNode": {
+            "init": 0,
+            "connections": {
+                "Hidden1Node1": 0.5,
+                "Hidden1Node2": 0.5
+            }
+        }
+    },
+    "Hidden Layer 1": {
+        "Hidden1Node1": {
+            "init": 0,
+            "connections": {
+                "Hidden2Node1": 0.5,
+                "Hidden2Node2": 0.5
+            }
+        },
+        "Hidden1Node2": {
+            "init": 0,
+            "connections": {
+                "Hidden2Node1": 0.5,
+                "Hidden2Node2": 0.5
+            }
+        }
+    },
+    "Hidden Layer 2": {
+        "Hidden2Node1": {
+            "init": 0,
+            "connections": {
+                "Hidden3Node1": 0.5,
+                "Hidden3Node2": 0.5
+            }
+        },
+        "Hidden2Node2": {
+            "init": 0,
+            "connections": {
+                "Hidden3Node1": 0.5,
+                "Hidden3Node2": 0.5
+            }
+        }
+    },
+    "Hidden Layer 3": {
+        "Hidden3Node1": {
+            "init": 0,
+            "connections": {
+                "OutputNode": -1
+            }
+        },
+        "Hidden3Node2": {
+            "init": 0,
+            "connections": {
+                "OutputNode": -1
+            }
+        }
+    },
+    "Output": {
+        "OutputNode": {
+            "init": 100,
+            "connections": {}
+        }
+    }
+}
