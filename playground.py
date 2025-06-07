@@ -6,4 +6,4 @@ import random_functions.main as rf
 import numpy as np
 
 
-rf.GodsPanel("inputs/GodsPanelPresets/Universe.json")
+tch.time_capsule_handler("/mnt/f")
