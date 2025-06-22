@@ -6,4 +6,5 @@ import random_functions.main as rf
 import numpy as np
 
 
-tch.time_capsule_handler("/mnt/f")
+#tch.time_capsule_handler("/mnt/f")
+
