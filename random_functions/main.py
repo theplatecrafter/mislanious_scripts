@@ -1025,6 +1025,35 @@ def normalize_path(path: str) -> str:
         return escaped_path
 
 
+def lnkToRelativeShorcut(lnkPath: str, deleteOriginal: bool = True):
+    # 1. Ask wslpath to convert the containing folder into a Windows path
+    lnk_dir_posix = os.path.dirname(lnkPath)
+    win_dir = subprocess.check_output(
+        ["wslpath", "-w", lnk_dir_posix],
+        text=True
+    ).strip()
+
+    # 2. Get the Windows‐style target from the .lnk and compute a Windows‐style relative path
+    win_target = plnk.Lnk(lnkPath).path           # e.g. "C:\\Users\\Foo\\Bar.exe"
+    rel_target = ntpath.relpath(win_target, win_dir)
+    print(win_target)
+
+    # 3. Emit a .bat next to the .lnk using the Windows‐style relative path
+    name = os.path.splitext(os.path.basename(lnkPath))[0]
+    bat_path = os.path.join(lnk_dir_posix, f"{name}.bat")
+    with open(bat_path, "w", encoding="utf-8-sig") as bat:
+        bat.write(
+            "@echo off\n"
+            "chcp 65001 >nul\n"
+            f'start "" "%~dp0{rel_target}"\n'
+            "exit\n"
+        )
+
+    if deleteOriginal:
+        os.remove(lnkPath)
+
+
+
 # number theory
 def checkPrime(n: int) -> bool:
     """Checks if n is a prime number or not"""
@@ -2489,3 +2518,219 @@ def startStockGame():
 
     printTable([["Companies"]+sharesName, ["Starting price"] +
                sharesPrice, ["aggresiveness"]+sharesStrength])
+
+
+
+    R1=1.0,               # Major radius
+    R2=0.5,               # Minor radius
+    K2=5.0,               # Distance from viewer to donut
+    width=80,             # Terminal width
+    height=24,            # Terminal height
+    wobble_speed=3.0,     # Speed of wobble
+    frame_delay=0.03      # Delay between frames (seconds)
+
+    """
+    Render a rotating, wobbling rainbow-colored ASCII torus in the terminal.
+    """
+    # Precompute constants
+    K1 = width * K2 * 3 / (8 * (R1 + R2))
+    # ANSI 256-color indices roughly following ROYGBIV
+    rainbow = [160, 196, 202, 208, 214, 220, 226, 190,
+               154, 118, 82, 46, 47, 48, 49, 51,
+               39, 27, 21, 57, 93, 129, 165, 201]
+
+    # Luminance characters from darkest to brightest
+    lum_chars = " .,-~:;=!*#$@"
+
+    A = 0.0  # rotation angle around X
+    B = 0.0  # rotation angle around Z
+
+    try:
+        while True:
+            # Buffers for z-depth and characters/colors
+            zbuffer = [0.0] * (width * height)
+            frame = [' '] * (width * height)
+            colorbuf = [37] * (width * height)  # default to white
+
+            # Wobble factor varies over time
+            wobble = 1.0 + 0.3 * math.sin(time.time() * wobble_speed)
+
+            cosA = math.cos(A)
+            sinA = math.sin(A)
+            cosB = math.cos(B)
+            sinB = math.sin(B)
+
+            theta = 0.0
+            while theta < 2 * math.pi:
+                costheta = math.cos(theta)
+                sintheta = math.sin(theta)
+                phi = 0.0
+                while phi < 2 * math.pi:
+                    cosphi = math.cos(phi)
+                    sinphi = math.sin(phi)
+
+                    # 3D coordinates before rotation
+                    circlex = R2 * costheta * wobble + R1
+                    circley = R2 * sintheta
+
+                    # Final 3D (x, y, z) after rotations A and B
+                    x = circlex * (cosB * cosphi + sinA * sinB * sinphi) - circley * cosA * sinB
+                    y = circlex * (sinB * cosphi - sinA * cosB * sinphi) + circley * cosA * cosB
+                    z = K2 + cosA * circlex * sinphi + circley * sinA
+                    ooz = 1.0 / z  # "one over z"
+
+                    # Project to 2D screen coords
+                    xp = int(width / 2 + K1 * ooz * x)
+                    yp = int(height / 2 - K1 * ooz * y)
+
+                    idx = xp + yp * width
+                    if 0 <= idx < width * height and ooz > zbuffer[idx]:
+                        zbuffer[idx] = ooz
+                        # Surface normal luminance
+                        L = (cosphi * costheta * sinB
+                             - cosA * costheta * sinphi
+                             - sinA * sintheta
+                             + cosB * (cosA * sintheta - costheta * sinA * sinphi))
+
+                        # Map L (-1..1) to character index safely
+                        idx_char = int((L + 1) * 0.5 * (len(lum_chars) - 1))
+                        idx_char = max(0, min(len(lum_chars) - 1, idx_char))
+                        ch = lum_chars[idx_char]
+
+                        # Color based on luminance
+                        lum_index = int((L + 1) / 2 * (len(rainbow) - 1))
+                        lum_index = max(0, min(len(rainbow) - 1, lum_index))
+                        colorbuf[idx] = rainbow[lum_index]
+
+                        frame[idx] = ch
+
+                    phi += 0.02
+                theta += 0.07
+
+            # Clear screen and move cursor home
+            sys.stdout.write("\033[H\033[J")
+
+            # Render the frame
+            for i, ch in enumerate(frame):
+                c = colorbuf[i]
+                sys.stdout.write(f"\033[38;5;{c}m{ch}")
+                if (i + 1) % width == 0:
+                    sys.stdout.write("\n")
+            sys.stdout.flush()
+
+            # Increment rotation
+            A += 0.04
+            B += 0.02
+            time.sleep(frame_delay)
+
+    except KeyboardInterrupt:
+        # Reset colors on exit
+        sys.stdout.write("\033[0m")
+        sys.stdout.flush()
+
+
+    R1=1.0,               # Major radius
+    R2=0.5,               # Minor radius
+    K2=5.0,               # Distance from viewer to donut
+    wobble_speed=3.0,     # Speed of wobble
+    frame_delay=0.03      # Delay between frames (seconds)
+
+
+def rotating_rainbow_torus(
+    R1=1.0,               # Major radius
+    R2=0.5,               # Minor radius
+    K2=5.0,               # Distance from viewer to donut
+    wobble_speed=3.0,     # Speed of wobble
+    frame_delay=0.03      # Delay between frames (seconds)
+):
+    """
+    Render a rotating, wobbling rainbow-colored ASCII torus in the terminal,
+    auto-adjusting to your current terminal size with separate X/Y scaling.
+    """
+    # Detect terminal size dynamically
+    try:
+        columns, rows = os.get_terminal_size()
+        width = max(20, columns)
+        height = max(10, rows - 1)
+    except OSError:
+        width, height = 80, 24
+
+    # Projection scaling for X and Y separately
+    K1x = width * K2 * 3 / (8 * (R1 + R2))
+    K1y = height * K2 * 3 / (8 * (R1 + R2))
+
+    # ANSI 256-color indices following ROYGBIV
+    rainbow = [160, 196, 202, 208, 214, 220, 226, 190,
+               154, 118, 82, 46, 47, 48, 49, 51,
+               39, 27, 21, 57, 93, 129, 165, 201]
+    lum_chars = " .,-~:;=!*#$@"  # from darkest to brightest
+
+    A = 0.0  # rotation around X
+    B = 0.0  # rotation around Z
+
+    try:
+        while True:
+            zbuffer = [0.0] * (width * height)
+            frame = [' '] * (width * height)
+            colorbuf = [37] * (width * height)
+
+            wobble = 1.0 + 0.3 * math.sin(time.time() * wobble_speed)
+            cosA, sinA = math.cos(A), math.sin(A)
+            cosB, sinB = math.cos(B), math.sin(B)
+
+            theta = 0.0
+            while theta < 2 * math.pi:
+                costh, sinth = math.cos(theta), math.sin(theta)
+                phi = 0.0
+                while phi < 2 * math.pi:
+                    cosp, sinp = math.cos(phi), math.sin(phi)
+                    circlex = R2 * costh * wobble + R1
+                    circley = R2 * sinth
+
+                    # 3D rotation
+                    x = circlex * (cosB * cosp + sinA * sinB * sinp) - circley * cosA * sinB
+                    y = circlex * (sinB * cosp - sinA * cosB * sinp) + circley * cosA * cosB
+                    z = K2 + cosA * circlex * sinp + circley * sinA
+                    ooz = 1.0 / z
+
+                    # Separate X and Y projection
+                    xp = int(width / 2 + K1x * ooz * x)
+                    yp = int(height / 2 - K1y * ooz * y)
+                    idx = xp + yp * width
+
+                    if 0 <= idx < len(zbuffer) and ooz > zbuffer[idx]:
+                        zbuffer[idx] = ooz
+                        # Surface normal luminance
+                        L = (cosp * costh * sinB
+                             - cosA * costh * sinp
+                             - sinA * sinth
+                             + cosB * (cosA * sinth - costh * sinA * sinp))
+
+                        # Character index
+                        ci = int((L + 1) * 0.5 * (len(lum_chars) - 1))
+                        ci = max(0, min(len(lum_chars) - 1, ci))
+                        frame[idx] = lum_chars[ci]
+
+                        # Color index
+                        col_i = int((L + 1) * 0.5 * (len(rainbow) - 1))
+                        col_i = max(0, min(len(rainbow) - 1, col_i))
+                        colorbuf[idx] = rainbow[col_i]
+
+                    phi += 0.02  # fine sampling for smoothness
+                theta += 0.07
+
+            # Clear and render frame
+            sys.stdout.write("\033[H\033[J")
+            for i, ch in enumerate(frame):
+                sys.stdout.write(f"\033[38;5;{colorbuf[i]}m{ch}")
+                if (i + 1) % width == 0:
+                    sys.stdout.write("\n")
+            sys.stdout.flush()
+
+            A += 0.04
+            B += 0.02
+            time.sleep(frame_delay)
+
+    except KeyboardInterrupt:
+        sys.stdout.write("\033[0m")
+        sys.stdout.flush()

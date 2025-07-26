@@ -35,3 +35,7 @@ import rawpy as r
 from PIL import Image
 Image.MAX_IMAGE_PIXELS = None
 import time
+import sys
+import pylnk3 as plnk
+import ntpath
+from pathlib import PureWindowsPath
