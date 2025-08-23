@@ -5,10 +5,4 @@ import random_functions.main as rf
 
 import numpy as np
 
-
-
-parent_dir = "/mnt/f/0) Other/3) Other Shortcuts/Family pics"
-
-lnks = [i for i in rf.get_all_file_paths(parent_dir) if rf.os.path.splitext(i)[1] == ".lnk"]
-for lnk in lnks:
-    rf.lnkToRelativeShortcut(lnk,False)
+rf.rotating_rainbow_torus()
